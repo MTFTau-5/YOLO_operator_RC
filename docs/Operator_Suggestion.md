@@ -354,7 +354,7 @@ CPU SIMD 贪心 NMS 要点（默认版，必写）：
 - **ncnn CPU 模式**：与主线同一份 param/bin，`use_vulkan_compute=false`，packing + AVX2 自动；
 - 编译：`-O3 -march=znver4 -ffast-math`，线程绑物理核。
 
-## 11. 系统层调优（十分钟，白捡的性能）
+## 11. 系统层调优
 
 ```bash
 # CPU 绑物理核 0-7（避开 SMT 逻辑核）
