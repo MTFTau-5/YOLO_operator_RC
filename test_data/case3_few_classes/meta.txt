@@ -1,0 +1,8 @@
+num_anchors=25200
+num_classes=10
+conf_thr=0.25
+nms_thr=0.5
+input_w=640
+input_h=640
+decode_count=202
+nms_count=202

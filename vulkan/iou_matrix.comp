@@ -1,0 +1,27 @@
+#version 450
+// iou_matrix.comp —— 混合式 NMS 的 GPU 部分（README(1).md §8.5）
+// 一个 dispatch 算完 N×N IoU 上三角矩阵；class-aware：异类写 0。
+// 注意：仅写入 j > i 的上三角，host 侧须在 dispatch 前把输出缓冲清零。
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 0) readonly  buffer Boxes { vec4 b[]; };     // x1, y1, x2, y2
+layout(binding = 1) readonly  buffer Meta  { vec4 m[]; };     // score, label, area, pad
+layout(binding = 2) writeonly buffer IoU   { float iou[]; };  // N*N 行主序
+
+layout(push_constant) uniform PC { uint N; } pc;
+
+void main() {
+    uint i = gl_GlobalInvocationID.x;
+    uint j = gl_GlobalInvocationID.y;
+    if (i >= pc.N || j >= pc.N || j <= i) return;
+    if (int(m[i].y) != int(m[j].y)) {           // class-aware：异类不抑制
+        iou[i * pc.N + j] = 0.0;
+        return;
+    }
+    vec4 a = b[i], c = b[j];
+    float iw = max(min(a.z, c.z) - max(a.x, c.x), 0.0);
+    float ih = max(min(a.w, c.w) - max(a.y, c.y), 0.0);
+    float inter = iw * ih;
+    float ua = m[i].z + m[j].z - inter;
+    iou[i * pc.N + j] = ua > 0.0 ? inter / ua : 0.0;
+}
