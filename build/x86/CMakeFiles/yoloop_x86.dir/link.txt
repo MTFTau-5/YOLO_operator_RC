@@ -1,0 +1,2 @@
+/usr/bin/ar qc libyoloop_x86.a CMakeFiles/yoloop_x86.dir/decode_avx2.cpp.o CMakeFiles/yoloop_x86.dir/nms_simd.cpp.o CMakeFiles/yoloop_x86.dir/preprocess_avx2.cpp.o
+/usr/bin/ranlib libyoloop_x86.a

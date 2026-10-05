@@ -1,0 +1,2 @@
+/usr/bin/ar qc libyoloop_common.a CMakeFiles/yoloop_common.dir/common/yolo_ref.cpp.o
+/usr/bin/ranlib libyoloop_common.a

@@ -40,11 +40,24 @@
 ## 2. 构建
 
 ```bash
-# 本开发机说明：CUDA 11.8 的 nvcc 与 g++13 系统头不兼容，需指定 CUDA 12.5：
+pip install -r requirements.txt 
+
+# CUDA 11.8 的 nvcc 与 g++13 系统头不兼容，需指定 CUDA 12.5：
 cmake -S . -B build -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.5/bin/nvcc
 cmake --build build -j
-# 自动探测 CUDA / OpenMP / Vulkan / TensorRT（本机全部启用）
+
 ```
+
+Vulkan 依赖安装（可选，`vulkan/` 混合 NMS 模块需要；Ubuntu/Debian）：
+
+```bash
+sudo apt install libvulkan-dev glslang-tools vulkan-tools
+# 7840HS 的 780M 核显还需 RADV 驱动（一般 Mesa 已自带）：
+sudo apt install mesa-vulkan-drivers
+vulkaninfo --summary 
+```
+
+装好后删掉 build 目录重新 `cmake`（配置期探测到 glslangValidator 才会启用该模块）。
 
 选项：
 
@@ -60,6 +73,9 @@ cmake --build build -j
 **本机实测状态**：以上五项全部实际启用并构建成功（Vulkan 有 glslangValidator + SDK，TensorRT 头文件取自 NVIDIA/TensorRT v11.3 + pip 版动态库）。「自动跳过」只在依赖缺失的机器上发生，属兜底行为。
 
 产物：`build/x86/libyoloop_x86.a`、`build/nvidia/libyoloop_cuda.a`、`build/nvidia/yolo_ops_cuda*.so`、`build/nvidia/libyoloop_trt_plugins.so`、`build/vulkan/libyoloop_vulkan.a`。
+
+**多 conda 环境注意**：pybind11 / TensorRT 是按「当前 shell 激活环境的 python」探测的——在哪个环境用 `yolo_ops_cuda`，就在哪个环境构建并先 `pip install pybind11`（老环境可能还需 `-DPYBIND11_FINDPYTHON=ON -DPython_EXECUTABLE=<env>/bin/python`，防止 pybind11 抓到 base 的 libpython 导致 .so ABI 不匹配）。TensorRT 装不进的老环境（如 py3.8）可直接指向其他环境的库：
+`-DTRT_INCLUDE_DIR=<项目>/nvidia/trt/include -DTRT_NVINFER_LIB=<site-packages>/tensorrt_libs/libnvinfer.so.11`
 
 ---
 

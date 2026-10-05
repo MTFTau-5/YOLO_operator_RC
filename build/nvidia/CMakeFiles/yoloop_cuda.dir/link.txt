@@ -1,0 +1,2 @@
+/usr/bin/ar qc libyoloop_cuda.a CMakeFiles/yoloop_cuda.dir/decode_kernel.cu.o CMakeFiles/yoloop_cuda.dir/nms_bitmask_kernel.cu.o CMakeFiles/yoloop_cuda.dir/preprocess_kernel.cu.o CMakeFiles/yoloop_cuda.dir/yolo_ops.cu.o
+/usr/bin/ranlib libyoloop_cuda.a

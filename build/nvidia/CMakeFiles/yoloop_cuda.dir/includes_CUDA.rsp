@@ -1,0 +1,1 @@
+-I"/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia" -I"/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common" -isystem "/usr/local/cuda-12.5/targets/x86_64-linux/include"

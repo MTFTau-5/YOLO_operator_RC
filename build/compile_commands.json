@@ -1,0 +1,86 @@
+[
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -fPIC -Wall -o CMakeFiles/yoloop_common.dir/common/yolo_ref.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common/yolo_ref.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common/yolo_ref.cpp",
+  "output": "CMakeFiles/yoloop_common.dir/common/yolo_ref.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/x86",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -Wall -O3 -ffast-math -march=native -fopenmp -o CMakeFiles/yoloop_x86.dir/decode_avx2.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/decode_avx2.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/decode_avx2.cpp",
+  "output": "x86/CMakeFiles/yoloop_x86.dir/decode_avx2.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/x86",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -Wall -O3 -ffast-math -march=native -fopenmp -o CMakeFiles/yoloop_x86.dir/nms_simd.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/nms_simd.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/nms_simd.cpp",
+  "output": "x86/CMakeFiles/yoloop_x86.dir/nms_simd.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/x86",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -Wall -O3 -ffast-math -march=native -fopenmp -o CMakeFiles/yoloop_x86.dir/preprocess_avx2.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/preprocess_avx2.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/preprocess_avx2.cpp",
+  "output": "x86/CMakeFiles/yoloop_x86.dir/preprocess_avx2.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/x86",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -Wall -fopenmp -o CMakeFiles/test_x86.dir/tests/test_x86.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/tests/test_x86.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/x86/tests/test_x86.cpp",
+  "output": "x86/CMakeFiles/test_x86.dir/tests/test_x86.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/local/cuda-12.5/bin/nvcc -forward-unknown-to-host-compiler  --options-file CMakeFiles/yoloop_cuda.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_52,code=[compute_52,sm_52]\" -Xcompiler=-fPIC -Xcompiler=-Wall -x cu -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/decode_kernel.cu -o CMakeFiles/yoloop_cuda.dir/decode_kernel.cu.o",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/decode_kernel.cu",
+  "output": "nvidia/CMakeFiles/yoloop_cuda.dir/decode_kernel.cu.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/local/cuda-12.5/bin/nvcc -forward-unknown-to-host-compiler  --options-file CMakeFiles/yoloop_cuda.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_52,code=[compute_52,sm_52]\" -Xcompiler=-fPIC -Xcompiler=-Wall -x cu -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/nms_bitmask_kernel.cu -o CMakeFiles/yoloop_cuda.dir/nms_bitmask_kernel.cu.o",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/nms_bitmask_kernel.cu",
+  "output": "nvidia/CMakeFiles/yoloop_cuda.dir/nms_bitmask_kernel.cu.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/local/cuda-12.5/bin/nvcc -forward-unknown-to-host-compiler  --options-file CMakeFiles/yoloop_cuda.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_52,code=[compute_52,sm_52]\" -Xcompiler=-fPIC -Xcompiler=-Wall -x cu -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/preprocess_kernel.cu -o CMakeFiles/yoloop_cuda.dir/preprocess_kernel.cu.o",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/preprocess_kernel.cu",
+  "output": "nvidia/CMakeFiles/yoloop_cuda.dir/preprocess_kernel.cu.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/local/cuda-12.5/bin/nvcc -forward-unknown-to-host-compiler  --options-file CMakeFiles/yoloop_cuda.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_52,code=[compute_52,sm_52]\" -Xcompiler=-fPIC -Xcompiler=-Wall -x cu -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/yolo_ops.cu -o CMakeFiles/yoloop_cuda.dir/yolo_ops.cu.o",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/yolo_ops.cu",
+  "output": "nvidia/CMakeFiles/yoloop_cuda.dir/yolo_ops.cu.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/local/cuda-12.5/bin/nvcc -forward-unknown-to-host-compiler  --options-file CMakeFiles/test_cuda.dir/includes_CUDA.rsp -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_52,code=[compute_52,sm_52]\" -Xcompiler=-Wall -x cu -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/tests/test_cuda.cu -o CMakeFiles/test_cuda.dir/tests/test_cuda.cu.o",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/tests/test_cuda.cu",
+  "output": "nvidia/CMakeFiles/test_cuda.dir/tests/test_cuda.cu.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/bin/c++ -Dyolo_ops_cuda_EXPORTS -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -isystem /home/mtftau-5/miniconda3/envs/pt121_py38/lib/python3.8/site-packages/pybind11/include -isystem /home/mtftau-5/miniconda3/envs/pt121_py38/include/python3.8 -isystem /usr/local/cuda-12.5/targets/x86_64-linux/include -O3 -DNDEBUG -std=gnu++17 -fPIC -fvisibility=hidden -Wall -flto=auto -fno-fat-lto-objects -o CMakeFiles/yolo_ops_cuda.dir/bindings/pybind_module.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/bindings/pybind_module.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/bindings/pybind_module.cpp",
+  "output": "nvidia/CMakeFiles/yolo_ops_cuda.dir/bindings/pybind_module.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/bin/c++ -Dyoloop_trt_plugins_EXPORTS -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/include -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -isystem /usr/local/cuda-12.5/targets/x86_64-linux/include -O3 -DNDEBUG -std=gnu++17 -fPIC -Wall -Wno-deprecated-declarations -o CMakeFiles/yoloop_trt_plugins.dir/trt/yolo_decode_plugin.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/yolo_decode_plugin.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/yolo_decode_plugin.cpp",
+  "output": "nvidia/CMakeFiles/yoloop_trt_plugins.dir/trt/yolo_decode_plugin.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/nvidia",
+  "command": "/usr/bin/c++  -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/include -isystem /usr/local/cuda-12.5/targets/x86_64-linux/include -O3 -DNDEBUG -std=gnu++17 -Wall -Wno-deprecated-declarations -o CMakeFiles/test_trt_plugin.dir/trt/test_trt_plugin.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/test_trt_plugin.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/nvidia/trt/test_trt_plugin.cpp",
+  "output": "nvidia/CMakeFiles/test_trt_plugin.dir/trt/test_trt_plugin.cpp.o"
+},
+{
+  "directory": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/vulkan",
+  "command": "/usr/bin/c++ -DYOLOOP_VULKAN_SHADER=\\\"/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/vulkan/iou_matrix.spv\\\" -I/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/common -O3 -DNDEBUG -std=gnu++17 -Wall -o CMakeFiles/yoloop_vulkan.dir/hybrid_nms.cpp.o -c /home/mtftau-5/yolo-RGBT/YOLO_operator_RC/vulkan/hybrid_nms.cpp",
+  "file": "/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/vulkan/hybrid_nms.cpp",
+  "output": "vulkan/CMakeFiles/yoloop_vulkan.dir/hybrid_nms.cpp.o"
+}
+]
