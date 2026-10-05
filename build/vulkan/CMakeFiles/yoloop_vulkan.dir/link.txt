@@ -1,2 +1,0 @@
-/usr/bin/ar qc libyoloop_vulkan.a CMakeFiles/yoloop_vulkan.dir/hybrid_nms.cpp.o
-/usr/bin/ranlib libyoloop_vulkan.a

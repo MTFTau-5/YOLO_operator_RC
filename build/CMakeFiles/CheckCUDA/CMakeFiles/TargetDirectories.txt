@@ -1,2 +1,0 @@
-/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/CMakeFiles/CheckCUDA/CMakeFiles/edit_cache.dir
-/home/mtftau-5/yolo-RGBT/YOLO_operator_RC/build/CMakeFiles/CheckCUDA/CMakeFiles/rebuild_cache.dir
