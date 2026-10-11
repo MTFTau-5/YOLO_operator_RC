@@ -21,7 +21,7 @@ static inline float iou_scalar(const Detection& a, const float* x1, const float*
     return ua > 0.f ? inter / ua : 0.f;
 }
 
-std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr, int topk) {
+std::vector<int32_t> nms_indices(const std::vector<Detection>& dets, float nms_thr, int topk) {
     const size_t n0 = dets.size();
     if (n0 == 0) return {};
 
@@ -57,12 +57,12 @@ std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr, int topk)
     std::vector<uint8_t> suppressed(n8, 0);
     for (size_t k = n; k < n8; ++k) suppressed[k] = 1;
 
-    std::vector<Detection> keep;
+    std::vector<int32_t> keep;
     keep.reserve(n);
     size_t removed = 0;  // kept ∪ suppressed 的框数；== n 时早停
     for (size_t i = 0; i < n; ++i) {
         if (suppressed[i]) continue;
-        keep.push_back(dets[idx[i]]);
+        keep.push_back((int32_t)idx[i]);
         if (++removed == n) break;  // 早停：剩余框均已无意义
 
         size_t j = i + 1;
@@ -112,6 +112,14 @@ std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr, int topk)
         }
     }
     return keep;
+}
+
+std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr, int topk) {
+    auto idx = nms_indices(dets, nms_thr, topk);
+    std::vector<Detection> out;
+    out.reserve(idx.size());
+    for (int32_t i : idx) out.push_back(dets[(size_t)i]);
+    return out;
 }
 
 }  // namespace x86

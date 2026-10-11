@@ -1,0 +1,6 @@
+num_classes=1
+num_kpts=7
+num_anchors=8400
+conf_thr=0.25
+nms_thr=0.45
+topk=100

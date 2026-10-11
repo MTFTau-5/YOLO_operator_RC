@@ -1,0 +1,4 @@
+num_classes=3
+num_anchors=8400
+conf_thr=0.25
+nms_thr=0.45

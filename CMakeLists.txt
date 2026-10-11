@@ -14,6 +14,8 @@ option(YOLOOP_BUILD_CUDA        "NVIDIA CUDA 算子"         ON)
 option(YOLOOP_BUILD_TRT_PLUGIN  "TensorRT decode 插件"     ON)
 option(YOLOOP_BUILD_PYTHON      "pybind11 Python 绑定"     ON)
 option(YOLOOP_BUILD_VULKAN      "Vulkan 混合式 NMS(可选)"  ON)
+option(YOLOOP_BUILD_APP         "实时流水线应用 yolo_rt(需 ncnn+Vulkan)" ON)
+set(NCNN_GIT_TAG "20250503" CACHE STRING "FetchContent 拉取的 ncnn release tag")
 # 目标机为 Zen4(7840HS) 时: -DYOLOOP_X86_ARCH=znver4
 set(YOLOOP_X86_ARCH "native" CACHE STRING "x86 -march 目标")
 
@@ -55,7 +57,24 @@ if(YOLOOP_BUILD_VULKAN)
   endif()
 endif()
 
+if(YOLOOP_BUILD_APP)
+  include(FetchContent)
+  set(NCNN_VULKAN ON CACHE BOOL "" FORCE)
+  set(NCNN_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(NCNN_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(NCNN_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+  set(NCNN_BUILD_BENCHMARK OFF CACHE BOOL "" FORCE)
+  set(NCNN_SHARED_LIB OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(ncnn
+    GIT_REPOSITORY https://github.com/Tencent/ncnn.git
+    GIT_TAG        ${NCNN_GIT_TAG}
+    GIT_SHALLOW    TRUE)
+  FetchContent_MakeAvailable(ncnn)
+  add_subdirectory(app)
+endif()
+
 message(STATUS "==================== yolo_operator 配置 ====================")
 message(STATUS "  x86 模块:    ${YOLOOP_BUILD_X86} (march=${YOLOOP_X86_ARCH}, OpenMP=${OpenMP_CXX_FOUND})")
 message(STATUS "  CUDA 模块:   ${YOLOOP_BUILD_CUDA} (compiler=${CMAKE_CUDA_COMPILER})")
+message(STATUS "  app 模块:    ${YOLOOP_BUILD_APP} (ncnn tag=${NCNN_GIT_TAG})")
 message(STATUS "===========================================================")

@@ -8,6 +8,7 @@
 | `x86/` | 7840HS（Zen4，独立 C++，无第三方依赖） | AVX2 decode（logit 域快筛）、CPU SIMD NMS、AVX2 预处理单 pass | §8.4a §8.5 §8.6 |
 | `nvidia/` | NVIDIA GPU | Decode CUDA kernel（warp ballot 压缩）、位掩码 NMS kernel、预处理融合 kernel、TensorRT 插件、pybind11 绑定 | §2.2 §2.3 §2.4 |
 | `vulkan/` | 780M 核显（可选） | 混合式 NMS：IoU 矩阵 compute shader + CPU 位掩码贪心 | §8.5 |
+| `app/` | 7840HS 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn Vulkan 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
 | `tools/` | 工具 | `gen_test_vectors.py` golden 生成、`bench_baseline.cpp` 无算子基线基准 | §5 §12 |
 
 ---
@@ -203,7 +204,126 @@ best.pt → ONNX(同样切 head、过 onnxsim)
   候选框常年上千(密集小目标/低阈值)再启用 vulkan 混合 NMS(§8.5)
 ```
 
-**验证顺序**（§5/§12，每步先对齐数值再压速度）：fp32 对 golden → fp16 → int8 → 系统层调优。
+**该运行时已实现为 `app/yolo_rt`**（`app/README.md`）：两线程 + 三槽位 + 丢旧帧
+流水线（规格见仓库上级 `../PIPELINE.md`），线程A 跑 letterbox/decode/NMS/卡尔曼
+（`app/tracker`，逻辑提取自 RK3588-AntiUAV-Tracker）/UDP 控制输出，线程B 提交
+ncnn Vulkan 推理（`app/ncnn_infer`，配置同 §8.3）。ncnn 由根 CMake
+FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
+
+**验证顺序**（§5/§12，每步先对齐数值再压速度）：fp32 对 golden → fp16 → int8(7840hs不推荐使用int8) → 系统层调优。
+
+---
+
+### 5.3 实时流水线应用 `app/yolo_rt`（v5 / v8/v11 / pose）
+
+`app/yolo_rt` 是按 `../PIPELINE.md` 实现的整机应用：两线程 + 三槽位 + 丢旧帧，
+线程A 采集/预处理/decode/NMS/卡尔曼/UDP 控制，线程B 提交 ncnn Vulkan 推理。
+设计与实现细节见 **[app/README.md](./app/README.md)**，这里只讲配置与调用。
+
+所有参数收在一个扁平 YAML 里（模板：`app/pipeline.example.yaml`），
+覆盖顺序：**默认值 < `--config` 文件 < CLI**：
+
+```bash
+./build/app/yolo_rt --config app/pipeline.yaml                  # 纯配置文件
+./build/app/yolo_rt --config app/pipeline.yaml --conf 0.35      # CLI 临时覆盖
+./build/app/yolo_rt --config app/pipeline.yaml --dump-config    # 打印最终生效值
+```
+
+#### 配置文件参数总表
+
+| 参数 | 含义 | 默认 |
+|---|---|---|
+| **模型契约** |||
+| `param` / `model` | ncnn `.param` / `.bin` 路径 | 必填 |
+| `in0` | 输入 blob 名 | `in0` |
+| `model-type` | `v5`=切头契约 `[4+1+nc,N]`；`v8`=v8/v11 检测（Detect 头烘在图内）`[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]` | `v5` |
+| `heads` | 输出 blob 名列表。v5：三个，按 stride 8→16→32；v8/pose：通常单个拼接输出 | 必填 |
+| `in-size` | 网络输入 `WxH`，须被 32 整除；letterbox 与 anchor 网格的唯一来源 | `640x640` |
+| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8: 4+nc；pose: 4+nc+3K） | `2` |
+| `num-kpts` | 仅 `v8-pose`：每框关键点数（任意，角点扫描场景） | `0` |
+| `anchors-s8/s16/s32` | 仅 `v5`：三级 anchor（w,h 平铺）。不给 = YOLOv5s P5 默认；训练开 autoanchor 时**必须从训练配置抄** | 空=默认 |
+| `gpu` | Vulkan 设备序号（`vulkaninfo --summary` 查） | `0` |
+| `cpu-threads` | ncnn CPU fallback 层线程数 | `1` |
+| **检测阈值** |||
+| `conf` | 置信度阈值 | `0.3` |
+| `nms` | NMS IoU 阈值 | `0.6` |
+| `topk` | NMS 输出上限 | `300` |
+| **跟踪** |||
+| `gate-px` | 关联门限下限（像素） | `120` |
+| `gate-scale` | 门限随预测框尺寸放大系数 | `2.0` |
+| `size-ratio` | 尺寸记忆过滤：面积比在 [1/r, r] 外的候选丢弃 | `3.0` |
+| `size-memory` | 尺寸先验记忆帧数 | `120` |
+| `coast` | 纯 Kalman 外推帧数上限，超过判 LOST | `5` |
+| `max-misses` | 门限自适应系数上限 | `15` |
+| **运行模式** |||
+| `serial` | `true` = 单线程串行（M1/M3 验收）；`false` = 两线程流水线 | `false` |
+| `cores-a` / `cores-b` | 线程A / 线程B 绑核列表（`0-3` 或 `0,2`；核数不足自动收缩） | `0-3` / `4-7` |
+| `max-w` / `max-h` | 采集缓冲上限（相机分辨率上限） | `1920` / `1080` |
+| `max-frames` | 处理 N 帧后自动退出（0=不限，测试用） | `0` |
+| **控制输出** |||
+| `udp` | 确认轨迹 UDP 目标 `host:port`（`hits>=2 && misses==0` 才发）；注释掉不发 | 空 |
+| **调试** |||
+| `no-model` | 跳过 ncnn，线程B 假推理（冒烟验证调度/关机） | `false` |
+| `fake-gpu-ms` | 假推理每帧睡眠毫秒数 | `10` |
+
+#### 三种模型的配置与调用
+
+**① YOLOv5 系（切头导出，anchor-based）**
+
+导出：`best.pt → ONNX（切 head、过 onnxsim）→ pnnx → ncnn`（§5.2）。
+
+```yaml
+# pipeline_v5.yaml
+param: weights/best.param
+model: weights/best.bin
+model-type: v5
+heads: [out8, out16, out32]        # 三个 head，stride 8→16→32
+in-size: 640x640
+num-classes: 2
+anchors-s8:  [10,13, 16,30, 33,23] # 从训练配置抄（开了 autoanchor 尤其要抄）
+anchors-s16: [30,61, 62,45, 59,119]
+anchors-s32: [116,90, 156,198, 373,326]
+```
+
+**② YOLOv8 / v11 检测（Detect 头烘在图内，anchor-free）**
+
+导出：Ultralytics 默认 `model.export(format='onnx')`（DFL+网格解码已在图内，
+GPU 上跑）`→ pnnx → ncnn`。输出为单个拼接 blob `[1, 4+nc, N]`。**不需要 anchor 表。**
+
+```yaml
+# pipeline_v8.yaml
+param: weights/yolov8n.param
+model: weights/yolov8n.bin
+model-type: v8
+heads: [output0]                   # 单个输出（名字以 pnnx 转换后为准）
+in-size: 640x640
+num-classes: 1
+```
+
+**③ YOLOv8 / v11 pose（角点/关键点扫描，点数任意）**
+
+输出 `[1, 4+nc+3×nkpt, N]`，关键点 (x,y,conf) 像素。关键点随框过 NMS，
+UDP 控制包附带被跟踪框命中当帧的关键点（≤32 点，coast/丢失帧 `kpt_count=0`）。
+
+```yaml
+# pipeline_pose.yaml
+param: weights/pose.param
+model: weights/pose.bin
+model-type: v8-pose
+heads: [output0]
+in-size: 640x640
+num-classes: 1
+num-kpts: 7                        # 你的关键点数
+```
+
+三种类型共用同一调用：
+
+```bash
+./build/app/yolo_rt --config app/pipeline_v5.yaml     # 换成对应 yaml
+```
+
+**防大小不匹配**：加载时试跑一帧校验输出通道数（v5 还校验 anchor 总数）——
+配置与模型不一致**启动即报错**，不会带病运行。
 
 ---
 
@@ -215,6 +335,12 @@ python tools/gen_test_vectors.py                 # 重新生成 golden(已随仓
 ./build/nvidia/test_cuda test_data               # CUDA 数值对齐 + 基准
 PYTHONPATH=build/nvidia python nvidia/tests/test_python_bindings.py
 ./build/nvidia/test_trt_plugin                   # TRT 插件 sanity
+# app 流水线(yolo_rt):
+python3 tools/gen_tracker_golden.py              # Tracker golden(import RK3588 原版 BoxKalman)
+python3 tools/gen_v8_vectors.py                  # v8/v11 检测+姿态 golden(case7/8，已随仓库生成)
+./build/app/test_tracker test_data               # 卡尔曼/门控数值对齐(误差<1e-3)
+./build/app/test_queue                           # 槽位不变式 + 丢旧帧语义
+./build/app/yolo_rt --no-model                   # 无相机冒烟(掉线重连路径 + 干净退出)
 ```
 
 验收标准（§5/§12）：decode/NMS 输出与 numpy golden 数量精确相等、坐标 max abs err < 1e-2、score < 1e-3；预处理 < 1e-3。本机实测全部 PASS：decode 坐标 max err ≤ 2.5e-4（含 992×992 / 992×544 分辨率），NMS 集合逐位一致。

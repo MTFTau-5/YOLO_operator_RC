@@ -1,6 +1,7 @@
 # 7840HS/x86 独立 C++ 算子库（不依赖第三方库；OpenMP 可选）
 add_library(yoloop_x86 STATIC
   decode_avx2.cpp
+  decode_v8.cpp
   nms_simd.cpp
   preprocess_avx2.cpp
 )
