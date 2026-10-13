@@ -1,0 +1,31 @@
+# yolo_rt pose 配置 —— data/best.pt（cube_face，1 类 4 关键点）
+param: ../data/best.ncnn.param
+model: ../data/best.ncnn.bin
+in0: in0
+model-type: v8-pose
+heads: [out0]
+in-size: 640x640
+num-classes: 1
+num-kpts: 4
+
+gpu: 0
+cpu-threads: 1
+
+conf: 0.25
+nms: 0.45
+topk: 100
+
+gate-px: 120
+gate-scale: 2.0
+size-ratio: 3.0
+size-memory: 120
+coast: 5
+max-misses: 15
+
+serial: false
+cores-a: 0-3
+cores-b: 4-7
+max-w: 1920
+max-h: 1080
+max-frames: 0
+udp: 127.0.0.1:9000

@@ -87,6 +87,48 @@ f32 cx cy w h | f32 vx vy vw vh | f32 score |
 u32 kpt_count | f32 kpts[32*3]    # pose：命中框关键点 (x,y,conf)，非 pose/无命中 = 0
 ```
 
+## 速度基准（`bench_pipeline`）
+
+离线视频全链路测速（无需相机），串行逐阶段 / 两线程流水线两种模式：
+
+```bash
+./build/app/bench_pipeline --param ../data/best.ncnn.param --model ../data/best.ncnn.bin \
+    --model-type v8-pose --heads out0 --num-classes 1 --num-kpts 4 \
+    --video ../data/xxx.webm --frames 500 [--serial] [--gpu 1] [--threads 8]
+```
+
+- `--gpu N` 选 Vulkan 设备（启动日志有设备表），`--gpu -1` = 纯 CPU（配合 `--threads`）。
+  **注意：Vulkan 设备枚举顺序不稳定**（同一台机两次运行 [0] 可能是核显也可能是
+  独显），选卡前务必看启动日志里的设备表再定 N；
+- `--serial` 逐阶段计时 letterbox / infer / decode+nms / tracker；默认两线程模式报
+  分阶段耗时 + 端到端延迟 P50/P99 + 吞吐 FPS + 丢帧数。
+
+参考数字（开发机 9700X + RTX 3090Ti，**非目标机 7840HS/780M**；best.pt 自训 pose，
+cube_face 1 类 4 关键点，输入 1447×1080→640，500 帧）：
+
+| 后端 | infer P50 | 端到端 P50 | 吞吐 |
+|---|---|---|---|
+| Vulkan / RTX 3090Ti（串行） | 9.5ms | 15.3ms | 上限 ≈65 FPS |
+| Vulkan / RTX 3090Ti（两线程） | 10.6ms | 14.2ms | 91.4 FPS，丢帧 364/500* |
+| Vulkan / 核显 RADV 2CU（串行） | 77.7ms | 83.9ms | 上限 ≈12 FPS |
+| Vulkan / 核显 RADV 2CU（两线程） | 83.6ms | 88.3ms | 11.5 FPS，丢帧 288/300* |
+| 纯 CPU 8 线程（串行） | 49.2ms | 56.7ms | 上限 ≈18 FPS |
+| 纯 CPU 8 线程（两线程） | 83.9ms | 89.9ms | 12.1 FPS，丢帧 285/300* |
+
+*视频文件解码远快于推理，丢旧帧策略主动丢弃积压帧（符合 PIPELINE.md §4 设计）；
+接真实相机时采集速率即输入速率，不会这样丢。
+
+CPU 两线程注意：infer 从串行的 49ms 涨到 84ms——线程 A 的 webm 解码（VP9）
++ letterbox 与 ncnn 的 8 线程推理抢核/带宽，吞吐反而低于串行上限（12 vs 18 FPS）。
+`--threads 4` 几乎相同（12.6 FPS），说明已瓶颈在带宽/争抢而非线程数。真实相机
+源线程 A 负载轻得多，劣化会小；**CPU 后端部署时建议直接用 serial 模式**。
+
+decode+nms ≈0.01ms、tracker ≈0.002ms，纯算子开销可忽略，瓶颈全在推理。
+
+官方 `yolo11n-pose.pt`（1 类 17 关键点，C=56=4+1+3×17）同链路验证通过——只改
+`num-kpts` 即可，点数任意：串行 infer P50 6.8ms、端到端 12.3ms，上限 ≈80 FPS；
+两线程 infer P50 7.5ms、端到端 P50 10.8ms、吞吐 125 FPS（3090Ti）。
+
 ## 里程碑对应（PIPELINE.md §8）
 
 | 里程碑 | 落地 |
@@ -101,5 +143,6 @@ u32 kpt_count | f32 kpts[32*3]    # pose：命中框关键点 (x,y,conf)，非 p
 ## 遗留项
 
 - 真实相机采集实现（接口已就位）；
-- 端到端实机验证需实际 `.param/.bin` 与相机；
+- 真实模型（best.pt pose → ncnn）已经 bench_pipeline 视频链路验证；相机端到端待采
+  集实现；
 - M5 验收指标（P50≈12ms / P99<25ms / ≥95FPS）需在目标机+真模型上复测。
