@@ -1,0 +1,44 @@
+# yolo_rt 流水线配置
+# 用法: ./build/app/yolo_rt --config app/pipeline.yaml [--conf 0.35 ...]
+#       ./build/app/yolo_rt --config app/pipeline.yaml --dump-config   # 打印最终生效值
+
+param: weights/best.param        # ncnn .param 路径
+model: weights/best.bin          # ncnn .bin 路径
+in0: in0                         # 输入 blob 名
+model-type: v5                   # v5=YOLOv5 契约(切头, [4+1+nc,N], 需 anchor 表)
+                                 # v8=v8/v11 检测(Detect 头烘在图内, 输出 [4+nc,N])
+                                 # v8-pose=v8/v11 姿态(输出 [4+nc+3*num-kpts, N])
+heads: [out8, out16, out32]      # v5: 三个输出 blob，按 stride 8→16→32；
+                                 # v8/v8-pose: 通常单个拼接输出，如 [output0]
+in-size: 640x640                 # 网络输入尺寸（须能被 32 整除）
+num-classes: 2                   # 类别数；通道数校验 = 4+1+nc (v5) / 4+nc (v8)
+num-kpts: 0                      # 仅 v8-pose：每框关键点数（个数任意，如角点扫描）
+
+# anchor 表（仅 model-type=v5 用；不给 = YOLOv5s P5 默认。换模型时从训练配置抄过来，
+# 每级 w,h 平铺，个数随意）
+# anchors-s8:  [10,13, 16,30, 33,23]
+# anchors-s16: [30,61, 62,45, 59,119]
+# anchors-s32: [116,90, 156,198, 373,326]
+
+gpu: 0                           # Vulkan 设备序号（vulkaninfo 可查）
+cpu-threads: 1                   # ncnn CPU fallback 层线程数
+conf: 0.3                        # 置信度阈值（logit 域快筛，同训练 yolo 的 conf）
+nms: 0.6                         # NMS IoU 阈值
+topk: 300                        # NMS 输出上限
+gate-px: 120                     # 关联门限下限（像素）
+gate-scale: 2.0                  # 门限随预测框尺寸放大系数
+size-ratio: 3.0                  # 尺寸记忆过滤：面积比在 [1/r, r] 外的候选丢弃
+size-memory: 120                 # 尺寸先验记忆帧数
+coast: 5                         # 纯外推帧数上限，超过判 LOST
+max-misses: 15                   # 门限自适应系数上限
+
+serial: false                    # true = 单线程串行（M1/M3 验收用）
+cores-a: 0-3                     # 线程A（CPU 全流程）绑核
+cores-b: 4-7                     # 线程B（GPU 提交）绑核
+max-w: 1920                      # 采集缓冲上限（相机分辨率上限）
+max-h: 1080
+max-frames: 0                    # 0 = 不限；>0 用于测试自动退出
+udp: 127.0.0.1:9000              # 确认轨迹 UDP 目标；注释掉则不发
+
+# no-model: true                 # 跳过 ncnn，线程B 假推理（冒烟用）
+# fake-gpu-ms: 10

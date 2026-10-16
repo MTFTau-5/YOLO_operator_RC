@@ -1,0 +1,1 @@
+frames=42 img_w=1280 img_h=720 coast_frames=5 max_misses=15 gate_px=120.0 gate_scale=2.0 size_ratio=3.0 size_mem=120

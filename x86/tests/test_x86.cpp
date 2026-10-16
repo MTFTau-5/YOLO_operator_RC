@@ -2,12 +2,15 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include "../common/testio.h"
 #include "../common/yolo_ref.h"
 #include "../decode_avx2.h"
+#include "../decode_v8.h"
 #include "../nms_simd.h"
 #include "../preprocess_avx2.h"
 
@@ -179,6 +182,89 @@ int main(int argc, char** argv) {
                 g_sink = (size_t)out[0];
             }, 100);
         }
+    }
+
+    // ---- YOLOv8/v11（Detect 头烘在图内，输出 [4+nc, N] 像素 xywh + 类别概率）----
+    {
+        const std::string dir = root + "/case7_v8_detect";
+        auto meta = yoloop::testio::load_meta(dir);
+        const int nc = yoloop::testio::meta_int(meta, "num_classes");
+        const int n = yoloop::testio::meta_int(meta, "num_anchors");
+        const float conf = yoloop::testio::meta_float(meta, "conf_thr");
+        const float nth = yoloop::testio::meta_float(meta, "nms_thr");
+
+        auto pred = yoloop::testio::load_f32(dir + "/pred.bin");
+        auto gdec = yoloop::testio::load_dets(dir + "/golden_decode.bin");
+        if ((int)pred.size() != (4 + nc) * n) {
+            std::fprintf(stderr, "[case7] pred.bin 尺寸不符: %zu != %d\n", pred.size(), (4 + nc) * n);
+            return 1;
+        }
+        auto dets = yoloop::x86::decode_v8(pred.data(), nc, n, conf);
+        auto m = match_sets(dets, gdec, 1e-3, 1e-5);
+        all_ok = all_ok && m.ok;
+        std::printf("[case7_v8_detect] decode %s | golden=%zu x86=%zu | err coord=%.3g score=%.3g\n",
+                    m.ok ? "PASS" : "FAIL", gdec.size(), dets.size(), m.max_coord_err,
+                    m.max_score_err);
+
+        // nms_indices 与 nms 逐位等价（同实现路径，仅返回形式不同）
+        auto gi = yoloop::x86::nms_indices(dets, nth, 300);
+        auto gn = yoloop::x86::nms(dets, nth, 300);
+        bool eq = gi.size() == gn.size();
+        for (size_t i = 0; eq && i < gi.size(); ++i)
+            eq = std::memcmp(&dets[(size_t)gi[i]], &gn[i], sizeof(Detection)) == 0;
+        all_ok = all_ok && eq;
+        std::printf("[case7_v8_detect] nms_indices↔nms 等价 %s | keep=%zu\n",
+                    eq ? "PASS" : "FAIL", gn.size());
+    }
+
+    // ---- YOLOv8 pose（[4+nc+3K, N]，关键点随框过 NMS）----
+    {
+        const std::string dir = root + "/case8_v8_pose";
+        auto meta = yoloop::testio::load_meta(dir);
+        const int nc = yoloop::testio::meta_int(meta, "num_classes");
+        const int nk = yoloop::testio::meta_int(meta, "num_kpts");
+        const int n = yoloop::testio::meta_int(meta, "num_anchors");
+        const float conf = yoloop::testio::meta_float(meta, "conf_thr");
+        const float nth = yoloop::testio::meta_float(meta, "nms_thr");
+        const int topk = yoloop::testio::meta_int(meta, "topk");
+        const int kstride = 3 * nk;
+
+        auto pred = yoloop::testio::load_f32(dir + "/pred.bin");
+        if ((int)pred.size() != (4 + nc + kstride) * n) {
+            std::fprintf(stderr, "[case8] pred.bin 尺寸不符\n");
+            return 1;
+        }
+        std::vector<Detection> dets;
+        std::vector<float> kpts;
+        yoloop::x86::decode_v8_pose(pred.data(), nc, nk, n, conf, dets, kpts);
+        bool shape_ok = kpts.size() == dets.size() * (size_t)kstride;
+
+        // golden_pose.bin: int32 count，随后每框 6 float det + 3K float kpts（nms 后顺序）
+        std::ifstream gf(dir + "/golden_pose.bin", std::ios::binary);
+        int32_t gcount = 0;
+        gf.read(reinterpret_cast<char*>(&gcount), 4);
+        auto keep = yoloop::x86::nms_indices(dets, nth, topk);
+        bool ok = shape_ok && (int32_t)keep.size() == gcount;
+        double max_det_err = 0.0, max_kpt_err = 0.0;
+        for (int32_t i = 0; i < gcount && ok; ++i) {
+            std::vector<float> buf(6 + kstride);
+            gf.read(reinterpret_cast<char*>(buf.data()), 4 * (6 + kstride));
+            const Detection& d = dets[(size_t)keep[(size_t)i]];
+            for (int k = 0; k < 4; ++k)
+                max_det_err = std::max(max_det_err, (double)std::fabs(
+                                       (&d.x1)[k] - buf[(size_t)k]));
+            max_det_err = std::max(max_det_err, (double)std::fabs(d.score - buf[4]));
+            ok = d.label == (int32_t)buf[5];
+            for (int k = 0; k < kstride; ++k)
+                max_kpt_err = std::max(max_kpt_err, (double)std::fabs(
+                                       kpts[(size_t)keep[(size_t)i] * kstride + k] -
+                                       buf[6 + (size_t)k]));
+        }
+        ok = ok && max_det_err < 1e-3 && max_kpt_err < 1e-5;
+        all_ok = all_ok && ok;
+        std::printf("[case8_v8_pose] decode+nms_indices %s | golden=%d x86=%zu | "
+                    "det_err=%.3g kpt_err=%.3g\n",
+                    ok ? "PASS" : "FAIL", gcount, keep.size(), max_det_err, max_kpt_err);
     }
 
     std::printf("\n== 基准（平均耗时） ==\n");
