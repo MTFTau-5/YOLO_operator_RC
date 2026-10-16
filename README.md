@@ -257,7 +257,7 @@ FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
 | `max-misses` | 门限自适应系数上限 | `15` |
 | **运行模式** |||
 | `serial` | `true` = 单线程串行（M1/M3 验收）；`false` = 两线程流水线 | `false` |
-| `cores-a` / `cores-b` | 线程A / 线程B 绑核列表（`0-3` 或 `0,2`；核数不足自动收缩） | `0-3` / `4-7` |
+| `cores-a` / `cores-b` | 线程A / 线程B 绑核列表（`0-3` 或 `0,2`；核数不足自动收缩）。**默认值是给 Vulkan 模式设计的；纯 CPU 两线程必须放宽 `cores-b`（如 `4-31`），否则推理线程挤 4 核，劣化 2~3 倍** | `0-3` / `4-7` |
 | `max-w` / `max-h` | 采集缓冲上限（相机分辨率上限） | `1920` / `1080` |
 | `max-frames` | 处理 N 帧后自动退出（0=不限，测试用） | `0` |
 | **控制输出** |||
@@ -354,3 +354,8 @@ python3 tools/gen_v8_vectors.py                  # v8/v11 检测+姿态 golden(c
 - TRT 插件基于 IPluginV2DynamicExt（TRT 11.3 起 deprecated，长期建议迁移 IPluginV3）
 - NMS GPU kernel 的 walk 阶段为单 warp 串行扫描（贪心算法固有），候选 >>2048 时可再优化
 - 本机基准数字来自 Ryzen 7 9700X（Zen5），仅供量级参考，以 7840HS 实测为准（§12）
+- 第二台实测机 Ryzen 9 7940HX（16C/32T 双 CCD）+ RTX 4060 Laptop：全模块构建通过
+  （含 CUDA 13.4 / ncnn / Vulkan / TRT 插件）。app 流水线实测：Vulkan 两线程 77 FPS，
+  纯 CPU 建议 `--serial --threads 8`（56.9ms / ≈17 FPS）；**纯 CPU 两线程必须放宽
+  `cores-b`（默认 `4-7` 只适用于 Vulkan 模式）**，实测数据与排查过程见
+  [app/README.md](./app/README.md)「实测补充：7940HX + RTX 4060 Laptop」

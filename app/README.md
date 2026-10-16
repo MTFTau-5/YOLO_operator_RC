@@ -129,6 +129,37 @@ decode+nms ≈0.01ms、tracker ≈0.002ms，纯算子开销可忽略，瓶颈全
 `num-kpts` 即可，点数任意：串行 infer P50 6.8ms、端到端 12.3ms，上限 ≈80 FPS；
 两线程 infer P50 7.5ms、端到端 P50 10.8ms、吞吐 125 FPS（3090Ti）。
 
+### 实测补充：7940HX + RTX 4060 Laptop（2026-10）
+
+第二台实测机：Ryzen 9 7940HX（16C/32T，双 CCD）+ RTX 4060 Laptop + 核显 610M。
+模型 `best.pt`（YOLO11s-pose，cube_face 1 类 4 关键点，ultralytics `format='ncnn'`
+fp16 导出），视频 1447×1080，500 帧：
+
+| 后端 | 模式 | infer P50 | 端到端 P50 | 吞吐 |
+|---|---|---|---|---|
+| Vulkan / RTX 4060 Laptop | 串行 | 11.2ms | 20.6ms | 上限 ≈49 FPS |
+| Vulkan / RTX 4060 Laptop | 两线程 | 12.0ms | 16.2ms（P99 22.4） | **77.1 FPS** |
+| 纯 CPU 16 线程 | 串行 | 50.6ms | 59.9ms | 上限 ≈16.7 FPS |
+| 纯 CPU 8 线程 | 串行 | 47.3ms | 56.9ms | 上限 ≈17.3 FPS |
+| 纯 CPU 16 线程 | 两线程（默认绑核 0-3/4-7） | 134.0ms | 144.4ms（P99 186.8） | 7.4 FPS |
+| 纯 CPU 16 线程 | 两线程（`--cores-b 4-31`） | 87~90ms | — | 11.2 FPS |
+| 纯 CPU 8 线程 | 两线程（默认绑核） | 111ms | — | 8.5 FPS |
+| 纯 CPU 16 线程 | 两线程（完全不绑核 0-31/0-31） | 127ms | — | 7.7 FPS |
+
+**纯 CPU 两线程异常排查结论**（7940HX 与 9700X 行为一致，非代码缺陷）：
+
+- **元凶是默认 `cores-b: 4-7`**：该默认值是给 Vulkan 模式设计的（线程B 只提交
+  GPU 命令）。纯 CPU 模式下推理本体就在线程B 执行（ncnn 走 libgomp，每个并行区
+  的 master 即线程B），16 线程挤 4 个物理核 → infer 从 51ms 恶化到 134ms。
+  纯 CPU 两线程必须放宽绑核：`--cores-b 4-31`（87ms，与 9700X 同型配置 84ms 一致）。
+- **完全不绑核同样糟糕**（127ms）：线程A 的 OpenCV 解码线程池与 ncnn 的 OpenMP
+  worker 满核互抢——隔离比数量重要。
+- 即使绑核放宽，两线程 CPU 推理仍比串行慢 ~1.7×（51→87ms），与 9700X 的
+  49→84ms 同型：OpenMP 静态切分下每个并行区都被最慢 worker 拖住。
+  `OMP_WAIT_POLICY=passive` 无效，不是自旋问题。
+- 串行模式 8 线程略快于 16 线程（47.3 vs 50.6ms）：7940HX 双 CCD + SMT，
+  超过物理核半数后只剩争抢。**纯 CPU 部署用 `--serial --threads 8`。**
+
 ## 里程碑对应（PIPELINE.md §8）
 
 | 里程碑 | 落地 |
