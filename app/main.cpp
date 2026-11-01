@@ -22,7 +22,9 @@
 #include "camera_source.h"
 #include "config.h"
 #include "control_tx.h"
+#include "decode_af_raw.h"
 #include "decode_avx2.h"
+#include "decode_e2e.h"
 #include "decode_v8.h"
 #include "ncnn_infer.h"
 #include "nms_simd.h"
@@ -41,9 +43,10 @@ struct Args {
     std::string in0 = "in0";
     std::vector<std::string> heads;
     int in_w = 640, in_h = 640;
-    int model_type = 0;  // 0=v5 契约 [4+1+nc,N]；1=v8/v11 检测 [4+nc,N]；2=v8 pose
+    HeadType head = HeadType::AnchorRaw;  // 检测头契约（common/head_types.h）
     int num_classes = 2;
-    int num_kpts = 0;    // model_type=2 时有效
+    int num_kpts = 0;    // head=PoseFused 时有效
+    int reg_max = 16;    // head=AfRaw 时有效（DFL 通道数 = 4*reg_max）
     int gpu = 0;
     int cpu_threads = 1;
     bool no_model = false;   // 冒烟：跳过 ncnn，线程B 假装推理
@@ -121,7 +124,8 @@ void usage(const char* argv0) {
             "  配置: --config 路径（扁平 YAML，key 与下列长选项同名）；CLI 覆盖配置文件\n"
             "        --dump-config 打印最终生效配置后退出\n"
             "  模型: --param P --model M --heads b0,b1,b2 [--in0 NAME] [--in-size WxH]\n"
-            "        [--num-classes N] [--gpu N] [--cpu-threads N]\n"
+            "        [--model-type v5|v8|v9|v11|v8-pose|v8-raw|v9-raw|v11-raw|v10]\n"
+            "        [--num-classes N] [--reg-max 16] [--gpu N] [--cpu-threads N]\n"
             "        [--anchors-s8 w,h,w,h,... --anchors-s16 ... --anchors-s32 ...]\n"
             "        [--no-model --fake-gpu-ms N]   (无模型冒烟)\n"
             "  检测: [--conf 0.3] [--nms 0.6] [--topk 300]\n"
@@ -155,14 +159,15 @@ void apply_kv(Args& a, const std::string& k, const std::string& v) {
     }
     else if (k == "in-size") parse_size(v, a.in_w, a.in_h);
     else if (k == "model-type") {
-        if (v == "v5") a.model_type = 0;
-        else if (v == "v8" || v == "v11") a.model_type = 1;
-        else if (v == "v8-pose" || v == "pose" || v == "v11-pose") a.model_type = 2;
-        else {
-            fprintf(stderr, "model-type 仅支持 v5 / v8 / v8-pose: %s\n", v.c_str());
+        if (!parse_head_type(v, a.head)) {
+            fprintf(stderr,
+                    "model-type 支持 v5 / v8 / v9 / v11 / v8-pose / v8-raw / v9-raw / "
+                    "v11-raw / v10: %s\n",
+                    v.c_str());
             exit(1);
         }
     }
+    else if (k == "reg-max") a.reg_max = atoi(v.c_str());
     else if (k == "num-kpts") a.num_kpts = atoi(v.c_str());
     else if (k == "num-classes") a.num_classes = atoi(v.c_str());
     else if (k == "gpu") a.gpu = atoi(v.c_str());
@@ -237,7 +242,8 @@ void dump_config(const Args& a) {
     fprintf(stderr,
             "# 最终生效配置\n"
             "param: %s\nmodel: %s\nin0: %s\nheads: [%s]\nin-size: %dx%d\n"
-            "model-type: %s\nnum-classes: %d\nnum-kpts: %d\ngpu: %d\ncpu-threads: %d\n"
+            "model-type: %s\nnum-classes: %d\nnum-kpts: %d\nreg-max: %d\ngpu: %d\n"
+            "cpu-threads: %d\n"
             "no-model: %s\nfake-gpu-ms: %d\n"
             "conf: %.3f\nnms: %.3f\ntopk: %d\nserial: %s\ncores-a: %s\ncores-b: %s\n"
             "max-w: %d\nmax-h: %d\nmax-frames: %d\nudp: %s\n"
@@ -253,8 +259,8 @@ void dump_config(const Args& a) {
             }()
                 .c_str(),
             a.in_w, a.in_h,
-            a.model_type == 0 ? "v5" : (a.model_type == 1 ? "v8" : "v8-pose"),
-            a.num_classes, a.num_kpts, a.gpu, a.cpu_threads,
+            head_type_name(a.head),
+            a.num_classes, a.num_kpts, a.reg_max, a.gpu, a.cpu_threads,
             a.no_model ? "true" : "false", a.fake_gpu_ms, a.conf, a.nms, a.topk,
             a.serial ? "true" : "false", a.cores_a.c_str(), a.cores_b.c_str(), a.max_w,
             a.max_h, a.max_frames, a.udp.c_str(), a.tk.association_gate_px,
@@ -293,9 +299,9 @@ void unletterbox_kpts(std::vector<float>& kpts, int num_kpts, int img_w, int img
 struct Ctx {
     Args args;
     Pipeline pipe;
-    AnchorTable tab;      // 仅 model_type=0（v5 契约）使用
-    int c_total = 0;      // pred 通道数（由 model_type 推导）
-    int pred_n = 0;       // 输出总列数（v5=anchor 表 N；v8=模型发现）
+    AnchorTable tab;      // AnchorRaw=anchor 表；AfRaw=网格点表；其余不使用
+    int c_total = 0;      // pred 通道数（由 head 契约推导）
+    int pred_n = 0;       // 输出总列数（AnchorRaw=anchor 表 N；其余由模型发现）
     NcnnInfer infer;
     NullSource cam;  // 采集接口占位：接真实相机时替换为其实现
     Tracker tracker;
@@ -308,31 +314,47 @@ struct Ctx {
 void consume(Ctx& c, Slot* done) {
     const Track* t = c.tracker.predict();
     if (!done->error) {
-        if (c.args.model_type == 0) {
-            done->dets = x86::decode(done->pred.data(), c.tab, c.args.num_classes,
-                                     c.args.conf);
-            done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
-        } else if (c.args.model_type == 1) {
-            done->dets = x86::decode_v8(done->pred.data(), c.args.num_classes, c.pred_n,
-                                        c.args.conf);
-            done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
-        } else {  // v8 pose：关键点随框过 NMS
-            const int kstride = 3 * c.args.num_kpts;
-            std::vector<float> kpts_raw;
-            x86::decode_v8_pose(done->pred.data(), c.args.num_classes,
-                                c.args.num_kpts, c.pred_n, c.args.conf, done->dets,
-                                kpts_raw);
-            auto idx = x86::nms_indices(done->dets, c.args.nms, c.args.topk);
-            done->kept.clear();
-            done->kpts.clear();
-            for (int32_t i : idx) {
-                done->kept.push_back(done->dets[(size_t)i]);
-                done->kpts.insert(done->kpts.end(), kpts_raw.begin() + (size_t)i * kstride,
-                                  kpts_raw.begin() + (size_t)(i + 1) * kstride);
+        switch (c.args.head) {
+            case HeadType::AnchorRaw:
+                done->dets = x86::decode(done->pred.data(), c.tab, c.args.num_classes,
+                                         c.args.conf);
+                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                break;
+            case HeadType::AfFused:
+                done->dets = x86::decode_v8(done->pred.data(), c.args.num_classes,
+                                            c.pred_n, c.args.conf);
+                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                break;
+            case HeadType::AfRaw:
+                done->dets = x86::decode_af_raw(done->pred.data(), c.tab,
+                                                c.args.num_classes, c.args.reg_max,
+                                                c.args.conf);
+                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                break;
+            case HeadType::E2E:
+                // NMS-free 头：模型自带 one-to-one 分配，仅阈值过滤
+                done->kept = x86::decode_e2e(done->pred.data(), c.pred_n, c.args.conf);
+                break;
+            case HeadType::PoseFused: {  // 关键点随框过 NMS
+                const int kstride = 3 * c.args.num_kpts;
+                std::vector<float> kpts_raw;
+                x86::decode_v8_pose(done->pred.data(), c.args.num_classes,
+                                    c.args.num_kpts, c.pred_n, c.args.conf, done->dets,
+                                    kpts_raw);
+                auto idx = x86::nms_indices(done->dets, c.args.nms, c.args.topk);
+                done->kept.clear();
+                done->kpts.clear();
+                for (int32_t i : idx) {
+                    done->kept.push_back(done->dets[(size_t)i]);
+                    done->kpts.insert(done->kpts.end(),
+                                      kpts_raw.begin() + (size_t)i * kstride,
+                                      kpts_raw.begin() + (size_t)(i + 1) * kstride);
+                }
+                break;
             }
         }
         unletterbox(done->kept, done->img_w, done->img_h, c.args.in_w, c.args.in_h);
-        if (c.args.model_type == 2)
+        if (c.args.head == HeadType::PoseFused)
             unletterbox_kpts(done->kpts, c.args.num_kpts, done->img_w, done->img_h,
                              c.args.in_w, c.args.in_h);
         t = c.tracker.update(done->kept, done->img_w, done->img_h, c.frame_id);
@@ -355,7 +377,7 @@ void consume(Ctx& c, Slot* done) {
         pkt.score = t->score;
         // pose：附本帧命中框的关键点（coast/丢失帧不带）
         int lm = c.tracker.last_match();
-        if (c.args.model_type == 2 && lm >= 0 && !done->error) {
+        if (c.args.head == HeadType::PoseFused && lm >= 0 && !done->error) {
             int nk = c.args.num_kpts;
             pkt.kpt_count = (uint32_t)std::min(nk, (int)ControlPacket::MAX_KPTS);
             const float* src = done->kpts.data() + (size_t)lm * 3 * nk;
@@ -482,16 +504,17 @@ int main(int argc, char** argv) {
     signal(SIGINT, on_sigint);
     signal(SIGTERM, on_sigint);
 
-    // v8 pose 必须给关键点数
-    if (c.args.model_type == 2 && c.args.num_kpts <= 0) {
+    // pose 必须给关键点数
+    if (c.args.head == HeadType::PoseFused && c.args.num_kpts <= 0) {
         fprintf(stderr, "[yolo_rt] model-type=v8-pose 需要 num-kpts > 0\n");
         return 1;
     }
 
-    // v5 契约才需要 anchor 表：配置给了三级 anchor 就用配置的，否则 YOLOv5s P5 默认。
-    // v8/v11 anchor-free，N 由模型输出自动发现。
+    // AnchorRaw 才需要 anchor 表：配置给了三级 anchor 就用配置的，否则 YOLOv5s P5 默认。
+    // AfRaw 的网格表由 ncnn_infer 探测输出形状后给出；--no-model 时用默认三级网格。
+    // 其余 anchor-free 契约的 N 由模型输出自动发现。
     int expected_n = 0;
-    if (c.args.model_type == 0) {
+    if (c.args.head == HeadType::AnchorRaw) {
         if (!c.args.anchors_s8.empty() && !c.args.anchors_s16.empty() &&
             !c.args.anchors_s32.empty()) {
             auto mk = [](int stride, int gw, int gh, const std::vector<float>& fl) {
@@ -511,6 +534,9 @@ int main(int argc, char** argv) {
             c.tab = build_anchor_table(default_levels(c.args.in_w, c.args.in_h));
         }
         expected_n = c.tab.n;
+    } else if (c.args.head == HeadType::AfRaw && c.args.no_model) {
+        c.tab = build_point_table(default_point_levels(c.args.in_w, c.args.in_h));
+        expected_n = c.tab.n;
     }
 
     if (!c.args.no_model) {
@@ -521,23 +547,23 @@ int main(int argc, char** argv) {
         icfg.head_names = c.args.heads;
         icfg.in_w = c.args.in_w;
         icfg.in_h = c.args.in_h;
-        icfg.model_type = c.args.model_type;
+        icfg.head = c.args.head;
         icfg.num_classes = c.args.num_classes;
         icfg.num_kpts = c.args.num_kpts;
+        icfg.reg_max = c.args.reg_max;
         icfg.gpu_index = c.args.gpu;
         icfg.cpu_threads = c.args.cpu_threads;
-        // 加载时试跑校验：v5 校验通道数与 anchor 总数；v8 校验通道数并发现 N。
-        // 尺寸不匹配启动即报错，不会带病运行。
+        // 加载时试跑校验：AnchorRaw 校验通道数与 anchor 总数；AfRaw 顺带推导网格表；
+        // 其余校验通道数并发现 N。尺寸不匹配启动即报错，不会带病运行。
         if (!c.infer.load(icfg, expected_n)) return 1;
         c.c_total = c.infer.c_total();
         c.pred_n = c.infer.pred_n();
+        if (c.args.head == HeadType::AfRaw) c.tab = c.infer.grid();
     } else {
         fprintf(stderr, "[yolo_rt] --no-model 冒烟模式（线程B 假推理 %dms/帧）\n",
                 c.args.fake_gpu_ms);
-        c.c_total = c.args.model_type == 2
-                        ? 4 + c.args.num_classes + 3 * c.args.num_kpts
-                        : (c.args.model_type == 1 ? 4 + c.args.num_classes
-                                                  : 5 + c.args.num_classes);
+        c.c_total = head_channels(c.args.head, c.args.num_classes, c.args.num_kpts,
+                                  c.args.reg_max);
         c.pred_n = expected_n > 0 ? expected_n : 8400;
     }
     c.pipe.init(c.args.in_w, c.args.in_h, c.c_total, c.pred_n, c.args.max_w,

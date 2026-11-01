@@ -214,7 +214,7 @@ FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
 
 ---
 
-### 5.3 实时流水线应用 `app/yolo_rt`（v5 / v8/v11 / pose）
+### 5.3 实时流水线应用 `app/yolo_rt`（v5 / v8/v9/v11 / v10 / pose）
 
 `app/yolo_rt` 是按 `../PIPELINE.md` 实现的整机应用：两线程 + 三槽位 + 丢旧帧，
 线程A 采集/预处理/decode/NMS/卡尔曼/UDP 控制，线程B 提交 ncnn Vulkan 推理。
@@ -236,11 +236,12 @@ FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
 | **模型契约** |||
 | `param` / `model` | ncnn `.param` / `.bin` 路径 | 必填 |
 | `in0` | 输入 blob 名 | `in0` |
-| `model-type` | `v5`=切头契约 `[4+1+nc,N]`；`v8`=v8/v11 检测（Detect 头烘在图内）`[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]` | `v5` |
-| `heads` | 输出 blob 名列表。v5：三个，按 stride 8→16→32；v8/pose：通常单个拼接输出 | 必填 |
+| `model-type` | 检测头契约（`common/head_types.h`）：`v5`=anchor-based 切头 `[4+1+nc,N]`；`v8`/`v9`/`v11`=Detect 头烘在图内 `[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]`；`v8-raw`/`v9-raw`/`v11-raw`=切在 DFL 前的逐层 raw `[4*reg_max+nc,h,w]`；`v10`=端到端 NMS-free `[N,6]` | `v5` |
+| `heads` | 输出 blob 名列表。v5/v8-raw：逐层，按 stride 8→16→32；v8/v9/v11/pose/v10：通常单个拼接输出 | 必填 |
 | `in-size` | 网络输入 `WxH`，须被 32 整除；letterbox 与 anchor 网格的唯一来源 | `640x640` |
-| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8: 4+nc；pose: 4+nc+3K） | `2` |
+| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8: 4+nc；pose: 4+nc+3K；v8-raw: 4×reg_max+nc；v10: 恒 6） | `2` |
 | `num-kpts` | 仅 `v8-pose`：每框关键点数（任意，角点扫描场景） | `0` |
+| `reg-max` | 仅 `v8-raw` 系：DFL 的 reg_max（Ultralytics v8/v9/v11 标准 = 16） | `16` |
 | `anchors-s8/s16/s32` | 仅 `v5`：三级 anchor（w,h 平铺）。不给 = YOLOv5s P5 默认；训练开 autoanchor 时**必须从训练配置抄** | 空=默认 |
 | `gpu` | Vulkan 设备序号（`vulkaninfo --summary` 查） | `0` |
 | `cpu-threads` | ncnn CPU fallback 层线程数 | `1` |
@@ -266,7 +267,7 @@ FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
 | `no-model` | 跳过 ncnn，线程B 假推理（冒烟验证调度/关机） | `false` |
 | `fake-gpu-ms` | 假推理每帧睡眠毫秒数 | `10` |
 
-#### 三种模型的配置与调用
+#### 五种模型的配置与调用
 
 **① YOLOv5 系（切头导出，anchor-based）**
 
@@ -285,22 +286,23 @@ anchors-s16: [30,61, 62,45, 59,119]
 anchors-s32: [116,90, 156,198, 373,326]
 ```
 
-**② YOLOv8 / v11 检测（Detect 头烘在图内，anchor-free）**
+**② YOLOv8 / v9 / v11 检测（Detect 头烘在图内，anchor-free）**
 
 导出：Ultralytics 默认 `model.export(format='onnx')`（DFL+网格解码已在图内，
 GPU 上跑）`→ pnnx → ncnn`。输出为单个拼接 blob `[1, 4+nc, N]`。**不需要 anchor 表。**
+v9 推理图检测头与 v8 同构（PGI 辅助分支导出时已剥离），同走此路径。
 
 ```yaml
 # pipeline_v8.yaml
 param: weights/yolov8n.param
 model: weights/yolov8n.bin
-model-type: v8
+model-type: v8                     # v9 / v11 模型写 v9 / v11 等价
 heads: [output0]                   # 单个输出（名字以 pnnx 转换后为准）
 in-size: 640x640
 num-classes: 1
 ```
 
-**③ YOLOv8 / v11 pose（角点/关键点扫描，点数任意）**
+**③ YOLOv8 / v9 / v11 pose（角点/关键点扫描，点数任意）**
 
 输出 `[1, 4+nc+3×nkpt, N]`，关键点 (x,y,conf) 像素。关键点随框过 NMS，
 UDP 控制包附带被跟踪框命中当帧的关键点（≤32 点，coast/丢失帧 `kpt_count=0`）。
@@ -316,14 +318,49 @@ num-classes: 1
 num-kpts: 7                        # 你的关键点数
 ```
 
-三种类型共用同一调用：
+**④ YOLOv8 / v9 / v11 原生 raw（Detect 头切在 DFL 之前，C++ 侧 DFL 解码）**
+
+导出：Detect 头在 DFL 之前切开，逐层 concat(box, cls) 后导出（§0.2 契约），
+每层一个 blob `[4*reg_max+nc, h, w]`。DFL + dist2bbox 由 `x86::decode_af_raw`
+完成，**网格点表在加载时按输出形状推导——换输入尺寸不用重新导出模型**
+（②的烘图路径则必须重新导出）。
+
+```yaml
+# pipeline_v8raw.yaml
+param: weights/yolov11s.param
+model: weights/yolov11s.bin
+model-type: v11-raw                # v8-raw / v9-raw 等价
+heads: [out8, out16, out32]        # 逐层 blob，按 stride 8→16→32
+in-size: 640x640
+num-classes: 2
+reg-max: 16                        # Ultralytics 标准值，一般不用改
+```
+
+**⑤ YOLOv10（端到端 NMS-free，无 anchor 无 NMS）**
+
+导出：`model.export(format='onnx', end2end=True)`（或 v10 默认 one-to-one 头）
+`→ pnnx → ncnn`。输出 `[1, N, 6]`（x1,y1,x2,y2,score,cls，输入图像素），
+box-major 布局由 `ncnn_infer` 自动转置。**不做 NMS**（`nms/topk` 配置不生效）。
+
+```yaml
+# pipeline_v10.yaml
+param: weights/yolov10n.param
+model: weights/yolov10n.bin
+model-type: v10
+heads: [output0]
+in-size: 640x640
+num-classes: 2
+```
+
+五种类型共用同一调用：
 
 ```bash
 ./build/app/yolo_rt --config app/pipeline_v5.yaml     # 换成对应 yaml
 ```
 
-**防大小不匹配**：加载时试跑一帧校验输出通道数（v5 还校验 anchor 总数）——
-配置与模型不一致**启动即报错**，不会带病运行。
+**防大小不匹配**：加载时试跑一帧校验输出通道数与布局（v5 还校验 anchor 总数，
+v8-raw 顺带推导网格 stride）——配置与模型不一致**启动即报错**，不会带病运行。
+box-major `[N, C]` 输出（v10 典型，fused 模型转置导出亦可）自动识别并转置。
 
 ---
 

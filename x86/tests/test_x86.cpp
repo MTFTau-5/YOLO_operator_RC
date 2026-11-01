@@ -7,9 +7,12 @@
 #include <string>
 #include <vector>
 
+#include "../common/head_types.h"
 #include "../common/testio.h"
 #include "../common/yolo_ref.h"
+#include "../decode_af_raw.h"
 #include "../decode_avx2.h"
+#include "../decode_e2e.h"
 #include "../decode_v8.h"
 #include "../nms_simd.h"
 #include "../preprocess_avx2.h"
@@ -267,8 +270,90 @@ int main(int argc, char** argv) {
                     ok ? "PASS" : "FAIL", gcount, keep.size(), max_det_err, max_kpt_err);
     }
 
+    // ---- v8/v9/v11 原生 raw（DFL 在 C++ 侧）：[4*reg_max+nc, N] ----
+    double bench_afraw = 0.0;
+    {
+        const std::string dir = root + "/case9_afraw";
+        auto meta = yoloop::testio::load_meta(dir);
+        const int nc = yoloop::testio::meta_int(meta, "num_classes");
+        const int n = yoloop::testio::meta_int(meta, "num_anchors");
+        const int rm = yoloop::testio::meta_int(meta, "reg_max");
+        const float conf = yoloop::testio::meta_float(meta, "conf_thr");
+        const float nth = yoloop::testio::meta_float(meta, "nms_thr");
+        const int iw = yoloop::testio::meta_int(meta, "input_w");
+        const int ih = yoloop::testio::meta_int(meta, "input_h");
+
+        auto pred = yoloop::testio::load_f32(dir + "/pred.bin");
+        auto gdec = yoloop::testio::load_dets(dir + "/golden_decode.bin");
+        auto gnms = yoloop::testio::load_dets(dir + "/golden_nms.bin");
+        if ((int)pred.size() != (4 * rm + nc) * n) {
+            std::fprintf(stderr, "[case9] pred.bin 尺寸不符: %zu != %d\n", pred.size(),
+                         (4 * rm + nc) * n);
+            return 1;
+        }
+        auto tab = yoloop::build_point_table(yoloop::default_point_levels(iw, ih));
+        if (tab.n != n) {
+            std::fprintf(stderr, "[case9] 网格点表不符: %d != %d\n", tab.n, n);
+            return 1;
+        }
+
+        auto rdec = yoloop::ref::decode_af_raw(pred.data(), tab, nc, rm, conf);
+        auto xdec = yoloop::x86::decode_af_raw(pred.data(), tab, nc, rm, conf);
+        auto m_ref = match_sets(rdec, gdec, 1e-2, 1e-3);
+        auto m_x86 = match_sets(xdec, gdec, 1e-2, 1e-3);
+        bool ok = m_ref.ok && m_x86.ok;
+        all_ok = all_ok && ok;
+        std::printf("[case9_afraw] decode %s | golden=%zu ref=%zu x86=%zu | "
+                    "ref_err coord=%.3g score=%.3g | x86_err coord=%.3g score=%.3g%s\n",
+                    ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
+                    m_ref.max_coord_err, m_ref.max_score_err, m_x86.max_coord_err,
+                    m_x86.max_score_err, m_x86.unmatched ? " (unmatched!)" : "");
+
+        auto rnms = yoloop::ref::nms(gdec, nth);
+        auto xnms = yoloop::x86::nms(gdec, nth, /*topk=*/0);
+        auto n_ref = match_sets(rnms, gnms, 1e-2, 1e-3);
+        auto n_x86 = match_sets(xnms, gnms, 1e-2, 1e-3);
+        bool nok = n_ref.ok && n_x86.ok;
+        all_ok = all_ok && nok;
+        std::printf("[case9_afraw] nms    %s | golden=%zu ref=%zu x86=%zu%s\n",
+                    nok ? "PASS" : "FAIL", gnms.size(), rnms.size(), xnms.size(),
+                    n_x86.unmatched ? " (unmatched!)" : "");
+
+        bench_afraw = bench_us([&] {
+            auto v = yoloop::x86::decode_af_raw(pred.data(), tab, nc, rm, conf);
+            g_sink = v.size();
+        }, 1000);
+    }
+
+    // ---- v10 端到端 NMS-free：[6, N]，仅阈值过滤 ----
+    {
+        const std::string dir = root + "/case10_e2e";
+        auto meta = yoloop::testio::load_meta(dir);
+        const int n = yoloop::testio::meta_int(meta, "num_anchors");
+        const float conf = yoloop::testio::meta_float(meta, "conf_thr");
+
+        auto pred = yoloop::testio::load_f32(dir + "/pred.bin");
+        auto gdec = yoloop::testio::load_dets(dir + "/golden_decode.bin");
+        if ((int)pred.size() != 6 * n) {
+            std::fprintf(stderr, "[case10] pred.bin 尺寸不符: %zu != %d\n", pred.size(),
+                         6 * n);
+            return 1;
+        }
+        auto rdec = yoloop::ref::decode_e2e(pred.data(), n, conf);
+        auto xdec = yoloop::x86::decode_e2e(pred.data(), n, conf);
+        auto m_ref = match_sets(rdec, gdec, 1e-3, 1e-5);
+        auto m_x86 = match_sets(xdec, gdec, 1e-3, 1e-5);
+        bool ok = m_ref.ok && m_x86.ok;
+        all_ok = all_ok && ok;
+        std::printf("[case10_e2e] decode %s | golden=%zu ref=%zu x86=%zu | "
+                    "err coord=%.3g score=%.3g\n",
+                    ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
+                    m_x86.max_coord_err, m_x86.max_score_err);
+    }
+
     std::printf("\n== 基准（平均耗时） ==\n");
     std::printf("decode      case2_dense N=25200     : %9.1f us  (1000 rounds)\n", bench_decode);
+    std::printf("decode_af   case9_afraw N=8400      : %9.1f us  (1000 rounds)\n", bench_afraw);
     std::printf("nms         case2_dense topk=300    : %9.1f us  (1000 rounds)\n", bench_nms);
     std::printf("preprocess  1280x720 -> 640x640     : %9.1f us  (100 rounds)\n", bench_pre);
     std::printf("\n%s\n", all_ok ? "ALL PASS" : "FAILED");

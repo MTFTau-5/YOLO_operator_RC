@@ -6,13 +6,18 @@ param: weights/best.param        # ncnn .param 路径
 model: weights/best.bin          # ncnn .bin 路径
 in0: in0                         # 输入 blob 名
 model-type: v5                   # v5=YOLOv5 契约(切头, [4+1+nc,N], 需 anchor 表)
-                                 # v8=v8/v11 检测(Detect 头烘在图内, 输出 [4+nc,N])
-                                 # v8-pose=v8/v11 姿态(输出 [4+nc+3*num-kpts, N])
-heads: [out8, out16, out32]      # v5: 三个输出 blob，按 stride 8→16→32；
-                                 # v8/v8-pose: 通常单个拼接输出，如 [output0]
+                                 # v8/v9/v11=检测(Detect 头烘在图内, 输出 [4+nc,N])
+                                 # v8-pose=v8/v9/v11 姿态(输出 [4+nc+3*num-kpts, N])
+                                 # v8-raw/v9-raw/v11-raw=切在 DFL 前的逐层 raw
+                                 #   [4*reg_max+nc,h,w]，C++ 侧 DFL 解码，输入尺寸自由
+                                 # v10=端到端 NMS-free(输出 [N,6]，不做 NMS)
+heads: [out8, out16, out32]      # v5/v8-raw 系: 三个输出 blob，按 stride 8→16→32；
+                                 # v8/v8-pose/v10: 通常单个拼接输出，如 [output0]
 in-size: 640x640                 # 网络输入尺寸（须能被 32 整除）
 num-classes: 2                   # 类别数；通道数校验 = 4+1+nc (v5) / 4+nc (v8)
+                                 #   / 4+nc+3K (pose) / 4*reg_max+nc (raw) / 6 (v10)
 num-kpts: 0                      # 仅 v8-pose：每框关键点数（个数任意，如角点扫描）
+reg-max: 16                      # 仅 v8-raw 系：DFL reg_max（Ultralytics 标准 = 16）
 
 # anchor 表（仅 model-type=v5 用；不给 = YOLOv5s P5 默认。换模型时从训练配置抄过来，
 # 每级 w,h 平铺，个数随意）

@@ -12,6 +12,19 @@ namespace ref {
 std::vector<Detection> decode(const float* pred, const AnchorTable& tab,
                               int num_classes, float conf_thr);
 
+// AfRaw（v8/v9/v11 切头导出）：pred channel-major [4*reg_max + num_classes, pts.n]
+//   通道 0..4*reg_max-1 : DFL logits，按边分组（l,t,r,b 各 reg_max 个）
+//   通道 4*reg_max..    : num_classes 个类别 logit
+// pts: build_point_table 产物（gx/gy = 网格中心 x+0.5，stride = 层步长）
+// 完整 softmax/sigmoid，不做快筛；输出未做 NMS 的 Detection 列表
+std::vector<Detection> decode_af_raw(const float* pred, const AnchorTable& pts,
+                                     int num_classes, int reg_max, float conf_thr);
+
+// E2E（v10 NMS-free）：pred channel-major [6, N]
+//   row 0..3 = x1,y1,x2,y2（输入图像素），row 4 = score，row 5 = 类别
+// 仅阈值过滤，保序输出，不做 NMS
+std::vector<Detection> decode_e2e(const float* pred, int n, float conf_thr);
+
 // class-aware 贪心 NMS：按 score 降序，同类且 IoU > nms_thr 则抑制
 // 输入为 decode 输出（任意顺序），内部排序
 std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr);

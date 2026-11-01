@@ -20,6 +20,7 @@ NcnnInfer::~NcnnInfer() {
 bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
     cfg_ = cfg;
     pred_n_ = 0;
+    grid_ = AnchorTable{};
 
     net_ = new ncnn::Net();
     // §8.3：Vulkan fp16 全家桶；gpu_index < 0 时走纯 CPU
@@ -56,6 +57,8 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
     int total = 0;
     const int c_total = this->c_total();
     head_n_.clear();
+    head_boxmaj_.clear();
+    std::vector<LevelSpec> af_levels;  // AfRaw：逐层网格（stride 由输入尺寸推断）
     for (const auto& name : cfg_.head_names) {
         ncnn::Mat out;
         if (ex.extract(name.c_str(), out) != 0) {
@@ -63,37 +66,71 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
             return false;
         }
         int c, n;
-        if (out.dims == 3 && out.c > 1) {  // [C, h, w] 逐 channel 平面（v5 逐 head）
+        char boxmaj = 0;
+        if (out.dims == 3 && out.c > 1) {  // [C, h, w] 逐 channel 平面（逐 head raw 输出）
             c = out.c;
             n = out.w * out.h;
-        } else if (out.dims == 3) {  // [1, C, N] 拼接输出（v8 典型）
-            c = out.h;
-            n = out.w;
-        } else if (out.dims == 2) {  // [C, N] 已压平
-            c = out.h;
-            n = out.w;
+            if (cfg_.head == HeadType::AfRaw) {
+                if (cfg_.in_w % out.w != 0 || cfg_.in_h % out.h != 0 ||
+                    cfg_.in_w / out.w != cfg_.in_h / out.h) {
+                    fprintf(stderr,
+                            "[ncnn] head '%s' 网格 %dx%d 与输入 %dx%d 不成整数 stride\n",
+                            name.c_str(), out.w, out.h, cfg_.in_w, cfg_.in_h);
+                    return false;
+                }
+                af_levels.push_back({cfg_.in_w / out.w, out.w, out.h, {}});
+            }
+        } else if (out.dims == 3) {  // [1, C, N] 拼接输出，或 [1, N, C] box-major
+            if (out.h == c_total) {
+                c = out.h;
+                n = out.w;
+            } else if (out.w == c_total) {
+                c = out.w;
+                n = out.h;
+                boxmaj = 1;
+            } else {
+                fprintf(stderr, "[ncnn] head '%s' 形状 [1,%d,%d] 与通道数 %d 不符\n",
+                        name.c_str(), out.h, out.w, c_total);
+                return false;
+            }
+        } else if (out.dims == 2) {  // [C, N] 已压平，或 [N, C] box-major
+            if (out.h == c_total) {
+                c = out.h;
+                n = out.w;
+            } else if (out.w == c_total) {
+                c = out.w;
+                n = out.h;
+                boxmaj = 1;
+            } else {
+                fprintf(stderr, "[ncnn] head '%s' 形状 [%d,%d] 与通道数 %d 不符\n",
+                        name.c_str(), out.h, out.w, c_total);
+                return false;
+            }
         } else {
             fprintf(stderr, "[ncnn] head '%s' dims=%d 不支持\n", name.c_str(), out.dims);
             return false;
         }
         if (c != c_total) {
-            fprintf(stderr, "[ncnn] head '%s' 通道数 %d, 期望 %d（model_type=%d, nc=%d, nkpt=%d）\n",
-                    name.c_str(), c, c_total, cfg_.model_type, cfg_.num_classes,
-                    cfg_.num_kpts);
+            fprintf(stderr,
+                    "[ncnn] head '%s' 通道数 %d, 期望 %d（head=%s, nc=%d, nkpt=%d, reg_max=%d）\n",
+                    name.c_str(), c, c_total, head_type_name(cfg_.head), cfg_.num_classes,
+                    cfg_.num_kpts, cfg_.reg_max);
             return false;
         }
         head_n_.push_back(n);
+        head_boxmaj_.push_back(boxmaj);
         total += n;
     }
     pred_n_ = total;
+    if (cfg_.head == HeadType::AfRaw) grid_ = build_point_table(af_levels);
     if (expected_n > 0 && total != expected_n) {
         fprintf(stderr, "[ncnn] 输出 anchor 总数 %d 与 anchor 表 N=%d 不一致\n", total,
                 expected_n);
         return false;
     }
-    fprintf(stderr, "[ncnn] 加载完成: %s / %s, type=%d, N=%d, C=%d, Vulkan=%d\n",
-            cfg_.param_path.c_str(), cfg_.model_path.c_str(), cfg_.model_type, pred_n_,
-            c_total, (int)net_->opt.use_vulkan_compute);
+    fprintf(stderr, "[ncnn] 加载完成: %s / %s, head=%s, N=%d, C=%d, Vulkan=%d\n",
+            cfg_.param_path.c_str(), cfg_.model_path.c_str(), head_type_name(cfg_.head),
+            pred_n_, c_total, (int)net_->opt.use_vulkan_compute);
     return true;
 }
 
@@ -110,11 +147,19 @@ bool NcnnInfer::infer(const float* blob, float* pred) {
         // extract type=0：已转 fp32、解 packing。目标布局 channel-major [C, N]。
         const int n = head_n_[i];
         if (out.dims == 3 && out.c > 1) {
-            // [C, h, w]：逐 channel 平面拷贝（v5 逐 head 契约）
+            // [C, h, w]：逐 channel 平面拷贝（逐 head raw 契约）
             for (int c = 0; c < c_total; ++c) {
                 ncnn::Mat ch = out.channel(c);
                 std::memcpy(pred + (size_t)c * pred_n_ + n_off, (const float*)ch.data,
                             (size_t)n * sizeof(float));
+            }
+        } else if (head_boxmaj_[i]) {
+            // box-major [N, C] / [1, N, C]：每行一个 box，转置为 channel-major
+            ncnn::Mat flat = (out.dims == 3) ? out.channel(0) : out;
+            for (int j = 0; j < n; ++j) {
+                const float* row = flat.row(j);
+                for (int c = 0; c < c_total; ++c)
+                    pred[(size_t)c * pred_n_ + n_off + j] = row[c];
             }
         } else {
             // [C, N] 或 [1, C, N]：行主序逐行拷贝（多输出列向拼接也正确）

@@ -44,6 +44,12 @@
    - 导出 ONNX（opset ≥ 12），先过 onnxsim 化简；
    - **切掉 Detect 层的 decode 部分**，三个 head 的原始卷积输出作为模型输出，decode/NMS 在部署侧实现（图干净、量化友好）；
    - 注意记录三个输出 blob 与 stride（8/16/32）的对应关系。
+5. **多代 head 的导出契约**（`yolo_rt` 五种 `model-type`，见 `common/head_types.h`）：
+   - **v5（anchor-based）**：按上文切 decode，逐层 `[na*(5+nc), h, w]`，C++ 侧 anchor decode；
+   - **v8/v9/v11（fused）**：Ultralytics 默认导出，Detect 头（DFL+网格+sigmoid）留图内，单输出 `[1, 4+nc, N]`。注意 anchor 网格烘为图内常量，**换输入尺寸必须重新导出**；v9/v11 检测头与 v8 同构（v9 的 PGI 辅助分支导出推理图时已剥离），直接复用此路径；
+   - **v8/v9/v11（raw，推荐需要换输入尺寸时用）**：Detect 头切在 DFL 之前，逐层 `concat(box, cls)` 导出 `[4*reg_max+nc, h, w]`（box 通道在前、按 l/t/r/b 边分组，cls 为 raw logits），C++ 侧 `decode_af_raw` 做 DFL+dist2bbox；网格 stride 由加载时输出形状推导，**输入尺寸自由**；
+   - **v10（端到端）**：`model.export(end2end=True)` 或 v10 默认 one-to-one 头，输出 `[1, N, 6]`（x1,y1,x2,y2,score,cls），部署侧仅阈值过滤，不做 NMS。
+   - 说明：TAL、FreeAnchor、TOOD 等是**训练期**标签分配器/头设计，只影响权重，推理输出必落于上述契约之一，按契约对接即可。
 
 ### 0.3 关键数学技巧（通用）
 

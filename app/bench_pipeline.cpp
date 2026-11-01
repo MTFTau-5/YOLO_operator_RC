@@ -21,6 +21,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "decode_af_raw.h"
+#include "decode_avx2.h"
+#include "decode_e2e.h"
 #include "decode_v8.h"
 #include "ncnn_infer.h"
 #include "nms_simd.h"
@@ -37,7 +40,8 @@ struct BArgs {
     std::string in0 = "in0";
     std::vector<std::string> heads;
     int in_w = 640, in_h = 640;
-    int model_type = 2;
+    HeadType head = HeadType::PoseFused;
+    int reg_max = 16;
     int num_classes = 1;
     int num_kpts = 4;
     int gpu = 0;
@@ -71,8 +75,12 @@ BArgs parse(int argc, char** argv) {
         else if (k == "--in-size") sscanf(val(i).c_str(), "%dx%d", &a.in_w, &a.in_h);
         else if (k == "--model-type") {
             std::string v = val(i);
-            a.model_type = (v == "v5") ? 0 : (v == "v8" ? 1 : 2);
+            if (!parse_head_type(v, a.head)) {
+                fprintf(stderr, "未知 model-type: %s\n", v.c_str());
+                exit(1);
+            }
         }
+        else if (k == "--reg-max") a.reg_max = atoi(val(i).c_str());
         else if (k == "--num-classes") a.num_classes = atoi(val(i).c_str());
         else if (k == "--num-kpts") a.num_kpts = atoi(val(i).c_str());
         else if (k == "--gpu") a.gpu = atoi(val(i).c_str());
@@ -167,9 +175,10 @@ int main(int argc, char** argv) {
     ic.head_names = a.heads;
     ic.in_w = a.in_w;
     ic.in_h = a.in_h;
-    ic.model_type = a.model_type;
+    ic.head = a.head;
     ic.num_classes = a.num_classes;
     ic.num_kpts = a.num_kpts;
+    ic.reg_max = a.reg_max;
     ic.gpu_index = a.gpu;
     ic.cpu_threads = a.threads;
     if (!infer.load(ic, 0)) return 1;
@@ -181,20 +190,43 @@ int main(int argc, char** argv) {
     Tracker tracker;
     Bench bm;
 
+    // AnchorRaw 需要 anchor 表（无配置入口，用 YOLOv5s P5 默认）；AfRaw 用探测推导的网格表
+    AnchorTable tab;
+    if (a.head == HeadType::AnchorRaw)
+        tab = build_anchor_table(default_levels(a.in_w, a.in_h));
+    else if (a.head == HeadType::AfRaw)
+        tab = infer.grid();
+
     auto decode_track = [&](Slot* s, Bench& b) {
         auto t0 = std::chrono::steady_clock::now();
         std::vector<Detection> kept;
         std::vector<float> kpts_raw;
-        if (a.model_type == 2) {
-            x86::decode_v8_pose(s->pred.data(), a.num_classes, a.num_kpts, infer.pred_n(),
-                                a.conf, s->dets, kpts_raw);
-            auto idx = x86::nms_indices(s->dets, a.nms, a.topk);
-            kept.reserve(idx.size());
-            for (int32_t i : idx) kept.push_back(s->dets[(size_t)i]);
-        } else {
-            kept = x86::nms(x86::decode_v8(s->pred.data(), a.num_classes, infer.pred_n(),
-                                           a.conf),
-                            a.nms, a.topk);
+        switch (a.head) {
+            case HeadType::PoseFused: {
+                x86::decode_v8_pose(s->pred.data(), a.num_classes, a.num_kpts,
+                                    infer.pred_n(), a.conf, s->dets, kpts_raw);
+                auto idx = x86::nms_indices(s->dets, a.nms, a.topk);
+                kept.reserve(idx.size());
+                for (int32_t i : idx) kept.push_back(s->dets[(size_t)i]);
+                break;
+            }
+            case HeadType::AnchorRaw:
+                kept = x86::nms(x86::decode(s->pred.data(), tab, a.num_classes, a.conf),
+                                a.nms, a.topk);
+                break;
+            case HeadType::AfRaw:
+                kept = x86::nms(x86::decode_af_raw(s->pred.data(), tab, a.num_classes,
+                                                   a.reg_max, a.conf),
+                                a.nms, a.topk);
+                break;
+            case HeadType::E2E:
+                kept = x86::decode_e2e(s->pred.data(), infer.pred_n(), a.conf);
+                break;
+            case HeadType::AfFused:
+                kept = x86::nms(x86::decode_v8(s->pred.data(), a.num_classes,
+                                               infer.pred_n(), a.conf),
+                                a.nms, a.topk);
+                break;
         }
         auto t1 = std::chrono::steady_clock::now();
         tracker.predict();

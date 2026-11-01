@@ -1,4 +1,3 @@
-// 标量参考实现 —— 与 tools/gen_test_vectors.py 的 numpy 实现严格同数学
 #include "yolo_ref.h"
 
 #include <algorithm>
@@ -39,6 +38,67 @@ std::vector<Detection> decode(const float* pred, const AnchorTable& tab,
         out.push_back(d);
     }
     (void)C;
+    return out;
+}
+
+// DFL：reg_max 个 logit 的 softmax 期望 Σk·p(k)。减 max 防溢出（softmax 平移不变）。
+static inline float dfl_expect(const float* logits, size_t stride_n, int reg_max) {
+    float m = logits[0];
+    for (int k = 1; k < reg_max; ++k) m = std::max(m, logits[(size_t)k * stride_n]);
+    float sum = 0.f, acc = 0.f;
+    for (int k = 0; k < reg_max; ++k) {
+        float p = expf(logits[(size_t)k * stride_n] - m);
+        sum += p;
+        acc += p * (float)k;
+    }
+    return acc / sum;
+}
+
+std::vector<Detection> decode_af_raw(const float* pred, const AnchorTable& pts,
+                                     int num_classes, int reg_max, float conf_thr) {
+    const int N = pts.n;
+    const float* cls_base = pred + (size_t)4 * reg_max * N;
+    std::vector<Detection> out;
+    for (int i = 0; i < N; ++i) {
+        int best = 0;
+        float best_logit = cls_base[i];
+        for (int c = 1; c < num_classes; ++c) {
+            float v = cls_base[(size_t)c * N + i];
+            if (v > best_logit) { best_logit = v; best = c; }
+        }
+        float score = sigmoid(best_logit);
+        if (score < conf_thr) continue;
+
+        const float* box = pred + i;  // 4 边 × reg_max 通道，通道步长 N
+        float dl = dfl_expect(box + (size_t)0 * reg_max * N, (size_t)N, reg_max);
+        float dt = dfl_expect(box + (size_t)1 * reg_max * N, (size_t)N, reg_max);
+        float dr = dfl_expect(box + (size_t)2 * reg_max * N, (size_t)N, reg_max);
+        float db = dfl_expect(box + (size_t)3 * reg_max * N, (size_t)N, reg_max);
+        float s = pts.stride[i];
+        float cx = pts.gx[i], cy = pts.gy[i];
+
+        Detection d;
+        d.x1 = (cx - dl) * s; d.y1 = (cy - dt) * s;
+        d.x2 = (cx + dr) * s; d.y2 = (cy + db) * s;
+        d.score = score; d.label = best;
+        out.push_back(d);
+    }
+    return out;
+}
+
+std::vector<Detection> decode_e2e(const float* pred, int n, float conf_thr) {
+    std::vector<Detection> out;
+    const float* score = pred + (size_t)4 * n;
+    const float* cls = pred + (size_t)5 * n;
+    for (int j = 0; j < n; ++j) {
+        if (score[j] < conf_thr) continue;
+        Detection d;
+        d.x1 = pred[j];               d.y1 = pred[(size_t)n + j];
+        d.x2 = pred[(size_t)2 * n + j]; d.y2 = pred[(size_t)3 * n + j];
+        d.score = score[j];
+        d.label = (int32_t)cls[j];
+        out.push_back(d);
+    }
     return out;
 }
 

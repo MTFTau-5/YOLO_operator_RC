@@ -1,12 +1,4 @@
 #pragma once
-// 测试向量读取工具：meta.txt (key=value) + raw bin
-// bin 格式约定（与 tools/gen_test_vectors.py 严格一致）：
-//   pred.bin       : float32 raw, channel-major [C, N]，C = 4 + 1 + num_classes
-//   golden_decode.bin / golden_nms.bin : int32 count, 随后 count * 6 个 float32
-//                    每个检测 6 个数: x1, y1, x2, y2, score, (float)label
-//   img.bin        : uint8 raw, HWC, 尺寸见 meta (img_w, img_h)
-//   golden_pre.bin : float32 raw, CHW [3, dst_w, dst_h]
-
 #include <fstream>
 #include <map>
 #include <sstream>

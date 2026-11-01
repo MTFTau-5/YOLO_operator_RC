@@ -41,13 +41,17 @@ cp app/pipeline.example.yaml app/pipeline.yaml    # 按你的模型改
 跟踪（`gate-px/gate-scale/size-ratio/size-memory/coast/max-misses`）、运行
 （`serial/cores-a/cores-b/max-w/max-h`）、控制（`udp`）。
 
-**模型类型（`model-type`）**：
+**模型类型（`model-type`）**：五种 head 契约（`common/head_types.h`）。
 
 | 值 | 输出契约 | decode 算子 |
 |---|---|---|
 | `v5` | 切头导出，3 个 head `[4+1+nc, N]`（README §3），需 anchor 表 | `x86::decode`（logit 快筛） |
-| `v8` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率） | `x86::decode_v8` |
+| `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `x86::decode_v8` |
 | `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `x86::decode_v8_pose` |
+| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（换输入尺寸不用重导模型） | `x86::decode_af_raw`（DFL+dist2bbox） |
+| `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `x86::decode_e2e` |
+
+`v8-raw` 系的 `reg-max`（默认 16）与 `num-classes` 决定校验通道数 `4*reg_max+nc`。
 
 pose 模式下关键点随框过 NMS（`x86::nms_indices` 索引重载），UDP 包附带被跟踪框
 命中时的关键点（≤32 点；coast/丢失帧 `kpt_count=0`）。
@@ -56,8 +60,8 @@ pose 模式下关键点随框过 NMS（`x86::nms_indices` 索引重载），UDP 
 自动发现。`NcnnInfer::load` 加载时会试跑一帧校验通道数（与总数）——模型与配置
 不匹配时启动即报错，不会带病运行。
 
-- `--heads`：三个输出 blob 名，**按 stride 8→16→32 顺序**；输出须为 README §3 契约的
-  原始卷积输出。
+- `--heads`：输出 blob 名列表。逐层契约（v5 / v8-raw 系）给三个，**按 stride 8→16→32
+  顺序**，输出须为对应契约的原始卷积输出；fused / v10 通常单个拼接输出。
 - `serial: true`：M1/M3 串行模式（单线程全链路），用于数值对齐与验收基线。
 - `no-model: true` + `fake-gpu-ms`：无模型冒烟（线程B 假推理），验证调度/关机路径。
 - 采集源目前只有接口（`camera_source.h`）+ `NullSource`：恒无帧 → 走 PIPELINE.md §6
@@ -165,8 +169,9 @@ fp16 导出），视频 1447×1080，500 帧：
 模型侧优化（《Operator_Suggestion.md》附录 A ★★）：源画面为 4:3 / 16:9 时，方形
 640×640 letterbox 的 padding 是纯浪费。按长边 640、短边对齐 32 重导矩形输入即可，
 **app 零代码改动**（letterbox / unletterbox / v8 N 自动发现均已参数化），只需新模型
-+ yaml 改 `in-size`。注意 DFL 网格烘在图内（anchor 网格是图里的常量），**换输入尺寸
-必须重新导出模型**，运行时改不了。
++ yaml 改 `in-size`。注意 DFL 网格烘在图内（anchor 网格是图里的常量），**fused
+路径换输入尺寸必须重新导出模型**，运行时改不了；`v8-raw` 系（C++ 侧 DFL）的网格
+表按输出形状加载时推导，输入尺寸不受此限制。
 
 重导命令（imgsz 为 [H,W]）：
 
