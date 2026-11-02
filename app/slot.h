@@ -25,7 +25,9 @@ struct Slot {
     // 网络输入 blob（线程A写）：CHW f32，in_w*in_h*3
     std::vector<float> blob;
 
-    // 网络输出（线程B写）：channel-major [4+1+num_classes, N]
+    // 网络输出（线程B写）：channel-major [c_total, N]，c_total 由 head 契约决定
+    // （common/head_types.h：AnchorRaw=5+nc，AfFused=4+nc，PoseFused=4+nc+3K，
+    //   AfRaw=4*reg_max+nc，E2E=6）
     std::vector<float> pred;
 
     // decode/NMS 结果（线程A写）

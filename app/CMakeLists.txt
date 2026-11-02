@@ -20,6 +20,20 @@ add_executable(test_queue tests/test_queue.cpp)
 target_link_libraries(test_queue PRIVATE yoloop_common Threads::Threads)
 target_include_directories(test_queue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+# 合成图集成测试：box-major 转置 / AfRaw 逐层探测（不依赖真实模型文件）
+add_executable(test_head_layouts tests/test_head_layouts.cpp ncnn_infer.cpp)
+target_link_libraries(test_head_layouts PRIVATE yoloop_x86 yoloop_common ncnn)
+target_include_directories(test_head_layouts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                           ${CMAKE_SOURCE_DIR}/x86)
+target_compile_options(test_head_layouts PRIVATE -O2)
+
+# 真实模型多尺寸动态验收（case 由 tools/accept_raw_dynamic.py 生成，缺失时 SKIP）
+add_executable(test_raw_model tests/test_raw_model.cpp ncnn_infer.cpp)
+target_link_libraries(test_raw_model PRIVATE yoloop_x86 yoloop_common ncnn)
+target_include_directories(test_raw_model PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                           ${CMAKE_SOURCE_DIR}/x86)
+target_compile_options(test_raw_model PRIVATE -O2)
+
 # 视频基准（可选，需 OpenCV；只链接用到的模块，避免 opencv_viz 拖入 VTK 依赖）
 find_package(OpenCV QUIET COMPONENTS core imgproc imgcodecs videoio)
 if(OpenCV_FOUND)

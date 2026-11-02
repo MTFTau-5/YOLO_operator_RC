@@ -22,7 +22,6 @@ static double bench_ms(F&& f, int rounds) {
 int main(int argc, char** argv) {
     std::string dir = argc > 1 ? argv[1] : "test_data";
 
-    // ---- decode: case2_dense (N=25200, 密集场景) ----
     {
         std::string c = dir + "/case2_dense";
         auto meta = testio::load_meta(c);
@@ -42,7 +41,6 @@ int main(int argc, char** argv) {
                tab.n, nd, t_ref, t_x86, t_ref / t_x86);
     }
 
-    // ---- NMS: case2 golden_decode 输出(1930 候选) ----
     {
         std::string c = dir + "/case2_dense";
         auto meta = testio::load_meta(c);
@@ -55,7 +53,6 @@ int main(int argc, char** argv) {
                dets.size(), t_ref, t_x86, t_ref / t_x86);
     }
 
-    // ---- preprocess: case4 1280x720 -> 640x640 ----
     {
         std::string c = dir + "/case4_preprocess";
         auto meta = testio::load_meta(c);

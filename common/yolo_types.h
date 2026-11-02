@@ -1,22 +1,4 @@
 #pragma once
-// YOLO 算子库公共类型定义 —— 两平台共享
-// 对应 README(1).md §0.2/§0.3 的导出约定：
-//   - 模型输出为三个 head 的原始卷积输出（decode/NMS 在部署侧实现）
-//   - pred 内存布局：channel-major [4 + 1 + num_classes, N]，N = 总 anchor 数
-//       row 0..3 : tx, ty, tw, th
-//       row 4    : objectness logit
-//       row 5..  : num_classes 个类别 logit
-//   - anchor 顺序：按 stride 8 -> 16 -> 32 依次排列；同一 level 内 row-major
-//     遍历网格 (gy, gx)，anchor 索引变化最快
-//   - decode 数学（YOLOv5 式）：
-//       x = (sigmoid(tx) * 2 - 0.5 + gx) * stride
-//       y = (sigmoid(ty) * 2 - 0.5 + gy) * stride
-//       w = (sigmoid(tw) * 2)^2 * anchor_w
-//       h = (sigmoid(th) * 2)^2 * anchor_h
-//       obj = sigmoid(o)，score = obj * sigmoid(cls_max)
-//   - 过滤：logit 域快筛（§0.3），o < logit(conf_thr) 直接跳过；
-//           存活 anchor 再算最终 score 并按 conf_thr 过滤
-
 #include <cmath>
 #include <cstdint>
 #include <vector>
@@ -77,7 +59,6 @@ inline AnchorTable build_anchor_table(const std::vector<LevelSpec>& levels) {
     return tab;
 }
 
-// README §0.3：sigmoid 单调递增，阈值比较在 logit 域完成
 inline float logit_threshold(float conf_thr) {
     return logf(conf_thr / (1.f - conf_thr));
 }

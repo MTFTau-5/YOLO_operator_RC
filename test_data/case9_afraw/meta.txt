@@ -1,0 +1,7 @@
+num_classes=3
+num_anchors=8400
+reg_max=16
+conf_thr=0.25
+nms_thr=0.45
+input_w=640
+input_h=640
