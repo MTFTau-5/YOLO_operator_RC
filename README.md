@@ -33,6 +33,7 @@
 解读：
 
 - Decode 的 CPU 加速比 ≈3×，与文档 §0.3 对 logit 域阈值「提速 3~5×」的预估一致（免全体 exp）。
+- 上表 Decode 是**算子微基准**（v5 路径：logit 快筛 + 范围归约多项式逼近 sigmoid，见 `x86/decode_avx2.cpp` `exp256_ps`）。`v8-raw` 路径的 DFL 当前为标量 `expf`（存活点 ~1% 量级，向量化无收益），AVX2 仅用于类别 logit 快筛；raw 输出体量约为 fused 的 9.6×（N=8400、nc=3 时 2.25MB vs 0.235MB），评价 raw/fused 优劣须看 infer+extract+拷贝+decode+NMS 全链路（`app/README.md` 基准），不能只看 decode 单项。
 - **候选框少时 NMS 不要上 GPU**：1930 候选下 x86 SIMD（0.012 ms）仍快于 CUDA（0.385 ms，含设备端排序）。GPU NMS 的价值是「feature map 不下传」——decode 结果本就在显存，GPU 侧做完只回传几十字节的框，省每帧 4MB+ 拷贝；候选上千且数据已在 GPU 时才值得（§8.5）。
 - 预处理是无算子时最大的隐藏开销（2 ms 级），融合 kernel 后基本归零。
 
@@ -41,7 +42,7 @@
 ## 2. 构建
 
 ```bash
-pip install -r requirements.txt 
+pip install -r requirements.txt    # 含部署工具链固定版本（torch/ultralytics/onnx/onnxsim/pnnx，验收口径见文件内注释）
 
 # CUDA 11.8 的 nvcc 与 g++13 系统头不兼容，需指定 CUDA 12.5：
 cmake -S . -B build -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.5/bin/nvcc
@@ -82,11 +83,17 @@ vulkaninfo --summary
 
 ## 3. 接口约定（对接 YOLO 的前提）
 
-算子输入是**切掉 Detect 层 decode 部分后**三个 head 拼接的原始卷积输出（§0.2）：
+**模型侧导出契约**（v5，§0.2 切掉 Detect 层 decode 部分后）：逐层原始卷积输出
+`[na*(5+nc), h, w]`，通道 anchor-major（`c = a*(5+nc) + attr`，attr 序
+`tx,ty,tw,th,obj,cls…`），三个 head 按 stride 8→16→32。`NcnnInfer` 加载时由
+blob 通道数推导 na（要求 `c % (5+nc) == 0`），拷贝时把 anchor 维重排为下述
+算子输入布局。
+
+**算子输入**（重排后，三个 head 拼接的原始卷积输出，§0.2）：
 
 - 内存布局：channel-major `[4 + 1 + num_classes, N]`，float32
   - 行 0..3：`tx, ty, tw, th`；行 4：objectness logit；行 5..：类别 logit
-- anchor 顺序：stride 8 → 16 → 32 逐 level 排列；level 内 row-major 网格，anchor 索引变化最快
+- anchor 顺序：stride 8 → 16 → 32 逐 level 排列；level 内 row-major 网格，anchor 索引变化最快（与重排列序一致）
 - decode 数学（YOLOv5 式）：`x=(σ(tx)*2-0.5+gx)*stride`，`w=(σ(tw)*2)²*anchor_w`，`score=σ(obj)*σ(cls_max)`
 - 输入边长须被 32 整除（640、992、992×544 均可）；`num_classes` 运行时传入，天然支持类别数裁剪
 
@@ -168,41 +175,57 @@ sanity 测试：`./build/nvidia/test_trt_plugin`（创建→序列化→反序�
 
 ## 5. 怎么跟 YOLO 部署串起来
 
-以训练好的 `best.pt` 为例，两条路线对应文档 Part I / Part II：
+以训练好的 `best.pt` 为例，两条路线对应文档 Part I / Part II。部署侧 Python 依赖：
+`pip install -r requirements.txt`（工具链版本已随真实模型验收固定，含版本敏感
+行为说明，偏离需重验）。
 
 ### 5.1 NVIDIA 路线（TensorRT）
 
 ```
 best.pt
-  │ ① 模型侧改图(§0.2): Focus 消除 / SPPF 并行 / 类别数裁剪(可选)
+  │ ① 模型侧改图（§0.2）：Focus 消除（v5 系）/ SPPF 并行 / 类别数裁剪（可选）
   ▼
-YOLOv5 export: python export.py --weights best.pt --include onnx --simplify
-  │   —— 关键: 导出前把 Detect 层的 decode 切掉, 让三个 head 的原始卷积输出
-  │      直接作为 ONNX 输出(布局整理成 [1, C, N] channel-major 拼接)
+导出（ultralytics 当前方式，按契约二选一）：
+  A. fused（图内 decode，最省事）：
+       YOLO('best.pt').export(format='engine', half=True)
+       —— 或 format='onnx'（内部过 onnxsim）→
+          trtexec --onnx=best.onnx --saveEngine=best.engine --fp16
+  B. 切头 raw（用本库 decode 算子/插件）：按 §3 契约把 Detect 层 decode 切掉，
+       逐层原始卷积输出作为模型输出（patch 模式同 tools/export_af_raw.py；
+       v5 契约逐层 [na*(5+nc), h, w]，anchor-major），
+       → trtexec / onnx-graphsurgeon 挂 YoloDecode 插件节点（§4.4）
   ▼
-trtexec --onnx=best.onnx --saveEngine=best.engine --fp16
-  │   —— 或用 C++ builder + onnx-graphsurgeon 挂上 YoloDecode 插件节点(§4.4)
-  ▼
-推理进程(§4.3):
-  cuda::letterbox_normalize   ← 预处理 kernel(相机帧已在显存则零拷贝)
-  → context->enqueueV3      ← TensorRT backbone+neck+head(自动融合 Conv+BN+SiLU)
-  → cuda::decode            ← 或 engine 内嵌插件
-  → cuda::nms               ← 或 CPU x86::nms(候选 ≤300 时更快, 见 §1)
+推理进程（§4.3）:
+  cuda::letterbox_normalize   ← 预处理 kernel（相机帧已在显存则零拷贝）
+  → context->enqueueV3        ← TensorRT backbone+neck+head（自动融合 Conv+BN+SiLU）
+  → cuda::decode              ← 或 engine 内嵌插件
+  → cuda::nms                 ← 或 CPU x86::nms（候选 ≤300 时更快，见 §1）
   → 只回传最终框
 ```
 
 ### 5.2 7840HS 路线（ncnn + Vulkan 主线）
 
 ```
-best.pt → ONNX(同样切 head、过 onnxsim)
-  → pnnx best.onnx inputshape=[1,3,992,992]     # pnnx 自动融合 Conv+BN+SiLU
-  → ncnn2fp16 / ncnn2table + ncnn2int8(可选量化, §8.2)
-  ▼
-推理进程(§4.2):
-  x86::letterbox_normalize → ncnn::Extractor(Vulkan fp16) → 三个输出 blob
-  → 按 §3 约定拼成 [C, N] → x86::decode → x86::nms → 出框
-  候选框常年上千(密集小目标/低阈值)再启用 vulkan 混合 NMS(§8.5)
+fused（v8/v9/v11/v10/pose，默认路线；610M 实测端到端最快，见 app/README 三路径对比）：
+  YOLO('best.pt').export(format='ncnn', imgsz=[H, W], half=True)
+    —— ultralytics 内部即 ONNX → onnxsim → pnnx → ncnn（fp16），与 §8.1 手工链路等效；
+       换输入尺寸须重新导出（anchor 网格烘为图内常量）
+
+raw（v8-raw/v9-raw/v11-raw，C++ 侧 DFL；改 in-size 免重新导出——v8 已验证、
+     v9 待验证、v11 经当前工具链导出跨尺寸失效需逐尺寸）：
+  python tools/export_af_raw.py best.pt --out-dir <dir> [--cut post-dfl]
+    —— monkeypatch Detect.forward → torch.onnx → onnxsim → pnnx；
+       post-dfl 产出 v8-dist 契约（DFL 留图内，实验路径）
+
+SPPF 并行（可选，替换前 exact-0 断言，数值逐位等价）：
+  python tools/export_ncnn_sppf.py best.pt --imgsz H W --out-dir <dir>
+
+验收（raw 导出等价性 + 多尺寸动态对拍）：
+  python tools/accept_raw_dynamic.py --weights best.pt --work-dir <dir> --build-dir build
+       [--per-size-export]      # v11 等含 attention 的模型
 ```
+
+量化（可选，§8.2）：`ncnn2table` + `ncnn2int8`（7840HS 不推荐 int8）。
 
 **该运行时已实现为 `app/yolo_rt`**（`app/README.md`）：两线程 + 三槽位 + 丢旧帧
 流水线（规格见仓库上级 `../PIPELINE.md`），线程A 跑 letterbox/decode/NMS/卡尔曼
@@ -236,10 +259,10 @@ FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
 | **模型契约** |||
 | `param` / `model` | ncnn `.param` / `.bin` 路径 | 必填 |
 | `in0` | 输入 blob 名 | `in0` |
-| `model-type` | 检测头契约（`common/head_types.h`）：`v5`=anchor-based 切头 `[4+1+nc,N]`；`v8`/`v9`/`v11`=Detect 头烘在图内 `[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]`；`v8-raw`/`v9-raw`/`v11-raw`=切在 DFL 前的逐层 raw `[4*reg_max+nc,h,w]`；`v10`=端到端 NMS-free `[N,6]` | `v5` |
-| `heads` | 输出 blob 名列表。v5/v8-raw：逐层，按 stride 8→16→32；v8/v9/v11/pose/v10：通常单个拼接输出 | 必填 |
+| `model-type` | 检测头契约（`common/head_types.h`）：`v5`=anchor-based 切头（逐层 `[na*(5+nc),h,w]`，重排为 `[4+1+nc,N]`）；`v8`/`v9`/`v11`=Detect 头烘在图内 `[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]`；`v8-raw`/`v9-raw`/`v11-raw`=切在 DFL 前的逐层 raw `[4*reg_max+nc,h,w]`；`v8-dist`/`v9-dist`/`v11-dist`=DFL 留图内的逐层 `[4+nc,h,w]`（实验路径）；`v10`=端到端 NMS-free `[N,6]` | `v5` |
+| `heads` | 输出 blob 名列表。v5/v8-raw/v8-dist：逐层，按 stride 8→16→32；v8/v9/v11/pose/v10：通常单个拼接输出 | 必填 |
 | `in-size` | 网络输入 `WxH`，须被 32 整除；letterbox 与 anchor 网格的唯一来源 | `640x640` |
-| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8: 4+nc；pose: 4+nc+3K；v8-raw: 4×reg_max+nc；v10: 恒 6） | `2` |
+| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8/v8-dist: 4+nc；pose: 4+nc+3K；v8-raw: 4×reg_max+nc；v10: 恒 6） | `2` |
 | `num-kpts` | 仅 `v8-pose`：每框关键点数（任意，角点扫描场景） | `0` |
 | `reg-max` | 仅 `v8-raw` 系：DFL 的 reg_max（Ultralytics v8/v9/v11 标准 = 16） | `16` |
 | `anchors-s8/s16/s32` | 仅 `v5`：三级 anchor（w,h 平铺）。不给 = YOLOv5s P5 默认；训练开 autoanchor 时**必须从训练配置抄** | 空=默认 |
@@ -322,8 +345,24 @@ num-kpts: 7                        # 你的关键点数
 
 导出：Detect 头在 DFL 之前切开，逐层 concat(box, cls) 后导出（§0.2 契约），
 每层一个 blob `[4*reg_max+nc, h, w]`。DFL + dist2bbox 由 `x86::decode_af_raw`
-完成，**网格点表在加载时按输出形状推导——换输入尺寸不用重新导出模型**
-（②的烘图路径则必须重新导出）。
+完成。网格点表在**加载时**按探测到的输出形状推导并缓存——改输入尺寸只需改
+`in-size` 重新加载，**免的是重新导出模型**；前提是 raw 导出图内没有固定空间
+尺寸的 reshape、常量 grid 等静态 shape 算子（②的烘图路径因网格烘为图内常量，
+换尺寸必须重新导出）。注意 raw 是**灵活性优化，不天然等于加速**：输出体量约为
+fused 的 9.6×（N=8400、nc=3、fp32：67×8400×4≈2.25MB vs 7×8400×4≈0.235MB），
+速度优劣按 infer+extract+拷贝+decode+NMS 全链路实测（独显 / 低阈值 / 密集场景
+尤须单独验证），不能只看 decode 微基准。
+
+**导出与验收工具链**：`tools/export_af_raw.py`（pre-dfl / post-dfl 两种切分，
+后者对应实验路径 `v8-dist`：DFL 留图内、C++ 只做 grid+dist2bbox）+
+`tools/accept_raw_dynamic.py`（真实模型多尺寸对拍）。实测结论（详见
+app/README「真实模型 raw 导出与多尺寸动态验收」支持矩阵与「DFL 切分点三路径
+对比」）：**v8** 同一 param/bin 换尺寸数值正确（v9 同构但**待验证**）；
+**v11 经当前工具链导出时** C2PSA 的静态空间 Reshape 使跨尺寸推理失效，
+需逐尺寸导出（非数学上不能动态，是本链路目前无法恢复动态 shape）；
+610M 核显端到端 fused 最快，DFL 默认应放图内，raw 的价值是换尺寸灵活性
+而非速度。验收环境已固定：torch 2.14.1 / ultralytics 8.4.178 / onnx 1.23.2 /
+onnxsim 0.8.1 / pnnx+ncnn 1.0.20260526。
 
 ```yaml
 # pipeline_v8raw.yaml
@@ -358,9 +397,12 @@ num-classes: 2
 ./build/app/yolo_rt --config app/pipeline_v5.yaml     # 换成对应 yaml
 ```
 
-**防大小不匹配**：加载时试跑一帧校验输出通道数与布局（v5 还校验 anchor 总数，
-v8-raw 顺带推导网格 stride）——配置与模型不一致**启动即报错**，不会带病运行。
-box-major `[N, C]` 输出（v10 典型，fused 模型转置导出亦可）自动识别并转置。
+**防大小不匹配**：加载时试跑一帧，把布局错误尽量前移到加载期——校验输出通道数
+与总数（v5 校验 blob 通道为 `na*(5+nc)` 整数倍、总数匹配 anchor 表；v8-raw 顺带
+推导网格 stride），形状/通道数与配置不一致**启动即报错**。但试跑只能消除形状与
+通道数的不确定性：head 顺序、box/class 通道语义、anchor 排列、logit 是否已
+sigmoid 仍由上述导出契约约束。box-major `[N, C]` 输出（v10 典型，fused 模型
+转置导出亦可）自动识别并转置。
 
 ---
 
@@ -368,16 +410,20 @@ box-major `[N, C]` 输出（v10 典型，fused 模型转置导出亦可）自动
 
 ```bash
 python tools/gen_test_vectors.py                 # 重新生成 golden(已随仓库生成)
-./build/x86/test_x86 test_data                   # x86 数值对齐 + 基准
+./build/x86/test_x86 test_data                   # x86 数值对齐 + 基准(含 case9/case12)
 ./build/nvidia/test_cuda test_data               # CUDA 数值对齐 + 基准
 PYTHONPATH=build/nvidia python nvidia/tests/test_python_bindings.py
 ./build/nvidia/test_trt_plugin                   # TRT 插件 sanity
 # app 流水线(yolo_rt):
 python3 tools/gen_tracker_golden.py              # Tracker golden(import RK3588 原版 BoxKalman)
 python3 tools/gen_v8_vectors.py                  # v8/v11 检测+姿态 golden(case7/8，已随仓库生成)
+python3 tools/gen_afdist_vectors.py              # v8-dist golden(case12，已随仓库生成)
 ./build/app/test_tracker test_data               # 卡尔曼/门控数值对齐(误差<1e-3)
 ./build/app/test_queue                           # 槽位不变式 + 丢旧帧语义
+./build/app/test_head_layouts                    # ncnn 输出布局集成测试(v5 重排/AfRaw/E2E，合成图)
 ./build/app/yolo_rt --no-model                   # 无相机冒烟(掉线重连路径 + 干净退出)
+# 真实模型验收（部署工具链见 requirements.txt；yolov8n 动态 / yolo11n 逐尺寸）:
+python3 tools/accept_raw_dynamic.py --weights <detect.pt> --work-dir <dir> --build-dir build [--per-size-export]
 ```
 
 验收标准（§5/§12）：decode/NMS 输出与 numpy golden 数量精确相等、坐标 max abs err < 1e-2、score < 1e-3；预处理 < 1e-3。本机实测全部 PASS：decode 坐标 max err ≤ 2.5e-4（含 992×992 / 992×544 分辨率），NMS 集合逐位一致。

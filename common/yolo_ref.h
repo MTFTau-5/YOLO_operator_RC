@@ -25,6 +25,12 @@ std::vector<Detection> decode_af_raw(const float* pred, const AnchorTable& pts,
 // 仅阈值过滤，保序输出，不做 NMS
 std::vector<Detection> decode_e2e(const float* pred, int n, float conf_thr);
 
+// AfDist（DFL 在图内、grid+dist2bbox 在 C++）：pred channel-major [4 + num_classes, pts.n]
+//   通道 0..3 : l/t/r/b 四条边的投影距离
+//   通道 4..  : num_classes 个类别 logit
+std::vector<Detection> decode_af_dist(const float* pred, const AnchorTable& pts,
+                                      int num_classes, float conf_thr);
+
 // class-aware 贪心 NMS：按 score 降序，同类且 IoU > nms_thr 则抑制
 // 输入为 decode 输出（任意顺序），内部排序
 std::vector<Detection> nms(std::vector<Detection> dets, float nms_thr);

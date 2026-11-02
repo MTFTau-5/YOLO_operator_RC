@@ -58,6 +58,7 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
     const int c_total = this->c_total();
     head_n_.clear();
     head_boxmaj_.clear();
+    head_na_.clear();
     std::vector<LevelSpec> af_levels;  // AfRaw：逐层网格（stride 由输入尺寸推断）
     for (const auto& name : cfg_.head_names) {
         ncnn::Mat out;
@@ -65,12 +66,13 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
             fprintf(stderr, "[ncnn] 输出 blob '%s' 提取失败\n", name.c_str());
             return false;
         }
-        int c, n;
+        int c, n, na = 1;
         char boxmaj = 0;
         if (out.dims == 3 && out.c > 1) {  // [C, h, w] 逐 channel 平面（逐 head raw 输出）
             c = out.c;
             n = out.w * out.h;
-            if (cfg_.head == HeadType::AfRaw) {
+            if (cfg_.head == HeadType::AfRaw || cfg_.head == HeadType::AfDist ||
+                cfg_.head == HeadType::AnchorRaw) {
                 if (cfg_.in_w % out.w != 0 || cfg_.in_h % out.h != 0 ||
                     cfg_.in_w / out.w != cfg_.in_h / out.h) {
                     fprintf(stderr,
@@ -78,7 +80,22 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
                             name.c_str(), out.w, out.h, cfg_.in_w, cfg_.in_h);
                     return false;
                 }
+            }
+            if (cfg_.head == HeadType::AfRaw || cfg_.head == HeadType::AfDist) {
                 af_levels.push_back({cfg_.in_w / out.w, out.w, out.h, {}});
+            } else if (cfg_.head == HeadType::AnchorRaw) {
+                // v5 契约：逐层 [na*(5+nc), h, w]，通道 anchor-major（c=a*(5+nc)+attr）。
+                // na 由 blob 通道数推导，列数按 anchor 维展开，拷贝时重排（见 infer）。
+                if (c % c_total != 0) {
+                    fprintf(stderr,
+                            "[ncnn] head '%s' 通道数 %d 不是 %d 的整数倍"
+                            "（v5 契约 na*(5+nc)，nc=%d）\n",
+                            name.c_str(), c, c_total, cfg_.num_classes);
+                    return false;
+                }
+                na = c / c_total;
+                n *= na;
+                c = c_total;
             }
         } else if (out.dims == 3) {  // [1, C, N] 拼接输出，或 [1, N, C] box-major
             if (out.h == c_total) {
@@ -119,10 +136,12 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
         }
         head_n_.push_back(n);
         head_boxmaj_.push_back(boxmaj);
+        head_na_.push_back(na);
         total += n;
     }
     pred_n_ = total;
-    if (cfg_.head == HeadType::AfRaw) grid_ = build_point_table(af_levels);
+    if (cfg_.head == HeadType::AfRaw || cfg_.head == HeadType::AfDist)
+        grid_ = build_point_table(af_levels);
     if (expected_n > 0 && total != expected_n) {
         fprintf(stderr, "[ncnn] 输出 anchor 总数 %d 与 anchor 表 N=%d 不一致\n", total,
                 expected_n);
@@ -147,11 +166,24 @@ bool NcnnInfer::infer(const float* blob, float* pred) {
         // extract type=0：已转 fp32、解 packing。目标布局 channel-major [C, N]。
         const int n = head_n_[i];
         if (out.dims == 3 && out.c > 1) {
-            // [C, h, w]：逐 channel 平面拷贝（逐 head raw 契约）
-            for (int c = 0; c < c_total; ++c) {
-                ncnn::Mat ch = out.channel(c);
-                std::memcpy(pred + (size_t)c * pred_n_ + n_off, (const float*)ch.data,
-                            (size_t)n * sizeof(float));
+            if (cfg_.head == HeadType::AnchorRaw) {
+                // v5 重排：[na*(5+nc), h, w]（通道 anchor-major）→ [5+nc, N]，
+                // 列序 (y*w+x)*na+a，与 build_anchor_table 的 (y,x,a) 迭代序一致
+                const int na = head_na_[i];
+                const int hw = n / na;
+                for (int cc = 0; cc < out.c; ++cc) {
+                    ncnn::Mat ch = out.channel(cc);
+                    const float* src = (const float*)ch.data;
+                    float* dst = pred + (size_t)(cc % c_total) * pred_n_ + n_off + cc / c_total;
+                    for (int j = 0; j < hw; ++j) dst[(size_t)j * na] = src[j];
+                }
+            } else {
+                // [C, h, w]：逐 channel 平面拷贝（逐 head raw 契约）
+                for (int c = 0; c < c_total; ++c) {
+                    ncnn::Mat ch = out.channel(c);
+                    std::memcpy(pred + (size_t)c * pred_n_ + n_off, (const float*)ch.data,
+                                (size_t)n * sizeof(float));
+                }
             }
         } else if (head_boxmaj_[i]) {
             // box-major [N, C] / [1, N, C]：每行一个 box，转置为 channel-major

@@ -12,6 +12,7 @@ enum class HeadType {
     PoseFused = 2,
     AfRaw = 3,
     E2E = 4,
+    AfDist = 5,
 };
 
 inline const char* head_type_name(HeadType h) {
@@ -21,6 +22,7 @@ inline const char* head_type_name(HeadType h) {
         case HeadType::PoseFused: return "v8-pose";
         case HeadType::AfRaw: return "v8-raw";
         case HeadType::E2E: return "v10";
+        case HeadType::AfDist: return "v8-dist";
     }
     return "unknown";
 }
@@ -34,6 +36,8 @@ inline bool parse_head_type(const std::string& s, HeadType& out) {
         out = HeadType::PoseFused;
     else if (s == "v8-raw" || s == "v9-raw" || s == "v11-raw" || s == "af-raw")
         out = HeadType::AfRaw;
+    else if (s == "v8-dist" || s == "v9-dist" || s == "v11-dist" || s == "af-dist")
+        out = HeadType::AfDist;
     else if (s == "v10" || s == "e2e" || s == "end2end" || s == "v10-e2e")
         out = HeadType::E2E;
     else
@@ -42,12 +46,15 @@ inline bool parse_head_type(const std::string& s, HeadType& out) {
 }
 
 inline int head_channels(HeadType h, int num_classes, int num_kpts, int reg_max) {
+    // 返回 pred 缓冲的通道数（decode 契约）。AnchorRaw 返回的是**每 anchor 属性数**
+    // (5+nc)：模型 blob 通道为 na*(5+nc)，anchor 维重排在 NcnnInfer::infer 完成。
     switch (h) {
         case HeadType::AnchorRaw: return 5 + num_classes;
         case HeadType::AfFused: return 4 + num_classes;
         case HeadType::PoseFused: return 4 + num_classes + 3 * num_kpts;
         case HeadType::AfRaw: return 4 * reg_max + num_classes;
         case HeadType::E2E: return 6;
+        case HeadType::AfDist: return 4 + num_classes;  // 4 条边的投影距离 + cls
     }
     return 0;
 }

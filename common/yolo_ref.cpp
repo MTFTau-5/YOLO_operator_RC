@@ -86,6 +86,37 @@ std::vector<Detection> decode_af_raw(const float* pred, const AnchorTable& pts,
     return out;
 }
 
+std::vector<Detection> decode_af_dist(const float* pred, const AnchorTable& pts,
+                                      int num_classes, float conf_thr) {
+    const int N = pts.n;
+    const float* cls_base = pred + (size_t)4 * N;
+    std::vector<Detection> out;
+    for (int i = 0; i < N; ++i) {
+        int best = 0;
+        float best_logit = cls_base[i];
+        for (int c = 1; c < num_classes; ++c) {
+            float v = cls_base[(size_t)c * N + i];
+            if (v > best_logit) { best_logit = v; best = c; }
+        }
+        float score = sigmoid(best_logit);
+        if (score < conf_thr) continue;
+
+        const float dl = pred[(size_t)0 * N + i];  // 4 边投影距离（图内已完成 DFL）
+        const float dt = pred[(size_t)1 * N + i];
+        const float dr = pred[(size_t)2 * N + i];
+        const float db = pred[(size_t)3 * N + i];
+        float s = pts.stride[i];
+        float cx = pts.gx[i], cy = pts.gy[i];
+
+        Detection d;
+        d.x1 = (cx - dl) * s; d.y1 = (cy - dt) * s;
+        d.x2 = (cx + dr) * s; d.y2 = (cy + db) * s;
+        d.score = score; d.label = best;
+        out.push_back(d);
+    }
+    return out;
+}
+
 std::vector<Detection> decode_e2e(const float* pred, int n, float conf_thr) {
     std::vector<Detection> out;
     const float* score = pred + (size_t)4 * n;

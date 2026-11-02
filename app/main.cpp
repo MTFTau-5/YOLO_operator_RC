@@ -22,6 +22,7 @@
 #include "camera_source.h"
 #include "config.h"
 #include "control_tx.h"
+#include "decode_af_dist.h"
 #include "decode_af_raw.h"
 #include "decode_avx2.h"
 #include "decode_e2e.h"
@@ -331,6 +332,11 @@ void consume(Ctx& c, Slot* done) {
                                                 c.args.conf);
                 done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
                 break;
+            case HeadType::AfDist:
+                done->dets = x86::decode_af_dist(done->pred.data(), c.tab,
+                                                 c.args.num_classes, c.args.conf);
+                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                break;
             case HeadType::E2E:
                 // NMS-free 头：模型自带 one-to-one 分配，仅阈值过滤
                 done->kept = x86::decode_e2e(done->pred.data(), c.pred_n, c.args.conf);
@@ -534,7 +540,8 @@ int main(int argc, char** argv) {
             c.tab = build_anchor_table(default_levels(c.args.in_w, c.args.in_h));
         }
         expected_n = c.tab.n;
-    } else if (c.args.head == HeadType::AfRaw && c.args.no_model) {
+    } else if ((c.args.head == HeadType::AfRaw || c.args.head == HeadType::AfDist) &&
+               c.args.no_model) {
         c.tab = build_point_table(default_point_levels(c.args.in_w, c.args.in_h));
         expected_n = c.tab.n;
     }
@@ -558,7 +565,8 @@ int main(int argc, char** argv) {
         if (!c.infer.load(icfg, expected_n)) return 1;
         c.c_total = c.infer.c_total();
         c.pred_n = c.infer.pred_n();
-        if (c.args.head == HeadType::AfRaw) c.tab = c.infer.grid();
+        if (c.args.head == HeadType::AfRaw || c.args.head == HeadType::AfDist)
+            c.tab = c.infer.grid();
     } else {
         fprintf(stderr, "[yolo_rt] --no-model 冒烟模式（线程B 假推理 %dms/帧）\n",
                 c.args.fake_gpu_ms);
