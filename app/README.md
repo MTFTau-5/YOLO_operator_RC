@@ -1,7 +1,7 @@
 # yolo_rt —— 实时检测跟踪流水线应用
 
 实现 [PIPELNE](../docs/PIPELINE.md)：两线程 + 三槽位 + 丢旧帧。本目录是对算子库的**集成层**，
-不改动 `common/ x86/ nvidia/ vulkan/` 任何代码。
+通过 `common/cpu_ops.h` 选择 `x86/` 或 `riscv/` 后端，模型推理仍由 ncnn 完成。
 
 ## 拓扑（PIPELINE.md §1/§2）
 
@@ -16,13 +16,27 @@
 
 ## 构建
 
-根目录 CMake 用 FetchContent 拉 ncnn（Vulkan ON，`-DNCNN_GIT_TAG=` 可换版本）：
+根目录 CMake 用 FetchContent 拉 ncnn（`YOLOOP_NCNN_VULKAN` 控制 Vulkan，
+`-DNCNN_GIT_TAG=` 可换版本）：
 
 ```bash
 cmake -S . -B build -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
       -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_X86_ARCH=znver4   # 目标机 7840HS；本机开发用 native
 cmake --build build -j$(nproc)          # 产物: build/app/yolo_rt
 ```
+
+K3 原生构建选择 `riscv/` 后端，ncnn 使用 CPU 模式：
+
+```bash
+cmake -S . -B build-k3 \
+  -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF \
+  -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
+  -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_BUILD_VULKAN=OFF \
+  -DYOLOOP_NCNN_VULKAN=OFF
+cmake --build build-k3 -j8
+```
+
+运行时使用 `--gpu -1`。此路径执行 X100 RVV，不包含 A100/IME 专用内核。
 
 ## 运行
 
@@ -45,15 +59,15 @@ cp app/pipeline.example.yaml app/pipeline.yaml    # 按你的模型改
 
 | 值 | 输出契约 | decode 算子 |
 |---|---|---|
-| `v5` | 切头导出，3 个 head `[4+1+nc, N]`（README §3），需 anchor 表 | `x86::decode`（logit 快筛） |
-| `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `x86::decode_v8` |
-| `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `x86::decode_v8_pose` |
-| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（换输入尺寸不用重导模型） | `x86::decode_af_raw`（DFL+dist2bbox） |
-| `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `x86::decode_e2e` |
+| `v5` | 切头导出，3 个 head `[4+1+nc, N]`（README §3），需 anchor 表 | `cpu::decode`（logit 快筛） |
+| `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `cpu::decode_v8` |
+| `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `cpu::decode_v8_pose` |
+| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（换输入尺寸不用重导模型） | `cpu::decode_af_raw`（DFL+dist2bbox） |
+| `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `cpu::decode_e2e` |
 
 `v8-raw` 系的 `reg-max`（默认 16）与 `num-classes` 决定校验通道数 `4*reg_max+nc`。
 
-pose 模式下关键点随框过 NMS（`x86::nms_indices` 索引重载），UDP 包附带被跟踪框
+pose 模式下关键点随框过 NMS（`cpu::nms_indices` 索引重载），UDP 包附带被跟踪框
 命中时的关键点（≤32 点；coast/丢失帧 `kpt_count=0`）。
 
 **防大小不匹配**：v5 由 `in-size`/`num-classes`/anchor 表推导 N；v8 系 N 由模型输出

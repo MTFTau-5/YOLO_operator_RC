@@ -22,14 +22,9 @@
 #include "camera_source.h"
 #include "config.h"
 #include "control_tx.h"
-#include "decode_af_raw.h"
-#include "decode_avx2.h"
-#include "decode_e2e.h"
-#include "decode_v8.h"
+#include "cpu_ops.h"
 #include "ncnn_infer.h"
-#include "nms_simd.h"
 #include "pipeline.h"
-#include "preprocess_avx2.h"
 #include "stats.h"
 #include "tracker.h"
 
@@ -316,32 +311,32 @@ void consume(Ctx& c, Slot* done) {
     if (!done->error) {
         switch (c.args.head) {
             case HeadType::AnchorRaw:
-                done->dets = x86::decode(done->pred.data(), c.tab, c.args.num_classes,
+                done->dets = cpu::decode(done->pred.data(), c.tab, c.args.num_classes,
                                          c.args.conf);
-                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                done->kept = cpu::nms(std::move(done->dets), c.args.nms, c.args.topk);
                 break;
             case HeadType::AfFused:
-                done->dets = x86::decode_v8(done->pred.data(), c.args.num_classes,
+                done->dets = cpu::decode_v8(done->pred.data(), c.args.num_classes,
                                             c.pred_n, c.args.conf);
-                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                done->kept = cpu::nms(std::move(done->dets), c.args.nms, c.args.topk);
                 break;
             case HeadType::AfRaw:
-                done->dets = x86::decode_af_raw(done->pred.data(), c.tab,
+                done->dets = cpu::decode_af_raw(done->pred.data(), c.tab,
                                                 c.args.num_classes, c.args.reg_max,
                                                 c.args.conf);
-                done->kept = x86::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                done->kept = cpu::nms(std::move(done->dets), c.args.nms, c.args.topk);
                 break;
             case HeadType::E2E:
                 // NMS-free 头：模型自带 one-to-one 分配，仅阈值过滤
-                done->kept = x86::decode_e2e(done->pred.data(), c.pred_n, c.args.conf);
+                done->kept = cpu::decode_e2e(done->pred.data(), c.pred_n, c.args.conf);
                 break;
             case HeadType::PoseFused: {  // 关键点随框过 NMS
                 const int kstride = 3 * c.args.num_kpts;
                 std::vector<float> kpts_raw;
-                x86::decode_v8_pose(done->pred.data(), c.args.num_classes,
+                cpu::decode_v8_pose(done->pred.data(), c.args.num_classes,
                                     c.args.num_kpts, c.pred_n, c.args.conf, done->dets,
                                     kpts_raw);
-                auto idx = x86::nms_indices(done->dets, c.args.nms, c.args.topk);
+                auto idx = cpu::nms_indices(done->dets, c.args.nms, c.args.topk);
                 done->kept.clear();
                 done->kpts.clear();
                 for (int32_t i : idx) {
@@ -435,7 +430,7 @@ int run_serial(Ctx& c) {
             continue;
         }
         s->t_capture = now_us();
-        x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
+        cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
                                  c.args.in_w, c.args.in_h);
         if (c.args.no_model) {
             std::this_thread::sleep_for(std::chrono::milliseconds(c.args.fake_gpu_ms));
@@ -474,7 +469,7 @@ int run_pipeline(Ctx& c) {
             continue;
         }
         s->t_capture = now_us();
-        x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
+        cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
                                  c.args.in_w, c.args.in_h);
         c.pipe.q_gpu.push(s);  // 交给 GPU，不等待
 

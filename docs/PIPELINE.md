@@ -72,14 +72,14 @@ void thread_cpu() {
         }
         s->t_capture = now_us();               // 延迟统计时间戳
 
-        x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h,
+        cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h,
                                  s->blob.data(), IN_W, IN_H);
         q_gpu.push(s);                          // 交给 GPU, 不等待
 
         Slot* done = q_back.try_pop();          // 取上一帧结果（通常已完成）
         if (done) {
-            s->dets = x86::decode(s->pred.data(), g_tab, 2, CONF_THR);
-            s->kept = x86::nms(std::move(s->dets), NMS_THR, TOPK);
+            s->dets = cpu::decode(s->pred.data(), g_tab, 2, CONF_THR);
+            s->kept = cpu::nms(std::move(s->dets), NMS_THR, TOPK);
             auto trks = g_tracker.predict();
             g_tracker.update(to_dets(s->kept));
             for (auto& t : trks)

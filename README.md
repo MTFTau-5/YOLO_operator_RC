@@ -1,14 +1,15 @@
 # YOLO_operator — YOLO 部署算子库
 
-按《YOLO 算子加速开发指南》（[开发参考](./docs/Operator_Suggestion.md)）实现的两平台部署侧算子，覆盖 YOLO 推理链路中**框架未优化三部分**：预处理、Decode、NMS。
+按《YOLO 算子加速开发指南》（[开发参考](./docs/Operator_Suggestion.md)）实现的多平台部署侧算子，覆盖 YOLO 推理链路中**框架未优化三部分**：预处理、Decode、NMS。
 
 | 模块 | 平台 | 内容 | 对应文档章节 |
 |---|---|---|---|
-| `common/` | 共享 | Detection/AnchorTable 类型、标量参考实现、测试向量读取 | §0.2 §0.3 |
+| `common/` | 共享 | Detection/AnchorTable 类型、标量参考实现、统一 CPU 接口、测试向量读取 | §0.2 §0.3 |
 | `x86/` | 7840HS（Zen4，独立 C++，无第三方依赖） | AVX2 decode（logit 域快筛）、CPU SIMD NMS、AVX2 预处理单 pass | §8.4a §8.5 §8.6 |
+| `riscv/` | K3 X100 / 其他 RVV 1.0 处理器 | 长度无关 RVV decode、掩码候选压缩、RVV NMS、RVV 预处理；非 RVV 构建保留标量回退 | — |
 | `nvidia/` | NVIDIA GPU | Decode CUDA kernel（warp ballot 压缩）、位掩码 NMS kernel、预处理融合 kernel、TensorRT 插件、pybind11 绑定 | §2.2 §2.3 §2.4 |
 | `vulkan/` | 780M 核显（可选） | 混合式 NMS：IoU 矩阵 compute shader + CPU 位掩码贪心 | §8.5 |
-| `app/` | 7840HS 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn Vulkan 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
+| `app/` | x86 / K3 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
 | `tools/` | 工具 | `gen_test_vectors.py` golden 生成、`bench_baseline.cpp` 无算子基线基准 | §5 §12 |
 
 ---
@@ -49,6 +50,28 @@ cmake --build build -j
 
 ```
 
+### K3 / RISC-V RVV 构建
+
+在 K3 的 Bianbu/Linux 环境中原生构建（需要支持 RVV 1.0 intrinsic 的编译器）：
+
+```bash
+cmake -S . -B build-k3 \
+  -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF \
+  -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
+  -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_BUILD_VULKAN=OFF \
+  -DYOLOOP_NCNN_VULKAN=OFF \
+  -DYOLOOP_RISCV_ARCH=rv64gcv -DYOLOOP_RISCV_ABI=lp64d
+cmake --build build-k3 -j8
+./build-k3/riscv/test_rvv test_data
+./build-k3/app/yolo_rt --config app/pipeline.yaml \
+  --gpu -1 --cpu-threads 8 --serial --cores-a 0-7
+```
+
+该目标使用 K3 X100 的标准 RVV 1.0 算子和 ncnn CPU 推理；**不包含 A100 的
+SpacemiT IME 专用指令或 AI 核调度**，不能把此路径当作已启用 60 TOPS AI 算力。
+A100/IME 应通过单独的 SpacemiT ONNX Runtime/Spine-Runtime 后端接入。交叉编译时，
+工具链文件须设置 `CMAKE_SYSTEM_PROCESSOR=riscv64` 并提供 RISC-V sysroot。
+
 Vulkan 依赖安装（可选，`vulkan/` 混合 NMS 模块需要；Ubuntu/Debian）：
 
 ```bash
@@ -64,16 +87,19 @@ vulkaninfo --summary
 
 | 选项 | 默认 | 说明 |
 |---|---|---|
-| `YOLOOP_BUILD_X86` | ON | x86 算子库 + 测试 |
+| `YOLOOP_BUILD_X86` | x86=ON，RISC-V=OFF | x86 算子库 + 测试 |
+| `YOLOOP_BUILD_RISCV` | RISC-V=ON，其他=OFF | RVV 算子库 + `test_rvv`；启用后 app 选择此后端 |
 | `YOLOOP_BUILD_CUDA` | ON | CUDA 算子库 + 测试 + Python 绑定 |
 | `YOLOOP_BUILD_TRT_PLUGIN` | ON | TensorRT decode 插件（找不到头文件/库自动跳过） |
 | `YOLOOP_BUILD_PYTHON` | ON | pybind11 模块 `yolo_ops_cuda` |
 | `YOLOOP_BUILD_VULKAN` | ON | 需 glslangValidator + Vulkan SDK，找不到自动跳过 |
+| `YOLOOP_NCNN_VULKAN` | ON | app 的 ncnn 是否启用 Vulkan；K3 纯 CPU 构建设 OFF |
 | `YOLOOP_X86_ARCH` | native | 目标机 7840HS 用 `-DYOLOOP_X86_ARCH=znver4` |
+| `YOLOOP_RISCV_ARCH` / `YOLOOP_RISCV_ABI` | rv64gcv / lp64d | RISC-V ISA/ABI；仅目标为 RISC-V 时添加编译参数 |
 
 **本机实测状态**：以上五项全部实际启用并构建成功（Vulkan 有 glslangValidator + SDK，TensorRT 头文件取自 NVIDIA/TensorRT v11.3 + pip 版动态库）。「自动跳过」只在依赖缺失的机器上发生，属兜底行为。
 
-产物：`build/x86/libyoloop_x86.a`、`build/nvidia/libyoloop_cuda.a`、`build/nvidia/yolo_ops_cuda*.so`、`build/nvidia/libyoloop_trt_plugins.so`、`build/vulkan/libyoloop_vulkan.a`。
+产物：`build/x86/libyoloop_x86.a`、`build/riscv/libyoloop_riscv.a`、`build/nvidia/libyoloop_cuda.a`、`build/nvidia/yolo_ops_cuda*.so`、`build/nvidia/libyoloop_trt_plugins.so`、`build/vulkan/libyoloop_vulkan.a`。
 
 **多 conda 环境注意**：pybind11 / TensorRT 是按「当前 shell 激活环境的 python」探测的——在哪个环境用 `yolo_ops_cuda`，就在哪个环境构建并先 `pip install pybind11`（老环境可能还需 `-DPYBIND11_FINDPYTHON=ON -DPython_EXECUTABLE=<env>/bin/python`，防止 pybind11 抓到 base 的 libpython 导致 .so ABI 不匹配）。TensorRT 装不进的老环境（如 py3.8）可直接指向其他环境的库：
 `-DTRT_INCLUDE_DIR=<项目>/nvidia/trt/include -DTRT_NVINFER_LIB=<site-packages>/tensorrt_libs/libnvinfer.so.11`
@@ -369,6 +395,7 @@ box-major `[N, C]` 输出（v10 典型，fused 模型转置导出亦可）自动
 ```bash
 python tools/gen_test_vectors.py                 # 重新生成 golden(已随仓库生成)
 ./build/x86/test_x86 test_data                   # x86 数值对齐 + 基准
+./build-k3/riscv/test_rvv test_data              # K3/RVV 同一套 golden + 基准
 ./build/nvidia/test_cuda test_data               # CUDA 数值对齐 + 基准
 PYTHONPATH=build/nvidia python nvidia/tests/test_python_bindings.py
 ./build/nvidia/test_trt_plugin                   # TRT 插件 sanity

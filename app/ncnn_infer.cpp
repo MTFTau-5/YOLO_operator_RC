@@ -23,8 +23,12 @@ bool NcnnInfer::load(const InferConfig& cfg, int expected_n) {
     grid_ = AnchorTable{};
 
     net_ = new ncnn::Net();
-    // §8.3：Vulkan fp16 全家桶；gpu_index < 0 时走纯 CPU
+    // §8.3：Vulkan fp16 全家桶；gpu_index < 0 或无 Vulkan 构建时走纯 CPU
+#if NCNN_VULKAN
     net_->opt.use_vulkan_compute = cfg_.gpu_index >= 0;
+#else
+    net_->opt.use_vulkan_compute = false;
+#endif
     net_->opt.use_fp16_packed = true;
     net_->opt.use_fp16_storage = true;
     net_->opt.use_fp16_arithmetic = true;

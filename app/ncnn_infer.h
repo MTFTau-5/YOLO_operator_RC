@@ -42,7 +42,7 @@ public:
     // expected_n > 0（AnchorRaw：anchor 表 N）时校验总数；<= 0 时由模型输出发现 N。
     bool load(const InferConfig& cfg, int expected_n);
 
-    // blob: CHW f32 [0,1]（x86::letterbox_normalize 产物）。
+    // blob: CHW f32 [0,1]（cpu::letterbox_normalize 产物）。
     // pred: 容量 c_total()*pred_n()。失败返回 false（§6 GPU 出错路径）。
     bool infer(const float* blob, float* pred);
 

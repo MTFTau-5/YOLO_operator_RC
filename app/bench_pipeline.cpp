@@ -21,14 +21,9 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "decode_af_raw.h"
-#include "decode_avx2.h"
-#include "decode_e2e.h"
-#include "decode_v8.h"
+#include "cpu_ops.h"
 #include "ncnn_infer.h"
-#include "nms_simd.h"
 #include "pipeline.h"
-#include "preprocess_avx2.h"
 #include "tracker.h"
 
 using namespace yoloop;
@@ -203,27 +198,27 @@ int main(int argc, char** argv) {
         std::vector<float> kpts_raw;
         switch (a.head) {
             case HeadType::PoseFused: {
-                x86::decode_v8_pose(s->pred.data(), a.num_classes, a.num_kpts,
+                cpu::decode_v8_pose(s->pred.data(), a.num_classes, a.num_kpts,
                                     infer.pred_n(), a.conf, s->dets, kpts_raw);
-                auto idx = x86::nms_indices(s->dets, a.nms, a.topk);
+                auto idx = cpu::nms_indices(s->dets, a.nms, a.topk);
                 kept.reserve(idx.size());
                 for (int32_t i : idx) kept.push_back(s->dets[(size_t)i]);
                 break;
             }
             case HeadType::AnchorRaw:
-                kept = x86::nms(x86::decode(s->pred.data(), tab, a.num_classes, a.conf),
+                kept = cpu::nms(cpu::decode(s->pred.data(), tab, a.num_classes, a.conf),
                                 a.nms, a.topk);
                 break;
             case HeadType::AfRaw:
-                kept = x86::nms(x86::decode_af_raw(s->pred.data(), tab, a.num_classes,
+                kept = cpu::nms(cpu::decode_af_raw(s->pred.data(), tab, a.num_classes,
                                                    a.reg_max, a.conf),
                                 a.nms, a.topk);
                 break;
             case HeadType::E2E:
-                kept = x86::decode_e2e(s->pred.data(), infer.pred_n(), a.conf);
+                kept = cpu::decode_e2e(s->pred.data(), infer.pred_n(), a.conf);
                 break;
             case HeadType::AfFused:
-                kept = x86::nms(x86::decode_v8(s->pred.data(), a.num_classes,
+                kept = cpu::nms(cpu::decode_v8(s->pred.data(), a.num_classes,
                                                infer.pred_n(), a.conf),
                                 a.nms, a.topk);
                 break;
@@ -242,7 +237,7 @@ int main(int argc, char** argv) {
             Slot* s = pipe.acquire_slot();
             auto t0 = std::chrono::steady_clock::now();
             cam.grab(s->img.data(), s->img_w, s->img_h);
-            x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
+            cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
                                      a.in_w, a.in_h);
             auto t1 = std::chrono::steady_clock::now();
             infer.infer(s->blob.data(), s->pred.data());
@@ -290,7 +285,7 @@ int main(int argc, char** argv) {
                 if (s) {
                     if (cam.grab(s->img.data(), s->img_w, s->img_h)) {
                         s->t_capture = now_us();
-                        x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h,
+                        cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h,
                                                  s->blob.data(), a.in_w, a.in_h);
                         pipe.q_gpu.push(s);
                         produced++;
