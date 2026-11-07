@@ -21,15 +21,16 @@
 
 ### 0.1 两平台路线对比
 
-| 维度 | NVIDIA GPU | Ryzen 7 7840HS |
-|---|---|---|
-| 计算单元 | CUDA 核心 + Tensor Core | Zen4 CPU（8C16T，AVX2/双泵 AVX-512）+ 780M 核显（RDNA3, gfx1103, Vulkan）+ XDNA NPU（仅 Windows） |
-| 主力推理栈 | **TensorRT**（ONNX → engine） | **ncnn + Vulkan**（主线）；OpenVINO/ORT CPU（保底）；Ryzen AI NPU（支线） |
-| 图级融合 | Builder（Myelin）自动完成 | pnnx 转换时自动完成 |
-| 需要手写的算子 | Decode 插件（或用现成插件）、预处理 kernel | Decode（AVX2 必写，Vulkan 可选）、混合式 NMS（可选） |
-| 精度模式 | FP32 / TF32 / FP16 / INT8（校准） | FP32 / FP16 / INT8（ncnn2int8 校准）；NPU 仅 INT8/BF16 |
-| 后处理策略 | Decode+NMS 全部 GPU 化，只回传框 | 混合：IoU 重活上 GPU，贪心选择留 CPU |
-| 典型瓶颈 | 预处理 CPU↔GPU 拷贝、小 batch 利用率 | 大分辨率首层 conv、串行小算子、CPU↔GPU 带宽 |
+
+| 维度           | NVIDIA GPU                                 | Ryzen 7 7840HS                                                                                    |
+| -------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| 计算单元       | CUDA 核心 + Tensor Core                    | Zen4 CPU（8C16T，AVX2/双泵 AVX-512）+ 780M 核显（RDNA3, gfx1103, Vulkan）+ XDNA NPU（仅 Windows） |
+| 主力推理栈     | **TensorRT**（ONNX → engine）             | **ncnn + Vulkan**（主线）；OpenVINO/ORT CPU（保底）；Ryzen AI NPU（支线）                         |
+| 图级融合       | Builder（Myelin）自动完成                  | pnnx 转换时自动完成                                                                               |
+| 需要手写的算子 | Decode 插件（或用现成插件）、预处理 kernel | Decode（AVX2 必写，Vulkan 可选）、混合式 NMS（可选）                                              |
+| 精度模式       | FP32 / TF32 / FP16 / INT8（校准）          | FP32 / FP16 / INT8（ncnn2int8 校准）；NPU 仅 INT8/BF16                                            |
+| 后处理策略     | Decode+NMS 全部 GPU 化，只回传框           | 混合：IoU 重活上 GPU，贪心选择留 CPU                                                              |
+| 典型瓶颈       | 预处理 CPU↔GPU 拷贝、小 batch 利用率      | 大分辨率首层 conv、串行小算子、CPU↔GPU 带宽                                                      |
 
 ### 0.2 平台无关的模型侧改图（两平台共同前置）
 
@@ -45,9 +46,10 @@
    - **切掉 Detect 层的 decode 部分**，三个 head 的原始卷积输出作为模型输出，decode/NMS 在部署侧实现（图干净、量化友好）；
    - 注意记录三个输出 blob 与 stride（8/16/32）的对应关系。
 5. **多代 head 的导出契约**（`yolo_rt` 五种 `model-type`，见 `common/head_types.h`）：
-   - **v5（anchor-based）**：按上文切 decode，逐层 `[na*(5+nc), h, w]`，C++ 侧 anchor decode；
+   - **v5（anchor-based）**：按上文切 decode，逐层 `[na*(5+nc), h, w]`，通道 anchor-major（`c = a*(5+nc) + attr`，attr 序 `tx,ty,tw,th,obj,cls…`）；`NcnnInfer` 由 blob 通道数推导 na 并重排为 `[5+nc, N]`（列序 (y,x,a)，与 anchor 表一致），C++ 侧 anchor decode；
    - **v8/v9/v11（fused）**：Ultralytics 默认导出，Detect 头（DFL+网格+sigmoid）留图内，单输出 `[1, 4+nc, N]`。注意 anchor 网格烘为图内常量，**换输入尺寸必须重新导出**；v9/v11 检测头与 v8 同构（v9 的 PGI 辅助分支导出推理图时已剥离），直接复用此路径；
-   - **v8/v9/v11（raw，推荐需要换输入尺寸时用）**：Detect 头切在 DFL 之前，逐层 `concat(box, cls)` 导出 `[4*reg_max+nc, h, w]`（box 通道在前、按 l/t/r/b 边分组，cls 为 raw logits），C++ 侧 `decode_af_raw` 做 DFL+dist2bbox；网格 stride 由加载时输出形状推导，**输入尺寸自由**；
+   - **v8/v9/v11（raw，推荐需要换输入尺寸时用）**：Detect 头切在 DFL 之前，逐层 `concat(box, cls)` 导出 `[4*reg_max+nc, h, w]`（box 通道在前、按 l/t/r/b 边分组，cls 为 raw logits），C++ 侧 `decode_af_raw` 做 DFL+dist2bbox；网格 stride 由加载时输出形状推导并缓存，**改输入尺寸免重新导出**（需改配置重新加载；前提是导出图内无固定空间尺寸的 reshape、常量 grid 等静态 shape 算子——纯 conv 骨干 v8 实测成立，v9 待验证；**v11 经当前工具链导出时 C2PSA 含烘焙空间尺寸的 reshape，跨尺寸推理失效，需逐尺寸导出**）。注意这是灵活性优化：raw 输出体量约为 fused 的 9.6×（N=8400、nc=3），是否更快按 infer+extract+拷贝+decode+NMS 全链路实测判定（610M 核显实测 fused 端到端最快，见 `app/README.md` 三路径对比）；
+   - **v8/v9/v11（dist，实验路径）**：DFL 期望留图内、切在 DFL 之后，逐层 `[4+nc, h, w]`（4 条边投影距离 + cls logits），C++ 侧 `decode_af_dist` 只做 grid+dist2bbox；输出体量 ≈ fused。**当前实现**下导出把 H/W 烘为常量（同 v11 的工具链限制），换尺寸需重导；shape-safe 的逐层 DFL 投影理论上可同时保住小输出与动态性，因本机无性能收益未投入；
    - **v10（端到端）**：`model.export(end2end=True)` 或 v10 默认 one-to-one 头，输出 `[1, N, 6]`（x1,y1,x2,y2,score,cls），部署侧仅阈值过滤，不做 NMS。
    - 说明：TAL、FreeAnchor、TOOD 等是**训练期**标签分配器/头设计，只影响权重，推理输出必落于上述契约之一，按契约对接即可。
 
@@ -69,13 +71,14 @@ const float logit_thr = logf(conf_thr / (1.f - conf_thr));  // 预计算一次
 
 ## 1. 技术栈选型
 
-| 层级 | 选型 | 说明 |
-|---|---|---|
-| 图优化 + 推理 | **TensorRT**（ONNX → .engine） | 自动完成 Conv+BN+激活融合、kernel 自动调优 |
-| Decode / NMS | 官方插件 `EfficientNMS_TRT` / `batchedNMSPlugin`，或自写 CUDA 插件 | 参考 tensorrtx 的 `yololayer.cu` |
-| 预处理 | 自写 CUDA kernel（letterbox + normalize + HWC→CHW 单 kernel） | 避免 CPU 侧预处理 + H2D 拷贝 |
-| 部署形态 | 进程内 TRT runtime，或多模型上 Triton Inference Server | 视业务规模 |
-| 量化 | FP16（一行 flag）/ INT8（熵校准，需 500~1000 张校准集） | head 敏感层可回退 FP16 |
+
+| 层级          | 选型                                                              | 说明                                       |
+| ------------- | ----------------------------------------------------------------- | ------------------------------------------ |
+| 图优化 + 推理 | **TensorRT**（ONNX → .engine）                                   | 自动完成 Conv+BN+激活融合、kernel 自动调优 |
+| Decode / NMS  | 官方插件`EfficientNMS_TRT` / `batchedNMSPlugin`，或自写 CUDA 插件 | 参考 tensorrtx 的`yololayer.cu`            |
+| 预处理        | 自写 CUDA kernel（letterbox + normalize + HWC→CHW 单 kernel）    | 避免 CPU 侧预处理 + H2D 拷贝               |
+| 部署形态      | 进程内 TRT runtime，或多模型上 Triton Inference Server            | 视业务规模                                 |
+| 量化          | FP16（一行 flag）/ INT8（熵校准，需 500~1000 张校准集）           | head 敏感层可回退 FP16                     |
 
 **核心认知：NVIDIA 上 90% 的融合工作 TensorRT builder 自动完成**（`trtexec --verbose` 可看到 Conv+BN+SiLU 被合成一个 kernel），开发精力集中在 **Decode/NMS 插件、预处理 GPU 化、INT8 校准** 三件事上。
 
@@ -83,12 +86,13 @@ const float logit_thr = logf(conf_thr / (1.f - conf_thr));  // 预计算一次
 
 ### 2.1 图级融合（自动，无需开发）
 
-| 优化项 | 机制 |
-|---|---|
-| Conv+BN | builder 常量折叠，BN 参数折进卷积权重：`W′ = γ/√(σ²+ε)·W`，`b′ = β + γ(b−μ)/√(σ²+ε)` |
-| Conv+Bias+SiLU | Myelin kernel 融合，SiLU 进 epilogue |
-| Focus | 模型侧改图后不存在；未改图时 slice+concat 会原样保留（慢），**务必先改图** |
-| SPPF | 并行改写后三个 MaxPool 可被调度并行执行 |
+
+| 优化项         | 机制                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------- |
+| Conv+BN        | builder 常量折叠，BN 参数折进卷积权重：`W′ = γ/√(σ²+ε)·W`，`b′ = β + γ(b−μ)/√(σ²+ε)` |
+| Conv+Bias+SiLU | Myelin kernel 融合，SiLU 进 epilogue                                                                 |
+| Focus          | 模型侧改图后不存在；未改图时 slice+concat 会原样保留（慢），**务必先改图**                           |
+| SPPF           | 并行改写后三个 MaxPool 可被调度并行执行                                                              |
 
 ### 2.2 Decode CUDA 插件（必做项之一）
 
@@ -99,11 +103,12 @@ const float logit_thr = logf(conf_thr / (1.f - conf_thr));  // 预计算一次
 
 ### 2.3 NMS 插件
 
-| 方案 | 说明 |
-|---|---|
-| `EfficientNMS_TRT` | 官方插件，支持 class-aware/class-agnostic、score 阈值、top-K，**首选** |
-| `batchedNMSPlugin` | DetectionOutput 风格，位掩码迭代算法 |
-| 自写位掩码 kernel | 参考 mmcv `nms` kernel：每 64 框一个 `uint64` 掩码，按 score 降序逐块抑制，O(N²/64) 访存 |
+
+| 方案               | 说明                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `EfficientNMS_TRT` | 官方插件，支持 class-aware/class-agnostic、score 阈值、top-K，**首选**                   |
+| `batchedNMSPlugin` | DetectionOutput 风格，位掩码迭代算法                                                     |
+| 自写位掩码 kernel  | 参考 mmcv`nms` kernel：每 64 框一个 `uint64` 掩码，按 score 降序逐块抑制，O(N²/64) 访存 |
 
 算法要点（位掩码迭代式）：按 score 排序后，第 i 个保留框生成「与后续所有框 IoU > 阈值」的位掩码，后续框的存活状态 = 所有已保留框掩码的按位或取反。轮数 = 保留框数（几十轮），每轮全并行。
 
@@ -173,13 +178,14 @@ auto engine = std::unique_ptr<nvinfer1::ICudaEngine>(
 
 ## 6. 常见坑
 
-| 坑 | 对策 |
-|---|---|
-| Focus 未改图，slice+concat 每帧大量显存往返 | 导出前改图（0.2） |
-| INT8 校准集不具代表性，mAP 暴跌 | 校准图覆盖真实分布；head 留 FP16 |
-| 每帧 cudaMalloc | 预分配 + 地址复用 |
-| Decode 用 Python/CPU 做 | 必须插件化，feature map 不下传 |
-| 动态 shape 未配 profile 直接崩 | 固定 shape 或显式 optimization profile |
+
+| 坑                                          | 对策                                   |
+| ------------------------------------------- | -------------------------------------- |
+| Focus 未改图，slice+concat 每帧大量显存往返 | 导出前改图（0.2）                      |
+| INT8 校准集不具代表性，mAP 暴跌             | 校准图覆盖真实分布；head 留 FP16       |
+| 每帧 cudaMalloc                             | 预分配 + 地址复用                      |
+| Decode 用 Python/CPU 做                     | 必须插件化，feature map 不下传         |
+| 动态 shape 未配 profile 直接崩              | 固定 shape 或显式 optimization profile |
 
 ---
 
@@ -189,11 +195,12 @@ auto engine = std::unique_ptr<nvinfer1::ICudaEngine>(
 
 7840HS（Phoenix APU）内含三个计算单元，路线按性价比排序：
 
-| 计算单元 | 栈 | 定位 | 平台限制 |
-|---|---|---|---|
-| **780M 核显（RDNA3, gfx1103）** | **ncnn + Vulkan（主线）** | conv 全部走核显，fp16 直通 | Linux / Windows 均可，最省心 |
-| Zen4 CPU（8C16T, AVX2/双泵 AVX-512） | OpenVINO / ONNX Runtime / ncnn CPU | 保底基准、后处理 | 无 |
-| XDNA NPU（Phoenix） | Ryzen AI SW + Quark + ORT Vitis AI EP | 低功耗支线 | **仅 Windows、仅量化模型；Phoenix 属老平台，新版软件栈支持不稳定** |
+
+| 计算单元                             | 栈                                    | 定位                       | 平台限制                                                           |
+| ------------------------------------ | ------------------------------------- | -------------------------- | ------------------------------------------------------------------ |
+| **780M 核显（RDNA3, gfx1103）**      | **ncnn + Vulkan（主线）**             | conv 全部走核显，fp16 直通 | Linux / Windows 均可，最省心                                       |
+| Zen4 CPU（8C16T, AVX2/双泵 AVX-512） | OpenVINO / ONNX Runtime / ncnn CPU    | 保底基准、后处理           | 无                                                                 |
+| XDNA NPU（Phoenix）                  | Ryzen AI SW + Quark + ORT Vitis AI EP | 低功耗支线                 | **仅 Windows、仅量化模型；Phoenix 属老平台，新版软件栈支持不稳定** |
 
 备选：Linux 下 ONNX Runtime **MIGraphX EP** 也可跑 780M（gfx1103 社区实测可用；ORT 1.23 起 ROCm EP 已移除，MIGraphX 是官方迁移路径），但自定义算子不如 ncnn 灵活，仅作备选。
 
@@ -253,6 +260,7 @@ ncnn 官方推荐的自定义层开发节奏（四步迭代，每步可独立验
 **(a) CPU AVX2 版**
 
 要点：
+
 - 预计算三个尺度的 `(gy, gx, stride, anchor_w, anchor_h)` 表，SoA 连续存储，只算一次；
 - logit 域阈值快筛（0.3），99% 的 anchor 直接跳过；
 - SoA 布局遍历，`-O3 -march=znver4 -ffast-math`，OpenMP 并行；
@@ -332,6 +340,7 @@ void main() {
 CPU 侧：矩阵转位掩码 `uint64_t mask[N][ceil(N/64)]`，贪心遍历（按 score 降序，逐保留框按位或抑制）——N=300 时 11KB，几十微秒。
 
 CPU SIMD 贪心 NMS 要点（默认版，必写）：
+
 - decode 输出 `partial_sort` 截 top-200/300，不全排；
 - SoA 存 `x1,y1,x2,y2,area,score,label`，IoU 内层 8-wide SIMD；
 - class-aware 时同类框连续排列，整块跳过异类；
@@ -388,67 +397,74 @@ echo high | sudo tee /sys/class/drm/card*/device/power_dpm_force_performance_lev
 
 按投入产出比排序：
 
-| 优先级 | 优化项 | 说明 | 收益 |
-|---|---|---|---|
-| ★★★ | logit 域阈值 + top-K 截断 | 0.3 节；decode 免全体 exp | decode 提速 3~5× |
-| ★★★ | 类别数裁剪 | 80→N 类，head 通道 255→3(N+5) | head 算力 -75%（10 类时） |
-| ★★★ | 预处理单 pass 化 + 零拷贝 | 一个 kernel/shader 完成全部预处理；NVIDIA 用 NVDEC 显存直通，780M 用 dmabuf | 省掉最大的一次 CPU↔GPU 传输 |
-| ★★★ | feature map 不下传 | decode+NMS 在 GPU 侧，只回传最终框 | 省 4MB+/帧 |
-| ★★ | 矩形推理 | 16:9 视频按长边 640、短边对齐 stride=32 | 少算约 25% |
-| ★★ | 跳帧 + 跟踪 | BYTETrack，隔 2~3 帧检测 | 等效帧率翻倍（系统级最大收益） |
-| ★★ | 异步流水线 | 采集/推理双缓冲，多 stream / 多 Extractor | 隐藏预处理延迟 |
-| ★ | 混合精度兜底 | 敏感层（SPPF 输出、head）留 fp16 | 量化掉点最小化 |
-| ★ | 系统层 | 绑核、governor、GPU dpm、warmup、内存池 | 白捡 5~15% |
+
+| 优先级 | 优化项                    | 说明                                                                        | 收益                           |
+| ------ | ------------------------- | --------------------------------------------------------------------------- | ------------------------------ |
+| ★★★ | logit 域阈值 + top-K 截断 | 0.3 节；decode 免全体 exp                                                   | decode 提速 3~5×              |
+| ★★★ | 类别数裁剪                | 80→N 类，head 通道 255→3(N+5)                                             | head 算力 -75%（10 类时）      |
+| ★★★ | 预处理单 pass 化 + 零拷贝 | 一个 kernel/shader 完成全部预处理；NVIDIA 用 NVDEC 显存直通，780M 用 dmabuf | 省掉最大的一次 CPU↔GPU 传输   |
+| ★★★ | feature map 不下传        | decode+NMS 在 GPU 侧，只回传最终框                                          | 省 4MB+/帧                     |
+| ★★   | 矩形推理                  | 16:9 视频按长边 640、短边对齐 stride=32                                     | 少算约 25%                     |
+| ★★   | 跳帧 + 跟踪               | BYTETrack，隔 2~3 帧检测                                                    | 等效帧率翻倍（系统级最大收益） |
+| ★★   | 异步流水线                | 采集/推理双缓冲，多 stream / 多 Extractor                                   | 隐藏预处理延迟                 |
+| ★     | 混合精度兜底              | 敏感层（SPPF 输出、head）留 fp16                                            | 量化掉点最小化                 |
+| ★     | 系统层                    | 绑核、governor、GPU dpm、warmup、内存池                                     | 白捡 5~15%                     |
 
 # 附录 B：开发路线图（TODO Checklist）
 
 **阶段 0 — 模型侧（两平台共同）**
-- [ ] Focus 改写（space-to-depth 保权重 或 6×6/s2 重训）
-- [ ] SPPF 并行化改写 + 数值对齐
-- [ ] 类别数裁剪
-- [ ] 切 head 导出 ONNX + onnxsim
+
+- [ ]  Focus 改写（space-to-depth 保权重 或 6×6/s2 重训）
+- [ ]  SPPF 并行化改写 + 数值对齐
+- [ ]  类别数裁剪
+- [ ]  切 head 导出 ONNX + onnxsim
 
 **阶段 1 — 基线打通**
-- [ ] [NVIDIA] trtexec FP16 baseline + 数值对齐
-- [ ] [7840HS] pnnx 转换 + ncnn-Vulkan FP16 baseline + 数值对齐
-- [ ] [7840HS] OpenVINO CPU 基准（正确性参照）
+
+- [X]  [NVIDIA] trtexec FP16 baseline + 数值对齐
+- [ ]  [7840HS] pnnx 转换 + ncnn-Vulkan FP16 baseline + 数值对齐
+- [ ]  [7840HS] OpenVINO CPU 基准（正确性参照）
 
 **阶段 2 — 后处理算子化**
-- [ ] logit 域阈值 decode（CPU SIMD，两平台通用验证逻辑）
-- [ ] [NVIDIA] Decode CUDA 插件 / EfficientNMS_TRT 接入
-- [ ] [7840HS] Decode Vulkan compute 版（如 profiling 需要）
-- [ ] CPU SIMD NMS（partial_sort top-K + SoA + 早停）
-- [ ] [可选] 混合式 NMS：IoU 矩阵 shader + CPU 位掩码
+
+- [ ]  logit 域阈值 decode（CPU SIMD，两平台通用验证逻辑）
+- [ ]  [NVIDIA] Decode CUDA 插件 / EfficientNMS_TRT 接入
+- [ ]  [7840HS] Decode Vulkan compute 版（如 profiling 需要）
+- [ ]  CPU SIMD NMS（partial_sort top-K + SoA + 早停）
+- [ ]  [可选] 混合式 NMS：IoU 矩阵 shader + CPU 位掩码
 
 **阶段 3 — 量化**
-- [ ] [NVIDIA] INT8 熵校准 + head FP16 回退
-- [ ] [7840HS] ncnn2table + ncnn2int8 + 敏感层 FP16
-- [ ] mAP 回归（COCO val 500 张）
+
+- [ ]  [NVIDIA] INT8 熵校准 + head FP16 回退
+- [ ]  [7840HS] ncnn2table + ncnn2int8 + 敏感层 FP16
+- [ ]  mAP 回归（COCO val 500 张）
 
 **阶段 4 — 系统与外置**
-- [ ] 预处理融合 kernel/shader + 零拷贝
-- [ ] 矩形推理 / 动态 shape
-- [ ] 异步流水线 + 内存池
-- [ ] 系统层调优（绑核/频率）
-- [ ] [视频场景] BYTETrack 跳帧
+
+- [ ]  预处理融合 kernel/shader + 零拷贝
+- [ ]  矩形推理 / 动态 shape
+- [ ]  异步流水线 + 内存池
+- [ ]  系统层调优（绑核/频率）
+- [ ]  [视频场景] BYTETrack 跳帧
 
 **阶段 5 — 支线（按需）**
-- [ ] [7840HS·Windows] NPU：Quark XINT8 → Vitis AI EP
-- [ ] [NVIDIA] CUDA Graph / Triton 服务化
+
+- [ ]  [7840HS·Windows] NPU：Quark XINT8 → Vitis AI EP
+- [ ]  [NVIDIA] CUDA Graph / Triton 服务化
 
 # 附录 C：参考仓库与资料
 
-| 资源 | 用途 |
-|---|---|
-| `ultralytics/yolov5` | 官方导出流程、`Conv.fuse()` 参考实现 |
-| `wang-xinyu/tensorrtx` | TensorRT 手搭网络 + Decode CUDA 插件（`yololayer.cu`） |
-| `shouxieai/tensorRT_Pro` | 手撕 CUDA 前后处理 + 融合推理 |
-| `Linaom1214/TensorRT-For-YOLO-Series` | ONNX + 图手术路线 |
-| `Tencent/ncnn` | 主线框架；内置 sigmoid AVX2 实现、自定义层 wiki（fp32→packing→fp16→Vulkan 四步法） |
-| `NVIDIA/TensorRT`（开源插件） | `batchedNMSPlugin` 位掩码迭代 NMS 教科书实现 |
-| `open-mmlab/mmcv` | 单 kernel 位掩码 NMS，适合移植 GLSL |
-| AMD Quark 文档 | Ryzen AI NPU 量化（XINT8/CLE/AdaRound/AdaQuant） |
-| ONNX Runtime Vitis AI EP 文档 | NPU 部署、PHX `X1` target 配置 |
+
+| 资源                                  | 用途                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| `ultralytics/yolov5`                  | 官方导出流程、`Conv.fuse()` 参考实现                                                  |
+| `wang-xinyu/tensorrtx`                | TensorRT 手搭网络 + Decode CUDA 插件（`yololayer.cu`）                                |
+| `shouxieai/tensorRT_Pro`              | 手撕 CUDA 前后处理 + 融合推理                                                         |
+| `Linaom1214/TensorRT-For-YOLO-Series` | ONNX + 图手术路线                                                                     |
+| `Tencent/ncnn`                        | 主线框架；内置 sigmoid AVX2 实现、自定义层 wiki（fp32→packing→fp16→Vulkan 四步法） |
+| `NVIDIA/TensorRT`（开源插件）         | `batchedNMSPlugin` 位掩码迭代 NMS 教科书实现                                          |
+| `open-mmlab/mmcv`                     | 单 kernel 位掩码 NMS，适合移植 GLSL                                                   |
+| AMD Quark 文档                        | Ryzen AI NPU 量化（XINT8/CLE/AdaRound/AdaQuant）                                      |
+| ONNX Runtime Vitis AI EP 文档         | NPU 部署、PHX`X1` target 配置                                                         |
 
 ---
-

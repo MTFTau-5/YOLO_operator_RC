@@ -15,6 +15,8 @@ std::vector<Detection> decode(const float* pred, const AnchorTable& tab,
                               int num_classes, float conf_thr);
 std::vector<Detection> decode_af_raw(const float* pred, const AnchorTable& pts,
                                      int num_classes, int reg_max, float conf_thr);
+std::vector<Detection> decode_af_dist(const float* pred, const AnchorTable& pts,
+                                      int num_classes, float conf_thr);
 std::vector<Detection> decode_v8(const float* pred, int num_classes, int n, float conf_thr);
 void decode_v8_pose(const float* pred, int num_classes, int num_kpts, int n, float conf_thr,
                     std::vector<Detection>& dets, std::vector<float>& kpts);

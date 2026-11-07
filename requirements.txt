@@ -1,3 +1,20 @@
+# golden 生成与数值测试（tools/gen_*.py、nvidia/tests）
 numpy
-pybind11>=2.10
-tensorrt>=10; python_version >= "3.10"
+pybind11>=2.10                          # nvidia Python 绑定（yolo_ops_cuda）构建
+tensorrt>=10; python_version >= "3.10"  # TRT 插件测试（可选，无则对应目标跳过）
+
+# ncnn 部署工具链（tools/export_ncnn_sppf.py / export_af_raw.py /
+# accept_raw_dynamic.py，见 README §5 与 app/README「验收环境」）。
+# 以下版本已随真实模型验收固定：本组合下实测——未过 onnxsim 的图会让 pnnx
+# 段错误（yolo11 复现）；命名符号维让 pnnx inputshape2 路径 stoi 崩溃。
+# 偏离这些版本时，导出脚本行为与 app/README 的验收结论需重新验证。
+torch==2.14.1                           # 验收机为 2.14.1+cu130
+ultralytics==8.4.178                    # fused 导出 format='ncnn' 与 Detect 头 patch 的口径来源
+onnx==1.23.2                            # torch.onnx 前置
+onnxsim==0.8.1                          # pnnx 前置化简（必需，非可选）
+pnnx==20260526                          # 提供 pnnx CLI（ONNX → ncnn）
+ncnn==1.0.20260526                      # AMD CPU/核显（7840HS/780M）部署：ncnn python
+                                        #   运行时（format='ncnn' 附带的 model_ncnn.py 依赖）
+onnxscript==0.7.2                       # torch.onnx dynamo 导出前端（AMD 侧动态 shape
+                                        #   导出路径备用；v11 attention 动态化尝试需要）
+opencv-python                           # accept_raw_dynamic 的读图/letterbox

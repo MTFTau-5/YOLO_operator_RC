@@ -1,4 +1,5 @@
 add_library(yoloop_riscv STATIC
+  decode_af_dist.cpp
   decode_af_raw.cpp
   decode_rvv.cpp
   nms_rvv.cpp

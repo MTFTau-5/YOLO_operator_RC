@@ -3,6 +3,7 @@
 #if defined(YOLOOP_CPU_BACKEND_RISCV)
 #include "../riscv/yolo_rvv.h"
 #else
+#include "../x86/decode_af_dist.h"
 #include "../x86/decode_af_raw.h"
 #include "../x86/decode_avx2.h"
 #include "../x86/decode_e2e.h"

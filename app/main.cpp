@@ -119,7 +119,7 @@ void usage(const char* argv0) {
             "  配置: --config 路径（扁平 YAML，key 与下列长选项同名）；CLI 覆盖配置文件\n"
             "        --dump-config 打印最终生效配置后退出\n"
             "  模型: --param P --model M --heads b0,b1,b2 [--in0 NAME] [--in-size WxH]\n"
-            "        [--model-type v5|v8|v9|v11|v8-pose|v8-raw|v9-raw|v11-raw|v10]\n"
+            "        [--model-type v5|v8|v9|v11|v8-pose|v8-raw|v9-raw|v11-raw|v8-dist|v9-dist|v11-dist|v10]\n"
             "        [--num-classes N] [--reg-max 16] [--gpu N] [--cpu-threads N]\n"
             "        [--anchors-s8 w,h,w,h,... --anchors-s16 ... --anchors-s32 ...]\n"
             "        [--no-model --fake-gpu-ms N]   (无模型冒烟)\n"
@@ -157,7 +157,7 @@ void apply_kv(Args& a, const std::string& k, const std::string& v) {
         if (!parse_head_type(v, a.head)) {
             fprintf(stderr,
                     "model-type 支持 v5 / v8 / v9 / v11 / v8-pose / v8-raw / v9-raw / "
-                    "v11-raw / v10: %s\n",
+                    "v11-raw / v8-dist / v9-dist / v11-dist / v10: %s\n",
                     v.c_str());
             exit(1);
         }
@@ -294,7 +294,7 @@ void unletterbox_kpts(std::vector<float>& kpts, int num_kpts, int img_w, int img
 struct Ctx {
     Args args;
     Pipeline pipe;
-    AnchorTable tab;      // AnchorRaw=anchor 表；AfRaw=网格点表；其余不使用
+    AnchorTable tab;      // AnchorRaw=anchor 表；AfRaw/AfDist=网格点表；其余不使用
     int c_total = 0;      // pred 通道数（由 head 契约推导）
     int pred_n = 0;       // 输出总列数（AnchorRaw=anchor 表 N；其余由模型发现）
     NcnnInfer infer;
@@ -324,6 +324,11 @@ void consume(Ctx& c, Slot* done) {
                 done->dets = cpu::decode_af_raw(done->pred.data(), c.tab,
                                                 c.args.num_classes, c.args.reg_max,
                                                 c.args.conf);
+                done->kept = cpu::nms(std::move(done->dets), c.args.nms, c.args.topk);
+                break;
+            case HeadType::AfDist:
+                done->dets = cpu::decode_af_dist(done->pred.data(), c.tab,
+                                                 c.args.num_classes, c.args.conf);
                 done->kept = cpu::nms(std::move(done->dets), c.args.nms, c.args.topk);
                 break;
             case HeadType::E2E:
@@ -529,7 +534,8 @@ int main(int argc, char** argv) {
             c.tab = build_anchor_table(default_levels(c.args.in_w, c.args.in_h));
         }
         expected_n = c.tab.n;
-    } else if (c.args.head == HeadType::AfRaw && c.args.no_model) {
+    } else if ((c.args.head == HeadType::AfRaw || c.args.head == HeadType::AfDist) &&
+               c.args.no_model) {
         c.tab = build_point_table(default_point_levels(c.args.in_w, c.args.in_h));
         expected_n = c.tab.n;
     }
@@ -553,7 +559,8 @@ int main(int argc, char** argv) {
         if (!c.infer.load(icfg, expected_n)) return 1;
         c.c_total = c.infer.c_total();
         c.pred_n = c.infer.pred_n();
-        if (c.args.head == HeadType::AfRaw) c.tab = c.infer.grid();
+        if (c.args.head == HeadType::AfRaw || c.args.head == HeadType::AfDist)
+            c.tab = c.infer.grid();
     } else {
         fprintf(stderr, "[yolo_rt] --no-model 冒烟模式（线程B 假推理 %dms/帧）\n",
                 c.args.fake_gpu_ms);

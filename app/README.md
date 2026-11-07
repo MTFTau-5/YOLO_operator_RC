@@ -55,14 +55,15 @@ cp app/pipeline.example.yaml app/pipeline.yaml    # 按你的模型改
 跟踪（`gate-px/gate-scale/size-ratio/size-memory/coast/max-misses`）、运行
 （`serial/cores-a/cores-b/max-w/max-h`）、控制（`udp`）。
 
-**模型类型（`model-type`）**：五种 head 契约（`common/head_types.h`）。
+**模型类型（`model-type`）**：六种 head 契约（`common/head_types.h`）。
 
 | 值 | 输出契约 | decode 算子 |
 |---|---|---|
-| `v5` | 切头导出，3 个 head `[4+1+nc, N]`（README §3），需 anchor 表 | `cpu::decode`（logit 快筛） |
+| `v5` | 切头导出，逐层 `[na*(5+nc), h, w]`（通道 anchor-major），`ncnn_infer` 重排为 `[4+1+nc, N]`（README §3），需 anchor 表 | `cpu::decode`（logit 快筛） |
 | `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `cpu::decode_v8` |
 | `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `cpu::decode_v8_pose` |
-| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（换输入尺寸不用重导模型） | `cpu::decode_af_raw`（DFL+dist2bbox） |
+| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（改输入尺寸只改 `in-size` 重新加载、免重新导出；前提是导出图内无固定空间尺寸的 reshape / 常量 grid 等静态 shape 算子） | `cpu::decode_af_raw`（DFL+dist2bbox） |
+| `v8-dist` / `v9-dist` / `v11-dist` | DFL 期望留图内，逐层 `[4+nc, h, w]`（4 条边投影距离 + cls logit），网格表推导同 raw；grid+dist2bbox 在 C++（实验路径，见「DFL 切分点三路径对比」） | `cpu::decode_af_dist` |
 | `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `cpu::decode_e2e` |
 
 `v8-raw` 系的 `reg-max`（默认 16）与 `num-classes` 决定校验通道数 `4*reg_max+nc`。
@@ -70,9 +71,11 @@ cp app/pipeline.example.yaml app/pipeline.yaml    # 按你的模型改
 pose 模式下关键点随框过 NMS（`cpu::nms_indices` 索引重载），UDP 包附带被跟踪框
 命中时的关键点（≤32 点；coast/丢失帧 `kpt_count=0`）。
 
-**防大小不匹配**：v5 由 `in-size`/`num-classes`/anchor 表推导 N；v8 系 N 由模型输出
-自动发现。`NcnnInfer::load` 加载时会试跑一帧校验通道数（与总数）——模型与配置
-不匹配时启动即报错，不会带病运行。
+**防大小不匹配**：v5 由 `in-size`/`num-classes`/anchor 表推导 N（另校验 blob 通道为
+`na*(5+nc)` 整数倍，na 由通道数推导）；v8 系 N 由模型输出自动发现。`NcnnInfer::load`
+加载时试跑一帧校验通道数与总数——把布局错误尽量前移到加载期，形状/通道数不匹配
+启动即报错；但试跑不能验证 head 顺序、box/class 通道语义、anchor 排列、logit 是否
+已 sigmoid，这些仍由模型契约约束。
 
 - `--heads`：输出 blob 名列表。逐层契约（v5 / v8-raw 系）给三个，**按 stride 8→16→32
   顺序**，输出须为对应契约的原始卷积输出；fused / v10 通常单个拼接输出。
@@ -249,6 +252,84 @@ python tools/export_ncnn_sppf.py best.pt --imgsz 480 640 \
 意义；在 ncnn/Vulkan 路线上不必为其单独重导。**矩形推理才是真正的收益来源。**
 配置：`app/pipeline_pose_rect_sppf.yaml`。
 
+### 真实模型 raw 导出与多尺寸动态验收（2026-11）
+
+工具链：`tools/export_af_raw.py`（v8/v9/v11 detect 头 pre-dfl / post-dfl 两种切分
+导出 ncnn；**必须先过 onnxsim**，未化简的图会让 pnnx 段错误——yolo11 实测复现；
+pnnx 把多输出 blob 重命名为 `out0..out2`）+ `tools/accept_raw_dynamic.py`
+（导出 → golden 生成 → C++ `test_raw_model` 对拍 → ultralytics predict 交叉核对，
+一键复现）+ `app/tests/test_raw_model.cpp`（多尺寸 `NcnnInfer::load` N 自动发现、
+raw 张量对拍、`decode_af_raw`+NMS 对拍；贴阈值边缘带 score∈[conf, conf+0.05)
+的框允许 fp16/图融合抖动出没，硬性对拍只约束严格框）。
+
+实测（yolov8n / yolo11n，bus.jpg，conf=0.25，fp32 导出 + fp16 存储推理）：
+
+- **v8（纯 conv 骨干）**：同一 param/bin 在 640×640 / 640×480 / 992×544 下
+  N 自动发现正确（8400 / 6300 / 11067），raw 张量 max|Δ| ≤ 0.165（fp16 存储
+  级别），严格框坐标 max|Δ| ≤ 0.09px，与原始 PyTorch Detect 交叉核对一致。
+  **raw 契约的"改尺寸免重导"在 v8 上已验证成立；v9 待验证（见下）。**
+- **v11（C2PSA attention，结论绑定当前工具链）**：YOLO11 经当前
+  PyTorch → ONNX → onnxsim → pnnx → ncnn 链路导出时，attention 内
+  `view(B,C,H,W)` 把空间尺寸烘为常量（ncnn param 中 `Reshape 0=400/0=20`
+  系列），同一模型跨尺寸推理数值错误（raw max|Δ| 达 22.8，框数错），因此
+  **当前工具链下需逐尺寸导出**。这不是 attention 在数学上不能动态——
+  动态恢复路径（dynamo 符号 shape 导出 + pnnx `inputshape2`）已实测不可行：
+  pnnx 对命名符号维 `stoi` 崩溃。逐尺寸导出、逐尺寸对拍全部通过
+  （坐标 max|Δ| ≤ 0.09px；attention 使 raw 张量误差偏大，≤0.69，语义层面框一致）。
+- v9：检测头与 v8 同构、GELAN 骨干纯 conv 无 attention，**跨尺寸能力待验证**
+  （未实测，无官方权重验收；不在 v8 已验证结论内）。
+
+**支持矩阵**（验收状态以本表为准）：
+
+| 路径 | 契约测试（合成） | 真实固定尺寸 | 真实跨尺寸（同 param/bin） |
+|---|---|---|---|
+| v5 raw | 已通过（重排全量比对 + planted decode + 反例） | 待验收（暂无 v5 导出工具） | 暂不属于本次范围 |
+| v8 raw | 已通过 | 已通过（≤0.09px） | 已通过（640×640 / 640×480 / 992×544） |
+| v9 raw | 可复用 v8 契约 | 待验收 | 待验证 |
+| v11 raw | 已通过 | 已通过（逐尺寸导出，≤0.09px） | 当前工具链下失败，需逐尺寸导出 |
+| AfDist | 已通过（case12 golden） | 已通过（数值抽查 + bench 全链路） | 当前导出不具备该优势（见下） |
+
+**验收环境（已固定，偏离需重验）**：torch 2.14.1 / ultralytics 8.4.178 /
+onnx 1.23.2 / onnxsim 0.8.1 / onnxscript 0.7.2 / pnnx+ncnn 1.0.20260526
+（完整清单与注释见 `requirements.txt`）。导出器版本是验收环境的
+一部分：onnxsim 化简顺序影响 pnnx 是否段错误、命名符号维让 pnnx inputshape2
+路径崩溃，均为本版本组合下的实测行为（脚本运行时打印 `[toolchain]` 实际版本）。
+
+### DFL 切分点三路径对比（同权重 yolov8n，610M 核显）
+
+第三条切分路径 `v8-dist`（`x86::decode_af_dist`）：DFL 期望留图内、逐层
+`[4+nc, h, w]`，C++ 只做 grid+dist2bbox。输出体量：
+
+| 路径 | 逐层通道 | N=8400 fp32 输出 | 换尺寸 |
+|---|---|---|---|
+| fused（图内全 decode） | —（单输出 [4+nc, N]） | 84×8400×4B ≈ 2.82MB | 必须重导 |
+| raw（pre-dfl） | 4×16+80=144 | 144×8400×4B ≈ 4.84MB（nc=80 时 1.7×；nc=3 时 67/7 ≈ 9.6×） | v8/v9 免重导 |
+| dist（post-dfl） | 4+80=84 | ≈ 2.82MB | 必须重导（图内 reshape 烘尺寸） |
+
+610M + Vulkan fp16、1447×1080 视频 300 帧串行（第二轮实测，运行间噪声 ±10%）：
+
+| 路径 | infer(GPU, 含 extract+拷贝) | decode+nms | 端到端 P50 近似 |
+|---|---|---|---|
+| fused | 6.03ms | 0.316ms | 9.60ms（≈104 FPS 上限） |
+| raw | 7.71ms | 0.100ms | 11.20ms（≈89 FPS 上限） |
+| dist | 7.08ms | 0.098ms | 10.58ms（≈95 FPS 上限） |
+
+结论：
+
+- decode 微基准（case9/case12，N=8400）：`decode_af_raw` 110.6µs vs
+  `decode_af_dist` 5.0µs——**DFL 是 raw 侧 decode 的绝对大头**；但在端到端里
+  它被 infer/extract/拷贝差异淹没（raw 与 dist 的 decode+nms 都 ~0.1ms，
+  差距不及 infer 段的 1/10）。
+- **本机上 DFL 应放图内**：fused 端到端最快；raw 慢 ~17%（144 通道的提取+拷贝
+  是主因）；dist 居中。**"dist 两头不占"仅限当前实现**：当前 post-dfl 导出把
+  H/W 烘为常量（同 v11 的工具链限制），换尺寸须重导，而性能上又不占优，故保留
+  为实验路径。理论上 shape-safe 的逐层 DFL 投影可以只输出 `[4+nc, h, w]` 且把
+  grid 留在图外，同时保住小输出与动态性；既然本机已无性能收益，除非以后特别
+  需要这条动态路径，不再为此投入。
+- 该结论与「核显共享内存下拷贝代价敏感」一致；独显、低阈值、密集场景（候选框
+  上千、NMS/decode 占比上升）结论可能反转——按 `bench_pipeline` 同法复测，
+  不要只看 decode 微基准。
+
 ## 里程碑对应（PIPELINE.md §8）
 
 | 里程碑 | 落地 |
@@ -265,4 +346,6 @@ python tools/export_ncnn_sppf.py best.pt --imgsz 480 640 \
 - 真实相机采集实现（接口已就位）；
 - 真实模型（best.pt pose → ncnn）已经 bench_pipeline 视频链路验证；相机端到端待采
   集实现；
+- 覆盖补全（不影响现有结论可信度）：v5 raw 真实模型对拍（需先补 v5 导出工具，
+  同 export_af_raw.py 模式）、v9 真实模型固定尺寸 + 跨尺寸验收（当前标"待验证"）；
 - M5 验收指标（P50≈12ms / P99<25ms / ≥95FPS）需在目标机+真模型上复测。

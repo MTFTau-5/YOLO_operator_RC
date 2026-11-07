@@ -12,6 +12,7 @@
 #include "../common/testio.h"
 #include "../common/yolo_ref.h"
 
+
 namespace {
 
 using yoloop::Detection;
@@ -272,6 +273,7 @@ int main(int argc, char** argv) {
 
     // ---- v8/v9/v11 原生 raw（DFL 在 C++ 侧）：[4*reg_max+nc, N] ----
     double bench_afraw = 0.0;
+    double bench_afdist = 0.0;
     {
         const std::string dir = root + "/case9_afraw";
         auto meta = yoloop::testio::load_meta(dir);
@@ -351,9 +353,62 @@ int main(int argc, char** argv) {
                     m_cpu.max_coord_err, m_cpu.max_score_err);
     }
 
+    // ---- v8/v9/v11 第三切分（DFL 在图内）：[4+nc, N]，grid+dist2bbox 在 C++ ----
+    {
+        const std::string dir = root + "/case12_afdist";
+        auto meta = yoloop::testio::load_meta(dir);
+        const int nc = yoloop::testio::meta_int(meta, "num_classes");
+        const int n = yoloop::testio::meta_int(meta, "num_anchors");
+        const float conf = yoloop::testio::meta_float(meta, "conf_thr");
+        const float nth = yoloop::testio::meta_float(meta, "nms_thr");
+        const int iw = yoloop::testio::meta_int(meta, "input_w");
+        const int ih = yoloop::testio::meta_int(meta, "input_h");
+        auto pred = yoloop::testio::load_f32(dir + "/pred.bin");
+        auto gdec = yoloop::testio::load_dets(dir + "/golden_decode.bin");
+        auto gnms = yoloop::testio::load_dets(dir + "/golden_nms.bin");
+        if ((int)pred.size() != (4 + nc) * n) {
+            std::fprintf(stderr, "[case12] pred.bin 尺寸不符: %zu != %d\n", pred.size(),
+                         (4 + nc) * n);
+            return 1;
+        }
+        auto tab = yoloop::build_point_table(yoloop::default_point_levels(iw, ih));
+        if (tab.n != n) {
+            std::fprintf(stderr, "[case12] 网格点表不符: %d != %d\n", tab.n, n);
+            return 1;
+        }
+
+        auto rdec = yoloop::ref::decode_af_dist(pred.data(), tab, nc, conf);
+        auto xdec = yoloop::cpu::decode_af_dist(pred.data(), tab, nc, conf);
+        auto m_ref = match_sets(rdec, gdec, 1e-2, 1e-3);
+        auto m_cpu = match_sets(xdec, gdec, 1e-2, 1e-3);
+        bool ok = m_ref.ok && m_cpu.ok;
+        all_ok = all_ok && ok;
+        std::printf("[case12_afdist] decode %s | golden=%zu ref=%zu cpu=%zu | "
+                    "ref_err coord=%.3g score=%.3g | cpu_err coord=%.3g score=%.3g%s\n",
+                    ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
+                    m_ref.max_coord_err, m_ref.max_score_err, m_cpu.max_coord_err,
+                    m_cpu.max_score_err, m_cpu.unmatched ? " (unmatched!)" : "");
+
+        auto rnms = yoloop::ref::nms(gdec, nth);
+        auto xnms = yoloop::cpu::nms(gdec, nth, /*topk=*/0);
+        auto n_ref = match_sets(rnms, gnms, 1e-2, 1e-3);
+        auto n_cpu = match_sets(xnms, gnms, 1e-2, 1e-3);
+        bool nok = n_ref.ok && n_cpu.ok;
+        all_ok = all_ok && nok;
+        std::printf("[case12_afdist] nms    %s | golden=%zu ref=%zu cpu=%zu%s\n",
+                    nok ? "PASS" : "FAIL", gnms.size(), rnms.size(), xnms.size(),
+                    n_cpu.unmatched ? " (unmatched!)" : "");
+
+        bench_afdist = bench_us([&] {
+            auto v = yoloop::cpu::decode_af_dist(pred.data(), tab, nc, conf);
+            g_sink = v.size();
+        }, 1000);
+    }
+
     std::printf("\n== 基准（平均耗时） ==\n");
     std::printf("decode      case2_dense N=25200     : %9.1f us  (1000 rounds)\n", bench_decode);
     std::printf("decode_af   case9_afraw N=8400      : %9.1f us  (1000 rounds)\n", bench_afraw);
+    std::printf("decode_dist case12_afdist N=8400    : %9.1f us  (1000 rounds)\n", bench_afdist);
     std::printf("nms         case2_dense topk=300    : %9.1f us  (1000 rounds)\n", bench_nms);
     std::printf("preprocess  1280x720 -> 640x640     : %9.1f us  (100 rounds)\n", bench_pre);
     std::printf("\n%s\n", all_ok ? "ALL PASS" : "FAILED");

@@ -185,11 +185,11 @@ int main(int argc, char** argv) {
     Tracker tracker;
     Bench bm;
 
-    // AnchorRaw 需要 anchor 表（无配置入口，用 YOLOv5s P5 默认）；AfRaw 用探测推导的网格表
+    // AnchorRaw 需要 anchor 表（无配置入口，用 YOLOv5s P5 默认）；AfRaw/AfDist 用探测推导的网格表
     AnchorTable tab;
     if (a.head == HeadType::AnchorRaw)
         tab = build_anchor_table(default_levels(a.in_w, a.in_h));
-    else if (a.head == HeadType::AfRaw)
+    else if (a.head == HeadType::AfRaw || a.head == HeadType::AfDist)
         tab = infer.grid();
 
     auto decode_track = [&](Slot* s, Bench& b) {
@@ -212,6 +212,11 @@ int main(int argc, char** argv) {
             case HeadType::AfRaw:
                 kept = cpu::nms(cpu::decode_af_raw(s->pred.data(), tab, a.num_classes,
                                                    a.reg_max, a.conf),
+                                a.nms, a.topk);
+                break;
+            case HeadType::AfDist:
+                kept = cpu::nms(cpu::decode_af_dist(s->pred.data(), tab, a.num_classes,
+                                                    a.conf),
                                 a.nms, a.topk);
                 break;
             case HeadType::E2E:
