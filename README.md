@@ -12,7 +12,7 @@
 | `app/` | x86 / K3 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn/SpaceMIT ORT 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
 | `tools/` | 工具 | `gen_test_vectors.py` golden 生成、`bench_baseline.cpp` 无算子基线基准 | §5 §12 |
 
-K3 实机调试与验证过程见 [K3 RVV 与 SpaceMIT EP 部署、调试和验证报告](./docs/K3_SPACEMIT_DEBUG_REPORT.md)。
+K3 实机调试与验证过程见 [K3 RVV 与 SpaceMIT EP 部署、调试和验证报告](./docs/K3_SPACEMIT_DEBUG_REPORT.md)；厂商问题分析见 [致进迭时空：K3 SpaceMIT EP 调试报告](./docs/K3_SPACEMIT_VENDOR_DEBUG_REPORT.md)。
 
 ---
 
