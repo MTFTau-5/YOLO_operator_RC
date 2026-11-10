@@ -108,6 +108,32 @@ OpenCV VideoCapture / FFmpeg 视频解码
 
 官方工具与自定义工具使用同一个 ONNX 模型和同一套核心 EP 库。区别主要在于**外围初始化环境**，而不是模型文件不同。
 
+### 3.3 `OrtInfer` 的归属与必要性
+
+`OrtInfer` **不是进迭时空官方组件**，而是本项目为了接入完整视频业务编写的适配层，代码位于 `app/ort_infer.cpp`。它本身不实现卷积、MatMul 或 AI 加速指令，真正的推理引擎仍然是官方的 ONNX Runtime 和 SpaceMIT EP。
+
+各组件归属如下：
+
+| 组件 | 归属 | 作用 |
+|---|---|---|
+| ONNX Runtime | 官方 | 模型加载、图执行和 Session 管理 |
+| SpaceMIT EP / libspert | 官方 | 将支持的子图调度到 A100 执行 |
+| `onnxruntime_perf_test` | 官方 | 单独测量模型推理性能 |
+| `OrtInfer` | **本项目自研** | 调用官方接口，校验模型输入输出，管理缓冲区、布局和 EP 初始化 |
+| `bench_pipeline` | **本项目自研** | 视频解码、预处理、Decode/NMS、Tracker、流水线及计时 |
+
+`OrtInfer` 通过 `SessionOptionsSpaceMITEnvInit` 接入官方 EP，负责：
+
+- 检查 `images/output0` 等模型输入输出名称和 head 契约；
+- 创建并复用输入输出 Tensor/缓冲区；
+- 使用 `Ort::IoBinding` 绑定现有 `pred` 或其他暂存区；
+- 将输出整理为项目需要的 channel-major 布局；
+- 把官方推理结果交给自研 Decode/NMS 和 Tracker。
+
+官方性能工具只负责“准备输入、执行模型、输出耗时”，**不包含也不需要这层业务适配代码**。如果只测模型 FPS，使用官方工具即可；如果要运行真实视频、处理姿态输出并接入跟踪控制，则需要这样的集成层，或者使用能满足相同业务需求的官方完整应用。
+
+因此，本报告中的“自研 OrtInfer”指项目集成层，**不是指我们自行实现或替换了官方 EP**。
+
 ## 4. 问题一：非等分 Split 导致 Reshape 编译失败
 
 ### 4.1 首次错误输出

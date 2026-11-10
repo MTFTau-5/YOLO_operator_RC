@@ -96,6 +96,8 @@ PC 上的 `test_rvv` 使用标量回退验证算法，同时使用 Clang 生成 
 - 其他布局使用一次性分配的暂存区；
 - `SPACEMIT_EP_*` 环境变量配置。
 
+`OrtInfer` 是本项目自研的集成适配层，不是进迭时空官方组件。它只负责官方 Session/EP 的初始化、输入输出校验、缓冲区绑定和布局适配；真正的模型推理由官方 ONNX Runtime 和 SpaceMIT EP 完成。官方 `onnxruntime_perf_test` 只测模型，不包含这层业务集成代码。
+
 ## 4. 构建与运行命令
 
 ### 4.1 K3 编译和测试
