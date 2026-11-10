@@ -55,7 +55,7 @@
 - 视频解码、预处理和流水线；
 - RVV Decode/NMS、Tracker。
 
-其中 `OrtInfer` 是**本项目自研的集成适配层**，位于 `app/ort_infer.cpp`，不是官方组件。它只负责：
+其中 `OrtInfer` 是个人为了适配测试环境做的一个兼容层，位于 `app/ort_infer.cpp`，不是官方组件。它只负责：
 
 - 调用 `SessionOptionsSpaceMITEnvInit`；
 - 校验输入输出名称和 head 契约；
