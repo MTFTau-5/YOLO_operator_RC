@@ -2,7 +2,7 @@
 //
 //   线程A（CPU，默认绑核 0-3）：采集 → letterbox → 推 q_gpu → 取回上帧 →
 //                                decode → NMS → Tracker(Kalman) → UDP 控制
-//   线程B（GPU 提交，默认绑核 4-7）：q_gpu.pop → ncnn extract() → q_back.push
+//   线程B（推理，默认绑核 4-7）：q_gpu.pop → ncnn/SpaceMIT ORT → q_back.push
 //
 // --serial 退化为 M1/M3 串行模式（单线程跑通全链路，用于数值对齐与验收）。
 
@@ -23,7 +23,7 @@
 #include "config.h"
 #include "control_tx.h"
 #include "cpu_ops.h"
-#include "ncnn_infer.h"
+#include "infer_backend.h"
 #include "pipeline.h"
 #include "stats.h"
 #include "tracker.h"
@@ -34,6 +34,7 @@ using namespace yoloop;
 
 struct Args {
     // 模型
+    std::string backend = "ncnn";
     std::string param, model;
     std::string in0 = "in0";
     std::vector<std::string> heads;
@@ -44,7 +45,7 @@ struct Args {
     int reg_max = 16;    // head=AfRaw 时有效（DFL 通道数 = 4*reg_max）
     int gpu = 0;
     int cpu_threads = 1;
-    bool no_model = false;   // 冒烟：跳过 ncnn，线程B 假装推理
+    bool no_model = false;   // 冒烟：跳过模型推理，线程B 假装推理
     int fake_gpu_ms = 10;    // --no-model 时线程B 每帧睡眠毫秒数
     // 检测阈值
     float conf = 0.3f;
@@ -118,7 +119,7 @@ void usage(const char* argv0) {
             "用法: %s [--config app.yaml] [覆盖选项...]\n"
             "  配置: --config 路径（扁平 YAML，key 与下列长选项同名）；CLI 覆盖配置文件\n"
             "        --dump-config 打印最终生效配置后退出\n"
-            "  模型: --param P --model M --heads b0,b1,b2 [--in0 NAME] [--in-size WxH]\n"
+            "  模型: [--backend ncnn|spacemit] --param P --model M --heads b0,b1,b2 [--in0 NAME] [--in-size WxH]\n"
             "        [--model-type v5|v8|v9|v11|v8-pose|v8-raw|v9-raw|v11-raw|v8-dist|v9-dist|v11-dist|v10]\n"
             "        [--num-classes N] [--reg-max 16] [--gpu N] [--cpu-threads N]\n"
             "        [--anchors-s8 w,h,w,h,... --anchors-s16 ... --anchors-s32 ...]\n"
@@ -140,7 +141,8 @@ std::vector<float> parse_floats(std::string v) {
 
 // 统一的 key=value 应用入口：CLI 与配置文件共用（key 不带前导 --）
 void apply_kv(Args& a, const std::string& k, const std::string& v) {
-    if (k == "param") a.param = v;
+    if (k == "backend") a.backend = v;
+    else if (k == "param") a.param = v;
     else if (k == "model") a.model = v;
     else if (k == "in0") a.in0 = v;
     else if (k == "heads") {
@@ -226,7 +228,9 @@ Args parse_args(int argc, char** argv) {
         }
         apply_kv(a, k, argv[i]);
     }
-    if (!a.no_model && (a.param.empty() || a.model.empty() || a.heads.empty())) {
+    const bool needs_param = a.backend == "ncnn";
+    if (!a.no_model &&
+        ((needs_param && a.param.empty()) || a.model.empty() || a.heads.empty())) {
         usage(argv[0]);
         exit(1);
     }
@@ -236,7 +240,7 @@ Args parse_args(int argc, char** argv) {
 void dump_config(const Args& a) {
     fprintf(stderr,
             "# 最终生效配置\n"
-            "param: %s\nmodel: %s\nin0: %s\nheads: [%s]\nin-size: %dx%d\n"
+            "backend: %s\nparam: %s\nmodel: %s\nin0: %s\nheads: [%s]\nin-size: %dx%d\n"
             "model-type: %s\nnum-classes: %d\nnum-kpts: %d\nreg-max: %d\ngpu: %d\n"
             "cpu-threads: %d\n"
             "no-model: %s\nfake-gpu-ms: %d\n"
@@ -245,7 +249,7 @@ void dump_config(const Args& a) {
             "gate-px: %.1f\ngate-scale: %.2f\nsize-ratio: %.2f\nsize-memory: %d\n"
             "coast: %d\nmax-misses: %d\nanchors-s8: %zu 个\nanchors-s16: %zu 个\n"
             "anchors-s32: %zu 个\n",
-            a.param.c_str(), a.model.c_str(), a.in0.c_str(),
+            a.backend.c_str(), a.param.c_str(), a.model.c_str(), a.in0.c_str(),
             [&] {
                 std::string s;
                 for (size_t i = 0; i < a.heads.size(); ++i)
@@ -297,7 +301,7 @@ struct Ctx {
     AnchorTable tab;      // AnchorRaw=anchor 表；AfRaw/AfDist=网格点表；其余不使用
     int c_total = 0;      // pred 通道数（由 head 契约推导）
     int pred_n = 0;       // 输出总列数（AnchorRaw=anchor 表 N；其余由模型发现）
-    NcnnInfer infer;
+    std::unique_ptr<InferBackend> infer;
     NullSource cam;  // 采集接口占位：接真实相机时替换为其实现
     Tracker tracker;
     ControlTx tx;
@@ -403,7 +407,7 @@ void thread_gpu(Ctx& c) {
             std::memset(s->pred.data(), 0, s->pred.size() * sizeof(float));
             s->error = false;
         } else {
-            s->error = !c.infer.infer(s->blob.data(), s->pred.data());
+            s->error = !c.infer->infer(s->blob.data(), s->pred.data());
         }
         c.pipe.q_back.push(s);
     }
@@ -442,7 +446,7 @@ int run_serial(Ctx& c) {
             std::memset(s->pred.data(), 0, s->pred.size() * sizeof(float));
             s->error = false;
         } else {
-            s->error = !c.infer.infer(s->blob.data(), s->pred.data());
+            s->error = !c.infer->infer(s->blob.data(), s->pred.data());
         }
         consume(c, s);
         if (now_us() - last_stat > 2000000) {
@@ -501,6 +505,7 @@ int main(int argc, char** argv) {
         dump_config(c.args);
         return 0;
     }
+    pin_thread(c.args.cores_a, "thread_cpu");
     signal(SIGINT, on_sigint);
     signal(SIGTERM, on_sigint);
 
@@ -556,11 +561,12 @@ int main(int argc, char** argv) {
         icfg.cpu_threads = c.args.cpu_threads;
         // 加载时试跑校验：AnchorRaw 校验通道数与 anchor 总数；AfRaw 顺带推导网格表；
         // 其余校验通道数并发现 N。尺寸不匹配启动即报错，不会带病运行。
-        if (!c.infer.load(icfg, expected_n)) return 1;
-        c.c_total = c.infer.c_total();
-        c.pred_n = c.infer.pred_n();
+        c.infer = make_infer_backend(c.args.backend);
+        if (!c.infer || !c.infer->load(icfg, expected_n)) return 1;
+        c.c_total = c.infer->c_total();
+        c.pred_n = c.infer->pred_n();
         if (c.args.head == HeadType::AfRaw || c.args.head == HeadType::AfDist)
-            c.tab = c.infer.grid();
+            c.tab = c.infer->grid();
     } else {
         fprintf(stderr, "[yolo_rt] --no-model 冒烟模式（线程B 假推理 %dms/帧）\n",
                 c.args.fake_gpu_ms);

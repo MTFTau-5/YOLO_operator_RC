@@ -1,13 +1,14 @@
 # yolo_rt —— 实时检测跟踪流水线应用
 
 实现 [PIPELNE](../docs/PIPELINE.md)：两线程 + 三槽位 + 丢旧帧。本目录是对算子库的**集成层**，
-通过 `common/cpu_ops.h` 选择 `x86/` 或 `riscv/` 后端，模型推理仍由 ncnn 完成。
+通过 `common/cpu_ops.h` 选择 `x86/` 或 `riscv/` 后端，模型推理由 ncnn 或
+SpaceMIT ONNX Runtime（`backend: spacemit`）完成。
 
 ## 拓扑（PIPELINE.md §1/§2）
 
 ```
 线程A（CPU, 默认绑核 0-3）:  采集 → letterbox → [推 q_gpu] → 取回上帧 → decode → NMS → Tracker(Kalman) → UDP 控制
-线程B（GPU 提交, 默认绑核 4-7）:  q_gpu.pop → ncnn extract()（Vulkan fp16）→ q_back.push
+线程B（推理, 默认绑核 4-7）:  q_gpu.pop → ncnn/SpaceMIT ORT → q_back.push
 ```
 
 - 槽位写死 3 个（`slot.h: NUM_SLOTS`），状态由所在队列表示，在途帧 ≤ 3；
@@ -25,18 +26,19 @@ cmake -S . -B build -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
 cmake --build build -j$(nproc)          # 产物: build/app/yolo_rt
 ```
 
-K3 原生构建选择 `riscv/` 后端，ncnn 使用 CPU 模式：
+K3 原生构建直接使用 `./build_k3.sh`。安装 `spacemit-onnxruntime` 后会自动启用
+官方 SpaceMIT EP；否则只保留 ncnn CPU 后端。也可通过 `SPACEMIT_ORT_ROOT` 指定
+解压后的 SDK 根目录。
+
+随包 pose 模型无需改配置：
 
 ```bash
-cmake -S . -B build-k3 \
-  -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF \
-  -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
-  -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_BUILD_VULKAN=OFF \
-  -DYOLOOP_NCNN_VULKAN=OFF
-cmake --build build-k3 -j8
+./run_k3_video.sh                     # SpaceMIT EP + 修复版 FP16 ONNX
+BACKEND=ncnn ./run_k3_video.sh        # ncnn + best.ncnn.param/.bin
+./build-k3/app/yolo_rt --config app/pipeline_k3_ort.yaml
 ```
 
-运行时使用 `--gpu -1`。此路径执行 X100 RVV，不包含 A100/IME 专用内核。
+ONNX 模型名称为 `images/output0`，ncnn 模型名称为 `in0/out0`，两套 YAML 已分别配置。
 
 ## 运行
 

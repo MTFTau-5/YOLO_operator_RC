@@ -9,8 +9,10 @@
 | `riscv/` | K3 X100 / 其他 RVV 1.0 处理器 | 长度无关 RVV decode、掩码候选压缩、RVV NMS、RVV 预处理；非 RVV 构建保留标量回退 | — |
 | `nvidia/` | NVIDIA GPU | Decode CUDA kernel（warp ballot 压缩）、位掩码 NMS kernel、预处理融合 kernel、TensorRT 插件、pybind11 绑定 | §2.2 §2.3 §2.4 |
 | `vulkan/` | 780M 核显（可选） | 混合式 NMS：IoU 矩阵 compute shader + CPU 位掩码贪心 | §8.5 |
-| `app/` | x86 / K3 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
+| `app/` | x86 / K3 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn/SpaceMIT ORT 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
 | `tools/` | 工具 | `gen_test_vectors.py` golden 生成、`bench_baseline.cpp` 无算子基线基准 | §5 §12 |
+
+K3 实机调试与验证过程见 [K3 RVV 与 SpaceMIT EP 部署、调试和验证报告](./docs/K3_SPACEMIT_DEBUG_REPORT.md)。
 
 ---
 
@@ -53,25 +55,56 @@ cmake --build build -j
 
 ### K3 / RISC-V RVV 构建
 
-在 K3 的 Bianbu/Linux 环境中原生构建（需要支持 RVV 1.0 intrinsic 的编译器）：
+在 K3 的 Bianbu/Linux 环境中原生构建（需要支持 RVV 1.0 intrinsic 的编译器）。
+完整迁移仓库后，直接运行：
+
+```bash
+./build_k3.sh                 # 编译 + golden/应用测试
+./build_k3.sh --no-test       # 只编译
+JOBS=16 ./build_k3.sh         # 指定 16 线程构建
+```
+
+脚本使用 `build-k3/`，自动关闭 x86、CUDA 和 Vulkan，并探测 SpaceMIT ONNX Runtime。
+使用官方 EP 前，在 Bianbu 安装 `spacemit-onnxruntime`；SDK 不在系统目录时，用
+`SPACEMIT_ORT_ROOT=/path/to/sdk ./build_k3.sh` 指定根目录。
+
+随包模型（1 类、4 关键点）已同时配置 ncnn 和官方 EP 两条路径：
+
+```bash
+./run_k3_video.sh                      # 默认修复版 FP16 ONNX + SpaceMIT EP
+BACKEND=ncnn ./run_k3_video.sh         # 同一视频复测 ncnn CPU 基线
+./build-k3/app/yolo_rt --config app/pipeline_k3_ort.yaml  # SpaceMIT EP
+./build-k3/app/yolo_rt --config app/pipeline_k3.yaml      # ncnn
+```
+
+视频测试需 OpenCV 开发包。可用 `SPACEMIT_EP_DUMP_SUBGRAPHS=1` 导出 EP 子图，或用
+`SPACEMIT_EP_DEBUG_PROFILE=profile_` 生成性能数据，确认算子是否回退 CPU。
+
+随包 FP16 模型先用 `tools/fix_spacemit_split.py` 将非等分 Split 改为 Slice，再经
+XSlim `--fp16` 转换，以规避 EP 对非等分 Split 的错误形状推导。K3 CoM260、500 帧
+实测：ncnn CPU 约 3.5 FPS；SpaceMIT EP FP16 端到端约 18.4 FPS（infer ≈35 ms）。
+K3 上脚本在启动推理进程时即通过 `taskset -c 0-7` 固定到 X100，C++ 入口也会在模型
+加载前绑核。视频基准先完成 EP 模型加载，再创建视频解码线程；`--load-only`
+可脱离视频单独验证模型加载。同时默认 `OPENBLAS_NUM_THREADS=1`，避免 OpenBLAS
+多线程初始化与 EP 初始化并存。旧顺序+OpenBLAS 单线程 30 次、新顺序完整视频
+50 次及 8 线程 30 次均通过，不再需要重试 workaround。
+
+等效手动构建命令为：
 
 ```bash
 cmake -S . -B build-k3 \
   -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF \
   -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
   -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_BUILD_VULKAN=OFF \
-  -DYOLOOP_NCNN_VULKAN=OFF \
+  -DYOLOOP_NCNN_VULKAN=OFF -DYOLOOP_BUILD_SPACEMIT_ORT=ON \
   -DYOLOOP_RISCV_ARCH=rv64gcv -DYOLOOP_RISCV_ABI=lp64d
 cmake --build build-k3 -j8
 ./build-k3/riscv/test_rvv test_data
-./build-k3/app/yolo_rt --config app/pipeline.yaml \
-  --gpu -1 --cpu-threads 8 --serial --cores-a 0-7
 ```
 
-该目标使用 K3 X100 的标准 RVV 1.0 算子和 ncnn CPU 推理；**不包含 A100 的
-SpacemiT IME 专用指令或 AI 核调度**，不能把此路径当作已启用 60 TOPS AI 算力。
-A100/IME 应通过单独的 SpacemiT ONNX Runtime/Spine-Runtime 后端接入。交叉编译时，
-工具链文件须设置 `CMAKE_SYSTEM_PROCESSOR=riscv64` 并提供 RISC-V sysroot。
+ncnn 路径使用 X100 RVV + ncnn CPU，不包含 A100/IME；`spacemit` 路径通过官方
+SpaceMITExecutionProvider 调度 K3 AI 核。交叉编译时，工具链文件须设置
+`CMAKE_SYSTEM_PROCESSOR=riscv64` 并提供 RISC-V sysroot。
 
 Vulkan 依赖安装（可选，`vulkan/` 混合 NMS 模块需要；Ubuntu/Debian）：
 
@@ -95,6 +128,8 @@ vulkaninfo --summary
 | `YOLOOP_BUILD_PYTHON` | ON | pybind11 模块 `yolo_ops_cuda` |
 | `YOLOOP_BUILD_VULKAN` | ON | 需 glslangValidator + Vulkan SDK，找不到自动跳过 |
 | `YOLOOP_NCNN_VULKAN` | ON | app 的 ncnn 是否启用 Vulkan；K3 纯 CPU 构建设 OFF |
+| `YOLOOP_BUILD_SPACEMIT_ORT` | ON | 自动探测并启用 SpaceMIT ONNX Runtime 后端 |
+| `SPACEMIT_ORT_ROOT` | 空 | 可选的 SpaceMIT ORT SDK 根目录（含 include/lib） |
 | `YOLOOP_X86_ARCH` | native | 目标机 7840HS 用 `-DYOLOOP_X86_ARCH=znver4` |
 | `YOLOOP_RISCV_ARCH` / `YOLOOP_RISCV_ABI` | rv64gcv / lp64d | RISC-V ISA/ABI；仅目标为 RISC-V 时添加编译参数 |
 

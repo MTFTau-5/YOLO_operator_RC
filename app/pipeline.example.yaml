@@ -2,8 +2,9 @@
 # 用法: ./build/app/yolo_rt --config app/pipeline.yaml [--conf 0.35 ...]
 #       ./build/app/yolo_rt --config app/pipeline.yaml --dump-config   # 打印最终生效值
 
-param: weights/best.param        # ncnn .param 路径
-model: weights/best.bin          # ncnn .bin 路径
+backend: ncnn                    # ncnn；或 spacemit（ONNX Runtime + SpaceMIT EP）
+param: weights/best.param        # ncnn .param 路径；spacemit 不需要
+model: weights/best.bin          # ncnn .bin 路径；spacemit 填 .onnx 路径
 in0: in0                         # 输入 blob 名
 model-type: v5                   # v5=YOLOv5 契约(切头，逐层 [na*(5+nc),h,w]，
                                  #   ncnn_infer 重排为 [4+1+nc,N]，需 anchor 表)

@@ -22,7 +22,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "cpu_ops.h"
-#include "ncnn_infer.h"
+#include "infer_backend.h"
 #include "pipeline.h"
 #include "tracker.h"
 
@@ -31,6 +31,7 @@ using namespace yoloop;
 namespace {
 
 struct BArgs {
+    std::string backend = "ncnn";
     std::string param, model, video;
     std::string in0 = "in0";
     std::vector<std::string> heads;
@@ -45,6 +46,8 @@ struct BArgs {
     int topk = 100;
     int frames = 500;
     bool serial = false;
+    bool load_only = false;
+    bool video_first = false;
     std::string cores_a = "0-3", cores_b = "4-7";
 };
 
@@ -53,7 +56,8 @@ BArgs parse(int argc, char** argv) {
     auto val = [&](int& i) { return std::string(argv[++i]); };
     for (int i = 1; i < argc; ++i) {
         std::string k = argv[i];
-        if (k == "--param") a.param = val(i);
+        if (k == "--backend") a.backend = val(i);
+        else if (k == "--param") a.param = val(i);
         else if (k == "--model") a.model = val(i);
         else if (k == "--video") a.video = val(i);
         else if (k == "--in0") a.in0 = val(i);
@@ -85,6 +89,8 @@ BArgs parse(int argc, char** argv) {
         else if (k == "--topk") a.topk = atoi(val(i).c_str());
         else if (k == "--frames") a.frames = atoi(val(i).c_str());
         else if (k == "--serial") a.serial = true;
+        else if (k == "--load-only") a.load_only = true;
+        else if (k == "--video-first") a.video_first = true;
         else if (k == "--cores-a") a.cores_a = val(i);
         else if (k == "--cores-b") a.cores_b = val(i);
     }
@@ -157,12 +163,14 @@ struct Bench {
 
 int main(int argc, char** argv) {
     BArgs a = parse(argc, argv);
+    pin(a.cores_a);
     VideoSource cam;
-    if (!cam.open(a.video, 1920, 1080)) {
-        fprintf(stderr, "打不开视频: %s\n", a.video.c_str());
+    if (a.video_first && !cam.open(a.video, 1920, 1080)) {
+        std::fprintf(stderr, "打不开视频: %s\n", a.video.c_str());
         return 1;
     }
-    NcnnInfer infer;
+    auto infer = make_infer_backend(a.backend);
+    if (!infer) return 1;
     InferConfig ic;
     ic.param_path = a.param;
     ic.model_path = a.model;
@@ -176,12 +184,20 @@ int main(int argc, char** argv) {
     ic.reg_max = a.reg_max;
     ic.gpu_index = a.gpu;
     ic.cpu_threads = a.threads;
-    if (!infer.load(ic, 0)) return 1;
+    if (!infer->load(ic, 0)) return 1;
+    if (a.load_only) {
+        std::fprintf(stderr, "[bench] 仅加载模型，未启动视频管线\n");
+        return 0;
+    }
+    if (!a.video_first && !cam.open(a.video, 1920, 1080)) {
+        std::fprintf(stderr, "打不开视频: %s\n", a.video.c_str());
+        return 1;
+    }
     fprintf(stderr, "[bench] 视频 %dx%d, 帧数 %d, %s 模式\n", cam.w(), cam.h(), a.frames,
             a.serial ? "串行" : "两线程");
 
     Pipeline pipe;
-    pipe.init(a.in_w, a.in_h, infer.c_total(), infer.pred_n(), 1920, 1080);
+    pipe.init(a.in_w, a.in_h, infer->c_total(), infer->pred_n(), 1920, 1080);
     Tracker tracker;
     Bench bm;
 
@@ -190,7 +206,7 @@ int main(int argc, char** argv) {
     if (a.head == HeadType::AnchorRaw)
         tab = build_anchor_table(default_levels(a.in_w, a.in_h));
     else if (a.head == HeadType::AfRaw || a.head == HeadType::AfDist)
-        tab = infer.grid();
+        tab = infer->grid();
 
     auto decode_track = [&](Slot* s, Bench& b) {
         auto t0 = std::chrono::steady_clock::now();
@@ -199,7 +215,7 @@ int main(int argc, char** argv) {
         switch (a.head) {
             case HeadType::PoseFused: {
                 cpu::decode_v8_pose(s->pred.data(), a.num_classes, a.num_kpts,
-                                    infer.pred_n(), a.conf, s->dets, kpts_raw);
+                                    infer->pred_n(), a.conf, s->dets, kpts_raw);
                 auto idx = cpu::nms_indices(s->dets, a.nms, a.topk);
                 kept.reserve(idx.size());
                 for (int32_t i : idx) kept.push_back(s->dets[(size_t)i]);
@@ -220,11 +236,11 @@ int main(int argc, char** argv) {
                                 a.nms, a.topk);
                 break;
             case HeadType::E2E:
-                kept = cpu::decode_e2e(s->pred.data(), infer.pred_n(), a.conf);
+                kept = cpu::decode_e2e(s->pred.data(), infer->pred_n(), a.conf);
                 break;
             case HeadType::AfFused:
                 kept = cpu::nms(cpu::decode_v8(s->pred.data(), a.num_classes,
-                                               infer.pred_n(), a.conf),
+                                               infer->pred_n(), a.conf),
                                 a.nms, a.topk);
                 break;
         }
@@ -245,7 +261,7 @@ int main(int argc, char** argv) {
             cpu::letterbox_normalize(s->img.data(), s->img_w, s->img_h, s->blob.data(),
                                      a.in_w, a.in_h);
             auto t1 = std::chrono::steady_clock::now();
-            infer.infer(s->blob.data(), s->pred.data());
+            infer->infer(s->blob.data(), s->pred.data());
             auto t2 = std::chrono::steady_clock::now();
             decode_track(s, bm);
             auto t3 = std::chrono::steady_clock::now();
@@ -256,7 +272,7 @@ int main(int argc, char** argv) {
         }
         printf("== 串行模式逐阶段（%d 帧）==\n", a.frames);
         Bench::report("letterbox", bm.letterbox);
-        Bench::report("infer(GPU)", bm.infer);
+        Bench::report("infer", bm.infer);
         Bench::report("decode+nms", bm.decode_nms);
         Bench::report("tracker", bm.track);
         Bench::report("端到端", bm.e2e);
@@ -272,7 +288,7 @@ int main(int argc, char** argv) {
             Slot* s;
             while (pipe.q_gpu.pop(s)) {
                 auto t0 = std::chrono::steady_clock::now();
-                s->error = !infer.infer(s->blob.data(), s->pred.data());
+                s->error = !infer->infer(s->blob.data(), s->pred.data());
                 auto t1 = std::chrono::steady_clock::now();
                 bm.infer.push_back(std::chrono::duration<double, std::micro>(t1 - t0).count());
                 pipe.q_back.push(s);
@@ -319,7 +335,7 @@ int main(int argc, char** argv) {
         std::sort(lat.begin(), lat.end());
         auto pct = [&](double q) { return lat[(size_t)(q * (lat.size() - 1))] / 1000.0; };
         printf("== 两线程流水线（%d 帧）==\n", a.frames);
-        Bench::report("infer(GPU)", bm.infer);
+        Bench::report("infer", bm.infer);
         Bench::report("decode+nms", bm.decode_nms);
         Bench::report("tracker", bm.track);
         if (!lat.empty())
