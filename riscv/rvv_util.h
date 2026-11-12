@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+
 #ifdef __riscv_vector
 #include <riscv_vector.h>
 

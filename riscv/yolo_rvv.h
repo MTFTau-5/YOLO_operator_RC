@@ -8,6 +8,9 @@
 namespace yoloop {
 namespace riscv {
 
+// Decode/NMS run synchronously on A100 when YOLOOP_RISCV_A100 is enabled.
+// Preprocessing retains the host RVV path.
+
 void letterbox_normalize(const uint8_t* src, int src_w, int src_h,
                          float* out, int dst_w, int dst_h);
 

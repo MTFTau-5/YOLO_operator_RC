@@ -1,27 +1,3 @@
-"""真实模型 raw 导出 + 多尺寸动态验收驱动（对应评审"真实模型动态尺寸验收"）。
-
-两种模式：
-  默认（动态尺寸验收，v8 等纯 conv 骨干；v9 待验证）：同一 ncnn param/bin 逐尺寸
-    NcnnInfer::load（N 自动发现）→ infer → 与 torch raw 对拍 → decode+nms
-    → 与 python 参考 golden 框对拍；
-  --per-size-export（v11 等含 attention 的模型）：**当前工具链下** C2PSA 的静态
-    空间 Reshape 使同一 param 换尺寸数值错误（实测确认；非数学上不能动态，
-    是本链路目前无法恢复动态 shape），故逐尺寸导出、逐尺寸对拍——验证 raw
-    Detect 等价性与契约符合性，动态性不适用。v9 跨尺寸能力**待验证**。
-
-golden：确定性输入（默认 ultralytics 自带 bus.jpg）经部署同款 letterbox 得 blob；
-torch patched 模型产出逐层 raw；python 参考 decode（DFL+dist2bbox）+ NMS 出框。
-末尾以 ultralytics predict（原始 PyTorch Detect 完整输出）交叉核对参考实现。
-
-用法（仓库根目录）：
-  python tools/accept_raw_dynamic.py --weights ../yolov8n.pt \
-      --work-dir ../build/accept_v8 --build-dir ../build
-  python tools/accept_raw_dynamic.py --weights ../yolo11n.pt \
-      --work-dir ../build/accept_v11 --build-dir ../build --per-size-export
-依赖与已固定的工具链版本见 requirements.txt；另需可用的 C++ 构建树
-（--build-dir 指定或自动探测）。
-"""
-
 import argparse
 import os
 import subprocess

@@ -1,132 +1,29 @@
-# K3 SSH/SCP 移交指南
+# K3 SSH 与部署移交
 
-## 1. 准备信息
-
-移交时准备以下信息，**不要把密码写入脚本、ZIP 或 GitHub**：
-
-- K3 IP：`<K3_IP>`
-- 用户名：`epoch`
-- 密码：向设备负责人获取
-- 本地文件：`K3_YOLO_test.zip`
-
-K3 与 PC 应能通过网络互通，并开放 SSH 服务。
-
-## 2. 连接 K3
+准备设备 IP、用户名 `epoch`、单独交付的密码，以及保持同级结构的 `YOLO_operator_RC/` 和 `data/`。密码不要写进脚本、文档或仓库。
 
 ```bash
 ssh epoch@<K3_IP>
+# 首次连接核对指纹，按提示输入密码。
 ```
 
-首次连接时确认主机指纹，然后输入设备密码。看到类似以下提示符即表示连接成功：
-
-```text
-epoch@...:~$
-```
-
-退出：
+推荐用 `ssh-keygen -t ed25519` 生成密钥，再执行 `ssh-copy-id epoch@<K3_IP>`。私钥留在本机。
 
 ```bash
-exit
-```
-
-### 推荐：配置免密登录
-
-在 PC 上生成密钥（已有密钥则跳过）：
-
-```bash
-ssh-keygen -t ed25519
-```
-
-把公钥安装到 K3：
-
-```bash
-ssh-copy-id epoch@<K3_IP>
-```
-
-之后可直接：
-
-```bash
-ssh epoch@<K3_IP>
-```
-
-不要把私钥复制到 K3 或提交到仓库。
-
-## 3. 上传部署包
-
-在 PC 上执行：
-
-```bash
-scp /home/mtftau-5/yolo-RGBT/K3_YOLO_test.zip \
-  epoch@<K3_IP>:/home/epoch/work/
-```
-
-然后登录 K3 并解压：
-
-```bash
+scp K3_YOLO_test.zip epoch@<K3_IP>:/home/epoch/work/
 ssh epoch@<K3_IP>
 cd /home/epoch/work
 unzip K3_YOLO_test.zip
-```
-
-目录应保持：
-
-```text
-work/
-├── YOLO_operator_RC/
-└── data/
-```
-
-权重和视频路径都依赖这个相对结构，不要随意移动 `data/` 中的文件。
-
-## 4. 安装依赖并运行
-
-在 K3 上执行：
-
-```bash
-cd /home/epoch/work/YOLO_operator_RC
-chmod +x build_k3.sh run_k3_video.sh install_k3_dependencies.sh
+# 按实际解压目录进入项目：
+cd YOLO_operator_RC
 ./install_k3_dependencies.sh
 ./build_k3.sh
 ./run_k3_video.sh
-```
-
-默认使用：
-
-- SpaceMIT ONNX Runtime；
-- `/opt/opencv-spacemit` 的 RVV OpenCV；
-- `/opt/openblas-spacemit` 的 RVV OpenBLAS；
-- `best.spacemit.fp16.onnx`。
-
-ncnn 基线对照：
-
-```bash
 BACKEND=ncnn ./run_k3_video.sh
 ```
 
-## 5. 连接失败排查
+部署目录若多了一层 `k3/`，按实际路径进入；程序依赖同级 `data/`。默认库、模型和参数见 [README](../README.md)。
 
-检查网络：
+连接失败先核对 IP、网络和 SSH 服务，再用 `ssh -vvv epoch@<K3_IP>` 检查；主机密钥变化应先核实设备。退出远程会话用 `exit`。
 
-```bash
-ping <K3_IP>
-```
-
-查看 SSH 详细过程：
-
-```bash
-ssh -vvv epoch@<K3_IP>
-```
-
-常见原因：
-
-- IP 或用户名错误；
-- K3 的 SSH 服务未启动；
-- PC 与 K3 不在同一网络或防火墙阻止 22 端口；
-- 密码错误；
-- 主机密钥发生变化，需要核对指纹。
-
-如果只需执行一条远程命令，不必先登录：
-
-```bash
-ssh epoch@<K3_IP> 'cd /home/epoch/work/YOLO_operator_RC && ./run_k3_video.sh'
-```
+K3 当前 EP 的越界问题及可交付复现见 [调试摘要](K3_DEBUG_SUMMARY.md)。冷启动成功不代表厂商问题已修复。

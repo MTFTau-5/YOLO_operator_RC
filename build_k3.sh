@@ -4,6 +4,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-${ROOT_DIR}/build-k3}"
 JOBS="${JOBS:-$(nproc)}"
+A100_MODE="${YOLOOP_RISCV_A100:-ON}"
 RUN_TESTS=1
 
 usage() {
@@ -19,6 +20,7 @@ usage() {
   OMP_NUM_THREADS        测试线程数，默认 8
   YOLOOP_RISCV_ARCH      RISC-V ISA，默认 rv64gcv
   YOLOOP_RISCV_ABI       RISC-V ABI，默认 lp64d
+  YOLOOP_RISCV_A100      后处理迁到 A100，默认 ON；OFF 使用宿主 RVV
   SPACEMIT_ORT_ROOT      可选的 SpaceMIT ONNX Runtime SDK 根目录
   OpenCV_DIR             可选的 OpenCV CMake 配置目录，默认优先使用 /opt/opencv-spacemit
 EOF
@@ -69,6 +71,7 @@ cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
     -DCMAKE_BUILD_TYPE=Release \
     "${OPENCV_CMAKE_ARGS[@]}" \
     -DYOLOOP_BUILD_RISCV=ON \
+    -DYOLOOP_RISCV_A100="$A100_MODE" \
     -DYOLOOP_BUILD_X86=OFF \
     -DYOLOOP_BUILD_CUDA=OFF \
     -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
@@ -83,6 +86,7 @@ cmake --build "$BUILD_DIR" -j"$JOBS"
 
 if ((RUN_TESTS)); then
     export OMP_NUM_THREADS="${OMP_NUM_THREADS:-8}"
+    if [[ "${A100_MODE^^}" == ON ]]; then "$BUILD_DIR/riscv/test_a100"; fi
     "$BUILD_DIR/riscv/test_rvv" "$ROOT_DIR/test_data"
     "$BUILD_DIR/app/test_tracker" "$ROOT_DIR/test_data"
     "$BUILD_DIR/app/test_queue"

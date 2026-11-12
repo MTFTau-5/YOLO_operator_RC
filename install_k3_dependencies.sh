@@ -24,6 +24,7 @@ $SUDO apt-get install -y \
     git \
     pkg-config \
     spacemit-onnxruntime \
+    spacemit-runtime \
     openblas-spacemit \
     opencv-spacemit
 
@@ -32,7 +33,9 @@ for path in \
     /opt/opencv-spacemit/lib/cmake/opencv5/OpenCVConfig.cmake \
     /opt/openblas-spacemit/lib/libopenblas.so.0 \
     /usr/lib/libonnxruntime.so \
-    /usr/lib/libspacemit_ep.so; do
+    /usr/lib/libspacemit_ep.so \
+    /usr/include/spert.hpp \
+    /usr/lib/libspert.so; do
     if [[ ! -e "$path" ]]; then
         printf '缺少: %s\n' "$path" >&2
         missing=1

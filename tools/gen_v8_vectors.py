@@ -1,16 +1,3 @@
-#!/usr/bin/env python3
-"""生成 YOLOv8/v11（Detect 头烘在图内）decode 的 golden 用例。
-
-输出契约（channel-major [C, N]，box=xywh 像素，cls=已 sigmoid 概率）：
-  case7_v8_detect : C = 4 + nc
-  case8_v8_pose   : C = 4 + nc + 3*nkpt，关键点 (x, y, conf) 像素
-
-文件格式与 tools/gen_test_vectors.py 一致；pose 另有 golden_pose.bin：
-  int32 count，随后每框 6 个 float（同 golden_decode）+ 3*nkpt 个 float 关键点，
-  顺序 = nms_indices 保留顺序（score 降序，并列按原索引升序，topk 先截断）。
-
-用法: python3 tools/gen_v8_vectors.py [test_data_dir]
-"""
 from __future__ import annotations
 
 import sys
@@ -29,7 +16,6 @@ def write_dets(path, dets):
 
 
 def nms_indices(dets, thr, topk):
-    """与 x86::nms_indices 同语义：score 降序（并列索引升序），topk 先截断，类感知。"""
     order = sorted(range(len(dets)), key=lambda i: (-dets[i][4], i))
     if topk > 0:
         order = order[:topk]

@@ -1,517 +1,107 @@
-# YOLO_operator — YOLO 部署算子库
+# YOLO_operator
 
-按《YOLO 算子加速开发指南》（[开发参考](./docs/Operator_Suggestion.md)）实现的多平台部署侧算子，覆盖 YOLO 推理链路中**框架未优化三部分**：预处理、Decode、NMS。
+YOLO 部署侧算子与检测跟踪应用：预处理、Decode、NMS、ncnn / SpaceMIT ORT 推理、Tracker 和 UDP 输出。
 
-| 模块 | 平台 | 内容 | 对应文档章节 |
-|---|---|---|---|
-| `common/` | 共享 | Detection/AnchorTable 类型、标量参考实现、统一 CPU 接口、测试向量读取 | §0.2 §0.3 |
-| `x86/` | 7840HS（Zen4，独立 C++，无第三方依赖） | AVX2 decode（logit 域快筛）、CPU SIMD NMS、AVX2 预处理单 pass | §8.4a §8.5 §8.6 |
-| `riscv/` | K3 X100 / 其他 RVV 1.0 处理器 | 长度无关 RVV decode、掩码候选压缩、RVV NMS、RVV 预处理；非 RVV 构建保留标量回退 | — |
-| `nvidia/` | NVIDIA GPU | Decode CUDA kernel（warp ballot 压缩）、位掩码 NMS kernel、预处理融合 kernel、TensorRT 插件、pybind11 绑定 | §2.2 §2.3 §2.4 |
-| `vulkan/` | 780M 核显（可选） | 混合式 NMS：IoU 矩阵 compute shader + CPU 位掩码贪心 | §8.5 |
-| `app/` | x86 / K3 整机应用 | **实时流水线 `yolo_rt`**：两线程三槽位丢旧帧、ncnn/SpaceMIT ORT 推理、卡尔曼跟踪、UDP 控制输出 | [app/README.md](./app/README.md)、`../PIPELINE.md` |
-| `tools/` | 工具 | `gen_test_vectors.py` golden 生成、`bench_baseline.cpp` 无算子基线基准 | §5 §12 |
----
+| 目录 | 功能 |
+|---|---|
+| `common/` | 公共类型、标量参考、统一 CPU 接口 |
+| `riscv/` | RVV 算子、K3 A100 后处理调度、标量回退 |
+| `x86/` | AVX2 算子 |
+| `nvidia/` | CUDA 算子、Python 绑定、TensorRT Decode 插件 |
+| `vulkan/` | IoU 矩阵 + CPU 贪心 NMS |
+| `app/` | 两线程三槽位流水线、推理适配、跟踪与控制输出 |
+| `tools/` | 模型导出、golden 生成、数值验收、K3 故障复现 |
 
-## 1. 性能：无算子基线 vs 本库算子
+## K3 构建与运行
 
-实测环境：RTX 3090 Ti + Ryzen 7 9700X，典型 YOLO 输入（3 尺度 head、N=25200 anchor、80 类、密集场景 1930 个候选框）。基线 = 功能相同但未做算子优化的实现（numpy 向量化写法 / 标量 C++ -O3）。
-
-| 阶段 | 无算子基线 | x86 算子（AVX2) | CUDA 算子 | 加速比 |
-|---|---|---|---|---|
-| **Decode**（N=25200） | numpy 0.272 ms；标量 C++ 0.160 ms | **0.054 ms** | **0.0096 ms** | CPU 3× / GPU 17~28× |
-| **NMS**（1930 候选） | numpy 20.4 ms；标量 C++ 0.917 ms | **0.012 ms** | **0.385 ms** | CPU 75×（对 numpy 1700×）/ GPU 2.4× |
-| **预处理** 1280×720→640 | 标量 C++ 2.03 ms | **0.216 ms** | **0.0096 ms** | 9.4× / 211× |
-
-复现：
-
-```bash
-./build/bench_baseline test_data     # 标量 C++ vs x86 AVX2
-./build/nvidia/test_cuda test_data   # 末尾打印 CUDA 基准
-```
-
-解读：
-
-- Decode 的 CPU 加速比 ≈3×，与文档 §0.3 对 logit 域阈值「提速 3~5×」的预估一致（免全体 exp）。
-- 上表 Decode 是**算子微基准**（v5 路径：logit 快筛 + 范围归约多项式逼近 sigmoid，见 `x86/decode_avx2.cpp` `exp256_ps`）。`v8-raw` 路径的 DFL 当前为标量 `expf`（存活点 ~1% 量级，向量化无收益），AVX2 仅用于类别 logit 快筛；raw 输出体量约为 fused 的 9.6×（N=8400、nc=3 时 2.25MB vs 0.235MB），评价 raw/fused 优劣须看 infer+extract+拷贝+decode+NMS 全链路（`app/README.md` 基准），不能只看 decode 单项。
-- **候选框少时 NMS 不要上 GPU**：1930 候选下 x86 SIMD（0.012 ms）仍快于 CUDA（0.385 ms，含设备端排序）。GPU NMS 的价值是「feature map 不下传」——decode 结果本就在显存，GPU 侧做完只回传几十字节的框，省每帧 4MB+ 拷贝；候选上千且数据已在 GPU 时才值得（§8.5）。
-- 预处理是无算子时最大的隐藏开销（2 ms 级），融合 kernel 后基本归零。
-
----
-
-## 2. 构建
-
-```bash
-pip install -r requirements.txt    # 含部署工具链固定版本（torch/ultralytics/onnx/onnxsim/pnnx，验收口径见文件内注释）
-
-# CUDA 11.8 的 nvcc 与 g++13 系统头不兼容，需指定 CUDA 12.5：
-cmake -S . -B build -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.5/bin/nvcc
-cmake --build build -j
-
-```
-
-### K3 / RISC-V RVV 构建
-
-先安装并检查依赖（需要 root 或 sudo）：
+保持本目录与 `data/` 同级。在 K3 Bianbu 上执行：
 
 ```bash
 ./install_k3_dependencies.sh
+./build_k3.sh                         # 编译并运行已有 golden/应用测试
+./run_k3_video.sh                     # SpaceMIT EP + FP16 ONNX
+BACKEND=ncnn ./run_k3_video.sh        # ncnn CPU 对照
+./build-k3/app/yolo_rt --config app/pipeline_k3_ort.yaml
+./build-k3/app/yolo_rt --config app/pipeline_k3.yaml
 ```
 
-脚本会安装 `build-essential`、`ca-certificates`、`cmake`、`git`、`pkg-config`、
-`spacemit-onnxruntime`、`openblas-spacemit` 和 `opencv-spacemit`，并检查 ORT、
-OpenCV RVV、OpenBLAS RVV 的实际文件路径。默认 RVV 配置和调试结论见
-[K3 调试摘要](./docs/K3_DEBUG_SUMMARY.md)，部署包移交与 SSH/SCP 方法见
-[K3 SSH/SCP 移交指南](./docs/K3_HANDOVER_SSH.md)。
+脚本优先使用 `/opt/opencv-spacemit` 和 `/opt/openblas-spacemit`，默认限制 OpenBLAS 为单线程，先完成 EP 首次推理再打开视频。EP 线程数由 `THREADS` 控制，视频帧数由 `FRAMES` 控制；`BUILD_DIR`、`JOBS` 等编译参数见 `./build_k3.sh --help`。
 
-在 K3 的 Bianbu/Linux 环境中原生构建（需要支持 RVV 1.0 intrinsic 的编译器）。
-完整迁移仓库后，直接运行：
+**现有 EP 仍存在已复现的 TCM 越界读取。** 换库和启动顺序是规避措施，不能作为根因修复。详见 [K3 调试摘要](docs/K3_DEBUG_SUMMARY.md) 和 [复现报告](docs/K3_ROOT_CAUSE_ANALYSIS_2026-11-12.md)。
+
+`build_k3.sh` 默认将全部 Decode/NMS 迁到 1 个 A100 核，EP 最多使用其余 7 核。计算采用 RVV/标量，预处理与 Tracker 保留宿主执行。详见 [A100 后处理](docs/IME_PORTING.md)。设置 `YOLOOP_RISCV_A100=OFF` 可回到宿主 RVV。
+
+## x86 / CUDA / Vulkan 构建
+
+Python 依赖用于导出和测试，C++ K3 部署使用上述系统安装脚本：
 
 ```bash
-./build_k3.sh                 # 编译 + golden/应用测试
-./build_k3.sh --no-test       # 只编译
-JOBS=16 ./build_k3.sh         # 指定 16 线程构建
+python -m pip install -r requirements.txt
+# NVIDIA Python / TensorRT 测试另装：
+python -m pip install -r requirements-cuda.txt
+cmake -S . -B build
+cmake --build build -j8
 ```
 
-脚本使用 `build-k3/`，自动关闭 x86、CUDA 和 Vulkan，并探测 SpaceMIT ONNX Runtime。
-使用官方 EP 前，在 Bianbu 安装 `spacemit-onnxruntime`；SDK 不在系统目录时，用
-`SPACEMIT_ORT_ROOT=/path/to/sdk ./build_k3.sh` 指定根目录。
-构建脚本会优先选择 `/opt/opencv-spacemit`；视频脚本默认同时使用该 RVV OpenCV 和
-`/opt/openblas-spacemit/lib/libopenblas.so.0`，可通过 `ldd` 检查实际加载路径。
+需要指定 CUDA 编译器时加 `-DCMAKE_CUDA_COMPILER=/path/to/nvcc`。使用绑定的 Python 环境应与构建环境一致；可指定 `-DPython_EXECUTABLE=/path/to/python`。CMake 自动探测 OpenMP、CUDA、Vulkan、TensorRT 和 SpaceMIT SDK；缺少依赖时对应可选模块跳过。
 
-随包模型（1 类、4 关键点）已同时配置 ncnn 和官方 EP 两条路径：
+| CMake 参数 | 默认 / 用途 |
+|---|---|
+| `YOLOOP_BUILD_X86` / `YOLOOP_BUILD_RISCV` | 按目标架构选择 CPU 后端 |
+| `YOLOOP_BUILD_CUDA` / `YOLOOP_BUILD_TRT_PLUGIN` / `YOLOOP_BUILD_PYTHON` | ON；CUDA、TRT 插件、Python 绑定 |
+| `YOLOOP_BUILD_VULKAN` / `YOLOOP_NCNN_VULKAN` | ON；混合 NMS / ncnn Vulkan |
+| `YOLOOP_RISCV_A100` | 通用 CMake 默认 OFF；K3 脚本默认 ON，需 Spine Runtime |
+| `YOLOOP_BUILD_APP` | ON；需 ncnn，配置时 FetchContent 拉取 |
+| `YOLOOP_BUILD_SPACEMIT_ORT` / `SPACEMIT_ORT_ROOT` | ON / 空；自动探测或指定 SDK |
+| `YOLOOP_X86_ARCH` | `native`；7840HS 可设 `znver4` |
+| `YOLOOP_RISCV_ARCH` / `YOLOOP_RISCV_ABI` | `rv64gcv` / `lp64d` |
+| `NCNN_GIT_TAG` | `20250503`；可指定 ncnn 版本 |
 
-```bash
-./run_k3_video.sh                      # 默认修复版 FP16 ONNX + SpaceMIT EP
-BACKEND=ncnn ./run_k3_video.sh         # 同一视频复测 ncnn CPU 基线
-./build-k3/app/yolo_rt --config app/pipeline_k3_ort.yaml  # SpaceMIT EP
-./build-k3/app/yolo_rt --config app/pipeline_k3.yaml      # ncnn
-```
-
-视频测试需 OpenCV 开发包。可用 `SPACEMIT_EP_DUMP_SUBGRAPHS=1` 导出 EP 子图，或用
-`SPACEMIT_EP_DEBUG_PROFILE=profile_` 生成性能数据，确认算子是否回退 CPU。
-
-随包 FP16 模型先用 `tools/fix_spacemit_split.py` 将非等分 Split 改为 Slice，再经
-XSlim `--fp16` 转换，以规避 EP 对非等分 Split 的错误形状推导。K3 CoM260、500 帧
-实测：ncnn CPU 约 3.5 FPS；SpaceMIT EP FP16 端到端约 18.4 FPS（infer ≈35 ms）。
-K3 上脚本在启动推理进程时即通过 `taskset -c 0-7` 固定到 X100，C++ 入口也会在模型
-加载前绑核。视频基准先完成 EP 模型加载，再创建视频解码线程；`--load-only`
-可脱离视频单独验证模型加载。同时默认 `OPENBLAS_NUM_THREADS=1`，避免 OpenBLAS
-多线程初始化与 EP 初始化并存。旧顺序+OpenBLAS 单线程 30 次、新顺序完整视频
-50 次及 8 线程 30 次均通过，不再需要重试 workaround。
-
-等效手动构建命令为：
+只构建独立 RISC-V 算子（交叉编译时另提供工具链和 sysroot）：
 
 ```bash
-cmake -S . -B build-k3 \
-  -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF \
-  -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
-  -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_BUILD_VULKAN=OFF \
-  -DYOLOOP_NCNN_VULKAN=OFF -DYOLOOP_BUILD_SPACEMIT_ORT=ON \
-  -DYOLOOP_RISCV_ARCH=rv64gcv -DYOLOOP_RISCV_ABI=lp64d
+cmake -S . -B build-k3 -DYOLOOP_BUILD_RISCV=ON -DYOLOOP_BUILD_X86=OFF -DYOLOOP_RISCV_A100=ON \
+  -DYOLOOP_BUILD_APP=OFF -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_VULKAN=OFF
 cmake --build build-k3 -j8
+```
+
+## 模型与接口
+
+支持 v5 anchor、v8/v9/v11 fused、pose、pre-DFL raw、post-DFL dist，以及 v10 E2E。各输出形状、导出和调用示例见 [模型契约](docs/MODEL_CONTRACTS.md)。统一 CPU 接口为 `common/cpu_ops.h`，RVV 接口为 `riscv/yolo_rvv.h`。
+
+```bash
+./build/app/yolo_rt --config app/pipeline.example.yaml
+./build/app/yolo_rt --config app/pipeline.example.yaml --conf 0.35 --dump-config
+```
+
+覆盖顺序：默认值 < YAML < CLI。跟踪器、UDP 包、设备基准及 raw 动态尺寸限制见 [应用说明](app/README.md)；线程和槽位规则见 [流水线](docs/PIPELINE.md)。纯 CPU 两线程运行时应按目标 CPU 调整 `cores-a/cores-b`，避免推理线程受限于少量核。
+
+## 验证
+
+仓库包含 `test_data/`。只重测无需重新生成；修改算法后按需运行：
+
+```bash
+./build/x86/test_x86 test_data
+./build-k3/riscv/test_a100                    # 仅 A100 构建
 ./build-k3/riscv/test_rvv test_data
-```
-
-ncnn 路径使用 X100 RVV + ncnn CPU，不包含 A100/IME；`spacemit` 路径通过官方
-SpaceMITExecutionProvider 调度 K3 AI 核。交叉编译时，工具链文件须设置
-`CMAKE_SYSTEM_PROCESSOR=riscv64` 并提供 RISC-V sysroot。
-
-Vulkan 依赖安装（可选，`vulkan/` 混合 NMS 模块需要；Ubuntu/Debian）：
-
-```bash
-sudo apt install libvulkan-dev glslang-tools vulkan-tools
-# 7840HS 的 780M 核显还需 RADV 驱动（一般 Mesa 已自带）：
-sudo apt install mesa-vulkan-drivers
-vulkaninfo --summary 
-```
-
-装好后删掉 build 目录重新 `cmake`（配置期探测到 glslangValidator 才会启用该模块）。
-
-选项：
-
-| 选项 | 默认 | 说明 |
-|---|---|---|
-| `YOLOOP_BUILD_X86` | x86=ON，RISC-V=OFF | x86 算子库 + 测试 |
-| `YOLOOP_BUILD_RISCV` | RISC-V=ON，其他=OFF | RVV 算子库 + `test_rvv`；启用后 app 选择此后端 |
-| `YOLOOP_BUILD_CUDA` | ON | CUDA 算子库 + 测试 + Python 绑定 |
-| `YOLOOP_BUILD_TRT_PLUGIN` | ON | TensorRT decode 插件（找不到头文件/库自动跳过） |
-| `YOLOOP_BUILD_PYTHON` | ON | pybind11 模块 `yolo_ops_cuda` |
-| `YOLOOP_BUILD_VULKAN` | ON | 需 glslangValidator + Vulkan SDK，找不到自动跳过 |
-| `YOLOOP_NCNN_VULKAN` | ON | app 的 ncnn 是否启用 Vulkan；K3 纯 CPU 构建设 OFF |
-| `YOLOOP_BUILD_SPACEMIT_ORT` | ON | 自动探测并启用 SpaceMIT ONNX Runtime 后端 |
-| `SPACEMIT_ORT_ROOT` | 空 | 可选的 SpaceMIT ORT SDK 根目录（含 include/lib） |
-| `YOLOOP_X86_ARCH` | native | 目标机 7840HS 用 `-DYOLOOP_X86_ARCH=znver4` |
-| `YOLOOP_RISCV_ARCH` / `YOLOOP_RISCV_ABI` | rv64gcv / lp64d | RISC-V ISA/ABI；仅目标为 RISC-V 时添加编译参数 |
-
-**本机实测状态**：以上五项全部实际启用并构建成功（Vulkan 有 glslangValidator + SDK，TensorRT 头文件取自 NVIDIA/TensorRT v11.3 + pip 版动态库）。「自动跳过」只在依赖缺失的机器上发生，属兜底行为。
-
-产物：`build/x86/libyoloop_x86.a`、`build/riscv/libyoloop_riscv.a`、`build/nvidia/libyoloop_cuda.a`、`build/nvidia/yolo_ops_cuda*.so`、`build/nvidia/libyoloop_trt_plugins.so`、`build/vulkan/libyoloop_vulkan.a`。
-
-**多 conda 环境注意**：pybind11 / TensorRT 是按「当前 shell 激活环境的 python」探测的——在哪个环境用 `yolo_ops_cuda`，就在哪个环境构建并先 `pip install pybind11`（老环境可能还需 `-DPYBIND11_FINDPYTHON=ON -DPython_EXECUTABLE=<env>/bin/python`，防止 pybind11 抓到 base 的 libpython 导致 .so ABI 不匹配）。TensorRT 装不进的老环境（如 py3.8）可直接指向其他环境的库：
-`-DTRT_INCLUDE_DIR=<项目>/nvidia/trt/include -DTRT_NVINFER_LIB=<site-packages>/tensorrt_libs/libnvinfer.so.11`
-
----
-
-## 3. 接口约定（对接 YOLO 的前提）
-
-**模型侧导出契约**（v5，§0.2 切掉 Detect 层 decode 部分后）：逐层原始卷积输出
-`[na*(5+nc), h, w]`，通道 anchor-major（`c = a*(5+nc) + attr`，attr 序
-`tx,ty,tw,th,obj,cls…`），三个 head 按 stride 8→16→32。`NcnnInfer` 加载时由
-blob 通道数推导 na（要求 `c % (5+nc) == 0`），拷贝时把 anchor 维重排为下述
-算子输入布局。
-
-**算子输入**（重排后，三个 head 拼接的原始卷积输出，§0.2）：
-
-- 内存布局：channel-major `[4 + 1 + num_classes, N]`，float32
-  - 行 0..3：`tx, ty, tw, th`；行 4：objectness logit；行 5..：类别 logit
-- anchor 顺序：stride 8 → 16 → 32 逐 level 排列；level 内 row-major 网格，anchor 索引变化最快（与重排列序一致）
-- decode 数学（YOLOv5 式）：`x=(σ(tx)*2-0.5+gx)*stride`，`w=(σ(tw)*2)²*anchor_w`，`score=σ(obj)*σ(cls_max)`
-- 输入边长须被 32 整除（640、992、992×544 均可）；`num_classes` 运行时传入，天然支持类别数裁剪
-
----
-
-## 4. 如何使用
-
-### 4.1 Python（最省事，NVIDIA）
-
-```python
-import numpy as np, yolo_ops_cuda   # PYTHONPATH=build/nvidia
-
-# pred: np.float32 [4+1+nc, N]，三个 head 原始输出拼接
-dets = yolo_ops_cuda.decode(pred, num_classes=80, conf_thr=0.25,
-                            input_w=992, input_h=992)   # 分辨率自适应, 默认 640x640
-kept = yolo_ops_cuda.nms(dets, nms_thr=0.45)            # [K,6] x1,y1,x2,y2,score,label
-
-img = ...  # np.uint8 [H,W,3]
-blob = yolo_ops_cuda.letterbox(img, 992, 992)           # [3,992,992] float32, 可直接喂模型
-```
-
-anchor 表按 `(input_w, input_h)` 首次构建并缓存，之后零开销；边长非 32 倍数抛 `ValueError`。
-
-### 4.2 C++ / x86（7840HS，无第三方依赖）
-
-```cpp
-#include "x86/decode_avx2.h"
-#include "x86/nms_simd.h"
-#include "x86/preprocess_avx2.h"
-using namespace yoloop;
-
-// 初始化一次
-AnchorTable tab = build_anchor_table(default_levels(992, 992));
-
-// 每帧
-std::vector<float> blob(3 * 992 * 992);
-x86::letterbox_normalize(bgr_img, img_w, img_h, blob.data(), 992, 992);   // 预处理
-/* ... 把 blob 喂给 ncnn/OpenVINO/ORT 拿到 pred ... */
-auto dets = x86::decode(pred.data(), tab, /*num_classes=*/80, /*conf_thr=*/0.25f);
-auto kept = x86::nms(std::move(dets), /*nms_thr=*/0.45f, /*topk=*/300);   // topk<=0 不截断
-```
-
-链接：`libyoloop_x86.a` + `libyoloop_common.a` + OpenMP。目标机编译 `-DYOLOOP_X86_ARCH=znver4`，运行 `taskset -c 0-7` 绑物理核（§11）。
-
-### 4.3 C++ / CUDA（NVIDIA，进程内集成）
-
-```cpp
-#include "nvidia/yolo_ops.h"
-using namespace yoloop;
-
-// 初始化一次：anchor 表上传显存
-cuda::CudaAnchorTable tab(build_anchor_table(default_levels(992, 992)));
-
-// 每帧（全部异步于同一 stream，feature map 不下传）
-cuda::letterbox_normalize(img_dev, sw, sh, blob_dev, 992, 992, stream);    // 预处理
-/* ... TensorRT enqueue 拿到 pred_dev ... */
-cuda::decode(pred_dev, tab.get(), 80, 0.25f, dets_dev, count_dev, cap, stream);
-cuda::nms(dets_dev, n, 0.45f, keep_dev, keep_count_dev, stream);
-// 只回传 keep_count 个 Detection（24B/框）
-```
-
-注意：`decode` 的 `count_dev` 是总存活数（可能 > cap），取 `min(count, cap)`。
-
-### 4.4 TensorRT 插件（NVIDIA，engine 内嵌）
-
-`nvidia/trt/yolo_decode_plugin.cpp` 提供 `YoloDecodePlugin`（IPluginV2DynamicExt，TRT 11.3 已验证）：
-
-```cpp
-// 构建 engine 时注册一次
-REGISTER_TENSORRT_PLUGIN 已在插件编译单元内完成;
-// 用 onnx-graphsurgeon / INetworkDefinition 把 "YoloDecode" 节点挂到三个 head 拼接输出后,
-// plugin 字段: num_classes, conf_thr, input_w, input_h, max_output_boxes
-// 输入 [1, C, N] -> 输出 [1, max_boxes, 6] float32 + [1, 1] int32 count
-```
-
-sanity 测试：`./build/nvidia/test_trt_plugin`（创建→序列化→反序列化→enqueue→销毁全链路）。
-
----
-
-## 5. 怎么跟 YOLO 部署串起来
-
-以训练好的 `best.pt` 为例，两条路线对应文档 Part I / Part II。部署侧 Python 依赖：
-`pip install -r requirements.txt`（工具链版本已随真实模型验收固定，含版本敏感
-行为说明，偏离需重验）。
-
-### 5.1 NVIDIA 路线（TensorRT）
-
-```
-best.pt
-  │ ① 模型侧改图（§0.2）：Focus 消除（v5 系）/ SPPF 并行 / 类别数裁剪（可选）
-  ▼
-导出（ultralytics 当前方式，按契约二选一）：
-  A. fused（图内 decode，最省事）：
-       YOLO('best.pt').export(format='engine', half=True)
-       —— 或 format='onnx'（内部过 onnxsim）→
-          trtexec --onnx=best.onnx --saveEngine=best.engine --fp16
-  B. 切头 raw（用本库 decode 算子/插件）：按 §3 契约把 Detect 层 decode 切掉，
-       逐层原始卷积输出作为模型输出（patch 模式同 tools/export_af_raw.py；
-       v5 契约逐层 [na*(5+nc), h, w]，anchor-major），
-       → trtexec / onnx-graphsurgeon 挂 YoloDecode 插件节点（§4.4）
-  ▼
-推理进程（§4.3）:
-  cuda::letterbox_normalize   ← 预处理 kernel（相机帧已在显存则零拷贝）
-  → context->enqueueV3        ← TensorRT backbone+neck+head（自动融合 Conv+BN+SiLU）
-  → cuda::decode              ← 或 engine 内嵌插件
-  → cuda::nms                 ← 或 CPU x86::nms（候选 ≤300 时更快，见 §1）
-  → 只回传最终框
-```
-
-### 5.2 7840HS 路线（ncnn + Vulkan 主线）
-
-```
-fused（v8/v9/v11/v10/pose，默认路线；610M 实测端到端最快，见 app/README 三路径对比）：
-  YOLO('best.pt').export(format='ncnn', imgsz=[H, W], half=True)
-    —— ultralytics 内部即 ONNX → onnxsim → pnnx → ncnn（fp16），与 §8.1 手工链路等效；
-       换输入尺寸须重新导出（anchor 网格烘为图内常量）
-
-raw（v8-raw/v9-raw/v11-raw，C++ 侧 DFL；改 in-size 免重新导出——v8 已验证、
-     v9 待验证、v11 经当前工具链导出跨尺寸失效需逐尺寸）：
-  python tools/export_af_raw.py best.pt --out-dir <dir> [--cut post-dfl]
-    —— monkeypatch Detect.forward → torch.onnx → onnxsim → pnnx；
-       post-dfl 产出 v8-dist 契约（DFL 留图内，实验路径）
-
-SPPF 并行（可选，替换前 exact-0 断言，数值逐位等价）：
-  python tools/export_ncnn_sppf.py best.pt --imgsz H W --out-dir <dir>
-
-验收（raw 导出等价性 + 多尺寸动态对拍）：
-  python tools/accept_raw_dynamic.py --weights best.pt --work-dir <dir> --build-dir build
-       [--per-size-export]      # v11 等含 attention 的模型
-```
-
-量化（可选，§8.2）：`ncnn2table` + `ncnn2int8`（7840HS 不推荐 int8）。
-
-**该运行时已实现为 `app/yolo_rt`**（`app/README.md`）：两线程 + 三槽位 + 丢旧帧
-流水线（规格见仓库上级 `../PIPELINE.md`），线程A 跑 letterbox/decode/NMS/卡尔曼
-（`app/tracker`，逻辑提取自 RK3588-AntiUAV-Tracker）/UDP 控制输出，线程B 提交
-ncnn Vulkan 推理（`app/ncnn_infer`，配置同 §8.3）。ncnn 由根 CMake
-FetchContent 自动拉取（`-DNCNN_GIT_TAG` 可换版本）。
-
-**验证顺序**（§5/§12，每步先对齐数值再压速度）：fp32 对 golden → fp16 → int8(7840hs不推荐使用int8) → 系统层调优。
-
----
-
-### 5.3 实时流水线应用 `app/yolo_rt`（v5 / v8/v9/v11 / v10 / pose）
-
-`app/yolo_rt` 是按 `../PIPELINE.md` 实现的整机应用：两线程 + 三槽位 + 丢旧帧，
-线程A 采集/预处理/decode/NMS/卡尔曼/UDP 控制，线程B 提交 ncnn Vulkan 推理。
-设计与实现细节见 **[app/README.md](./app/README.md)**，这里只讲配置与调用。
-
-所有参数收在一个扁平 YAML 里（模板：`app/pipeline.example.yaml`），
-覆盖顺序：**默认值 < `--config` 文件 < CLI**：
-
-```bash
-./build/app/yolo_rt --config app/pipeline.yaml                  # 纯配置文件
-./build/app/yolo_rt --config app/pipeline.yaml --conf 0.35      # CLI 临时覆盖
-./build/app/yolo_rt --config app/pipeline.yaml --dump-config    # 打印最终生效值
-```
-
-#### 配置文件参数总表
-
-| 参数 | 含义 | 默认 |
-|---|---|---|
-| **模型契约** |||
-| `param` / `model` | ncnn `.param` / `.bin` 路径 | 必填 |
-| `in0` | 输入 blob 名 | `in0` |
-| `model-type` | 检测头契约（`common/head_types.h`）：`v5`=anchor-based 切头（逐层 `[na*(5+nc),h,w]`，重排为 `[4+1+nc,N]`）；`v8`/`v9`/`v11`=Detect 头烘在图内 `[4+nc,N]`；`v8-pose`=姿态 `[4+nc+3K,N]`；`v8-raw`/`v9-raw`/`v11-raw`=切在 DFL 前的逐层 raw `[4*reg_max+nc,h,w]`；`v8-dist`/`v9-dist`/`v11-dist`=DFL 留图内的逐层 `[4+nc,h,w]`（实验路径）；`v10`=端到端 NMS-free `[N,6]` | `v5` |
-| `heads` | 输出 blob 名列表。v5/v8-raw/v8-dist：逐层，按 stride 8→16→32；v8/v9/v11/pose/v10：通常单个拼接输出 | 必填 |
-| `in-size` | 网络输入 `WxH`，须被 32 整除；letterbox 与 anchor 网格的唯一来源 | `640x640` |
-| `num-classes` | 类别数 nc；加载时校验 head 通道数（v5: 4+1+nc；v8/v8-dist: 4+nc；pose: 4+nc+3K；v8-raw: 4×reg_max+nc；v10: 恒 6） | `2` |
-| `num-kpts` | 仅 `v8-pose`：每框关键点数（任意，角点扫描场景） | `0` |
-| `reg-max` | 仅 `v8-raw` 系：DFL 的 reg_max（Ultralytics v8/v9/v11 标准 = 16） | `16` |
-| `anchors-s8/s16/s32` | 仅 `v5`：三级 anchor（w,h 平铺）。不给 = YOLOv5s P5 默认；训练开 autoanchor 时**必须从训练配置抄** | 空=默认 |
-| `gpu` | Vulkan 设备序号（`vulkaninfo --summary` 查） | `0` |
-| `cpu-threads` | ncnn CPU fallback 层线程数 | `1` |
-| **检测阈值** |||
-| `conf` | 置信度阈值 | `0.3` |
-| `nms` | NMS IoU 阈值 | `0.6` |
-| `topk` | NMS 输出上限 | `300` |
-| **跟踪** |||
-| `gate-px` | 关联门限下限（像素） | `120` |
-| `gate-scale` | 门限随预测框尺寸放大系数 | `2.0` |
-| `size-ratio` | 尺寸记忆过滤：面积比在 [1/r, r] 外的候选丢弃 | `3.0` |
-| `size-memory` | 尺寸先验记忆帧数 | `120` |
-| `coast` | 纯 Kalman 外推帧数上限，超过判 LOST | `5` |
-| `max-misses` | 门限自适应系数上限 | `15` |
-| **运行模式** |||
-| `serial` | `true` = 单线程串行（M1/M3 验收）；`false` = 两线程流水线 | `false` |
-| `cores-a` / `cores-b` | 线程A / 线程B 绑核列表（`0-3` 或 `0,2`；核数不足自动收缩）。**默认值是给 Vulkan 模式设计的；纯 CPU 两线程必须放宽 `cores-b`（如 `4-31`），否则推理线程挤 4 核，劣化 2~3 倍** | `0-3` / `4-7` |
-| `max-w` / `max-h` | 采集缓冲上限（相机分辨率上限） | `1920` / `1080` |
-| `max-frames` | 处理 N 帧后自动退出（0=不限，测试用） | `0` |
-| **控制输出** |||
-| `udp` | 确认轨迹 UDP 目标 `host:port`（`hits>=2 && misses==0` 才发）；注释掉不发 | 空 |
-| **调试** |||
-| `no-model` | 跳过 ncnn，线程B 假推理（冒烟验证调度/关机） | `false` |
-| `fake-gpu-ms` | 假推理每帧睡眠毫秒数 | `10` |
-
-#### 六种模型的配置与调用
-
-**① YOLOv5 系（切头导出，anchor-based）**
-
-导出：`best.pt → ONNX（切 head、过 onnxsim）→ pnnx → ncnn`（§5.2）。
-
-```yaml
-# pipeline_v5.yaml
-param: weights/best.param
-model: weights/best.bin
-model-type: v5
-heads: [out8, out16, out32]        # 三个 head，stride 8→16→32
-in-size: 640x640
-num-classes: 2
-anchors-s8:  [10,13, 16,30, 33,23] # 从训练配置抄（开了 autoanchor 尤其要抄）
-anchors-s16: [30,61, 62,45, 59,119]
-anchors-s32: [116,90, 156,198, 373,326]
-```
-
-**② YOLOv8 / v9 / v11 检测（Detect 头烘在图内，anchor-free）**
-
-导出：Ultralytics 默认 `model.export(format='onnx')`（DFL+网格解码已在图内，
-GPU 上跑）`→ pnnx → ncnn`。输出为单个拼接 blob `[1, 4+nc, N]`。**不需要 anchor 表。**
-v9 推理图检测头与 v8 同构（PGI 辅助分支导出时已剥离），同走此路径。
-
-```yaml
-# pipeline_v8.yaml
-param: weights/yolov8n.param
-model: weights/yolov8n.bin
-model-type: v8                     # v9 / v11 模型写 v9 / v11 等价
-heads: [output0]                   # 单个输出（名字以 pnnx 转换后为准）
-in-size: 640x640
-num-classes: 1
-```
-
-**③ YOLOv8 / v9 / v11 pose（角点/关键点扫描，点数任意）**
-
-输出 `[1, 4+nc+3×nkpt, N]`，关键点 (x,y,conf) 像素。关键点随框过 NMS，
-UDP 控制包附带被跟踪框命中当帧的关键点（≤32 点，coast/丢失帧 `kpt_count=0`）。
-
-```yaml
-# pipeline_pose.yaml
-param: weights/pose.param
-model: weights/pose.bin
-model-type: v8-pose
-heads: [output0]
-in-size: 640x640
-num-classes: 1
-num-kpts: 7                        # 你的关键点数
-```
-
-**④ YOLOv8 / v9 / v11 原生 raw（Detect 头切在 DFL 之前，C++ 侧 DFL 解码）**
-
-导出：Detect 头在 DFL 之前切开，逐层 concat(box, cls) 后导出（§0.2 契约），
-每层一个 blob `[4*reg_max+nc, h, w]`。DFL + dist2bbox 由 `cpu::decode_af_raw`
-完成。网格点表在**加载时**按探测到的输出形状推导并缓存——改输入尺寸只需改
-`in-size` 重新加载，**免的是重新导出模型**；前提是 raw 导出图内没有固定空间
-尺寸的 reshape、常量 grid 等静态 shape 算子（②的烘图路径因网格烘为图内常量，
-换尺寸必须重新导出）。注意 raw 是**灵活性优化，不天然等于加速**：输出体量约为
-fused 的 9.6×（N=8400、nc=3、fp32：67×8400×4≈2.25MB vs 7×8400×4≈0.235MB），
-速度优劣按 infer+extract+拷贝+decode+NMS 全链路实测（独显 / 低阈值 / 密集场景
-尤须单独验证），不能只看 decode 微基准。
-
-**导出与验收工具链**：`tools/export_af_raw.py`（pre-dfl / post-dfl 两种切分，
-后者对应实验路径 `v8-dist`：DFL 留图内、C++ 只做 grid+dist2bbox）+
-`tools/accept_raw_dynamic.py`（真实模型多尺寸对拍）。实测结论（详见
-app/README「真实模型 raw 导出与多尺寸动态验收」支持矩阵与「DFL 切分点三路径
-对比」）：**v8** 同一 param/bin 换尺寸数值正确（v9 同构但**待验证**）；
-**v11 经当前工具链导出时** C2PSA 的静态空间 Reshape 使跨尺寸推理失效，
-需逐尺寸导出（非数学上不能动态，是本链路目前无法恢复动态 shape）；
-610M 核显端到端 fused 最快，DFL 默认应放图内，raw 的价值是换尺寸灵活性
-而非速度。验收环境已固定：torch 2.14.1 / ultralytics 8.4.178 / onnx 1.23.2 /
-onnxsim 0.8.1 / pnnx+ncnn 1.0.20260526。
-
-```yaml
-# pipeline_v8raw.yaml
-param: weights/yolov11s.param
-model: weights/yolov11s.bin
-model-type: v11-raw                # v8-raw / v9-raw 等价
-heads: [out8, out16, out32]        # 逐层 blob，按 stride 8→16→32
-in-size: 640x640
-num-classes: 2
-reg-max: 16                        # Ultralytics 标准值，一般不用改
-```
-
-**⑤ YOLOv10（端到端 NMS-free，无 anchor 无 NMS）**
-
-导出：`model.export(format='onnx', end2end=True)`（或 v10 默认 one-to-one 头）
-`→ pnnx → ncnn`。输出 `[1, N, 6]`（x1,y1,x2,y2,score,cls，输入图像素），
-box-major 布局由 `ncnn_infer` 自动转置。**不做 NMS**（`nms/topk` 配置不生效）。
-
-```yaml
-# pipeline_v10.yaml
-param: weights/yolov10n.param
-model: weights/yolov10n.bin
-model-type: v10
-heads: [output0]
-in-size: 640x640
-num-classes: 2
-```
-
-六种类型共用同一调用：
-
-```bash
-./build/app/yolo_rt --config app/pipeline_v5.yaml     # 换成对应 yaml
-```
-
-**防大小不匹配**：加载时试跑一帧，把布局错误尽量前移到加载期——校验输出通道数
-与总数（v5 校验 blob 通道为 `na*(5+nc)` 整数倍、总数匹配 anchor 表；v8-raw 顺带
-推导网格 stride），形状/通道数与配置不一致**启动即报错**。但试跑只能消除形状与
-通道数的不确定性：head 顺序、box/class 通道语义、anchor 排列、logit 是否已
-sigmoid 仍由上述导出契约约束。box-major `[N, C]` 输出（v10 典型，fused 模型
-转置导出亦可）自动识别并转置。
-
----
-
-## 6. 验证
-
-```bash
-python tools/gen_test_vectors.py                 # 重新生成 golden(已随仓库生成)
-./build/x86/test_x86 test_data                   # x86 数值对齐 + 基准(含 case9/case12)
-./build-k3/riscv/test_rvv test_data              # K3/RVV 同一套 golden + 基准
-./build/nvidia/test_cuda test_data               # CUDA 数值对齐 + 基准
+./build/nvidia/test_cuda test_data
 PYTHONPATH=build/nvidia python nvidia/tests/test_python_bindings.py
-./build/nvidia/test_trt_plugin                   # TRT 插件 sanity
-# app 流水线(yolo_rt):
-python3 tools/gen_tracker_golden.py              # Tracker golden(import RK3588 原版 BoxKalman)
-python3 tools/gen_v8_vectors.py                  # v8/v11 检测+姿态 golden(case7/8，已随仓库生成)
-python3 tools/gen_afdist_vectors.py              # v8-dist golden(case12，已随仓库生成)
-./build/app/test_tracker test_data               # 卡尔曼/门控数值对齐(误差<1e-3)
-./build/app/test_queue                           # 槽位不变式 + 丢旧帧语义
-./build/app/test_head_layouts                    # ncnn 输出布局集成测试(v5 重排/AfRaw/E2E，合成图)
-./build/app/yolo_rt --no-model                   # 无相机冒烟(掉线重连路径 + 干净退出)
-# 真实模型验收（部署工具链见 requirements.txt；yolov8n 动态 / yolo11n 逐尺寸）:
-python3 tools/accept_raw_dynamic.py --weights <detect.pt> --work-dir <dir> --build-dir build [--per-size-export]
+./build/nvidia/test_trt_plugin
+./build/app/test_tracker test_data
+./build/app/test_queue
+./build/app/test_head_layouts
+./build/app/yolo_rt --no-model
 ```
 
-验收标准（§5/§12）：decode/NMS 输出与 numpy golden 数量精确相等、坐标 max abs err < 1e-2、score < 1e-3；预处理 < 1e-3。本机实测全部 PASS：decode 坐标 max err ≤ 2.5e-4（含 992×992 / 992×544 分辨率），NMS 集合逐位一致。
+golden 生成入口：`tools/gen_test_vectors.py`、`gen_v8_vectors.py`、`gen_afraw_vectors.py`、`gen_afdist_vectors.py`、`gen_e2e_vectors.py`、`gen_tracker_golden.py`。Tracker golden 默认读取同级 `RK3588-AntiUAV-Tracker/tracker`，也可传入源码目录。
 
----
+真实模型验收：
 
-## 7. 目标机（7840HS）注意事项
+```bash
+python tools/accept_raw_dynamic.py --weights <detect.pt> --work-dir <dir> --build-dir build
+# v11 等包含静态 attention reshape 的模型加 --per-size-export
+```
 
-- `-DYOLOOP_X86_ARCH=znver4`，`taskset -c 0-7` 绑物理核，`scaling_governor=performance`（§11）
-- vulkan 模块需 glslangValidator + Vulkan SDK；本开发机已通过 lavapipe 软件 Vulkan 实测（case2_dense 1930→1913 与 golden 逐位一致；该冒烟测试为临时程序未入库，库本身已编译验证），780M 真机性能未测
-- TRT 插件基于 IPluginV2DynamicExt（TRT 11.3 起 deprecated，长期建议迁移 IPluginV3）
-- NMS GPU kernel 的 walk 阶段为单 warp 串行扫描（贪心算法固有），候选 >>2048 时可再优化
-- 本机基准数字来自 Ryzen 7 9700X（Zen5），仅供量级参考，以 7840HS 实测为准（§12）
-- 第二台实测机 Ryzen 9 7940HX（16C/32T 双 CCD）+ RTX 4060 Laptop：全模块构建通过
-  （含 CUDA 13.4 / ncnn / Vulkan / TRT 插件）。app 流水线实测：Vulkan 两线程 77 FPS，
-  纯 CPU 建议 `--serial --threads 8`（56.9ms / ≈17 FPS）；**纯 CPU 两线程必须放宽
-  `cores-b`（默认 `4-7` 只适用于 Vulkan 模式）**，实测数据与排查过程见
-  [app/README.md](./app/README.md)「实测补充：7940HX + RTX 4060 Laptop」
+Decode/NMS 数量和标签应一致，坐标误差 < `1e-2`、score < `1e-3`，预处理误差 < `1e-3`。微基准由测试程序打印；端到端性能以目标设备实测为准。
+
+更多：[优化方向](docs/Operator_Suggestion.md) · [K3 SSH 移交](docs/K3_HANDOVER_SSH.md) · [厂商问题单](docs/K3_SPACEMIT_VENDOR_DEBUG_REPORT.md)

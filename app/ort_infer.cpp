@@ -58,6 +58,16 @@ struct OrtInfer::Impl {
             for (const char* key : env_options) {
                 if (const char* value = std::getenv(key)) provider_options[key] = value;
             }
+#ifdef YOLOOP_RISCV_A100
+            // Spine streams own disjoint cores. Leave one of K3's eight A100 cores
+            // available for postprocessing before the EP checks out its stream.
+            const int requested = std::stoi(provider_options["SPACEMIT_EP_INTRA_THREAD_NUM"]);
+            const int granted = std::clamp(requested, 1, 7);
+            if (requested != granted) {
+                std::fprintf(stderr, "[spacemit-ort] A100 后处理预留 1 核，EP线程 %d -> %d\n", requested, granted);
+                provider_options["SPACEMIT_EP_INTRA_THREAD_NUM"] = std::to_string(granted);
+            }
+#endif
             SessionOptionsSpaceMITEnvInit(session_options, provider_options);
             session = std::make_unique<Ort::Session>(env, cfg.model_path.c_str(), session_options);
 
@@ -222,7 +232,7 @@ struct OrtInfer::Impl {
                          "[spacemit-ort] 加载完成: %s, head=%s, N=%d, C=%d, "
                          "EP线程=%d, 直接输出绑定=%d\n",
                          cfg.model_path.c_str(), head_type_name(cfg.head), pred_n, expected_c,
-                         std::max(1, cfg.cpu_threads), (int)direct_output);
+                         std::stoi(provider_options["SPACEMIT_EP_INTRA_THREAD_NUM"]), (int)direct_output);
             return true;
         } catch (const Ort::Exception& e) {
             std::fprintf(stderr, "[spacemit-ort] 加载失败: %s\n", e.what());

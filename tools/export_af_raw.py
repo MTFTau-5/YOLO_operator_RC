@@ -1,31 +1,3 @@
-"""Ultralytics v8/v9/v11 detect 模型 raw head 导出（ncnn）。
-
-切分点（--cut）：
-  pre-dfl  （AfRaw 契约）：Detect 头切在 DFL 之前，逐层 [4*reg_max+nc, h, w]，
-             box 通道按 l/t/r/b 边分组在前，cls raw logits 在后（纯 conv+cat，
-             无空间 reshape，图天然尺寸动态）。
-  post-dfl （AfDist 契约）：DFL 期望留图内，逐层 [4+nc, h, w]，box 通道为已
-             投影的 l/t/r/b 距离，cls raw logits；grid+dist2bbox 在 C++ 侧。
-
-流程：monkeypatch Detect.forward → torch.onnx（静态形状）→ onnxsim → pnnx → ncnn。
-pre-dfl 头部为纯 conv+cat（无空间 reshape）；v8（无 attention 模块）的整图在
-ncnn 侧尺寸动态，同一 param/bin 可在任意（32 倍数的）输入尺寸下推理（已实测）；
-v9 同构但跨尺寸能力**待验证**。
-**v11 注意（绑定当前工具链的结论）**：YOLO11 经当前 PyTorch → ONNX → onnxsim
-→ pnnx → ncnn 链路导出时，C2PSA 中的静态空间 Reshape（torch 侧 `view(B,C,H,W)`
-把 H/W 烘为常量）导致同一模型跨尺寸推理数值错误，因此**当前工具链下**需逐尺寸
-导出（验收见 tools/accept_raw_dynamic.py --per-size-export）。这不是 attention
-在数学上不能动态——动态恢复路径（dynamo 符号 shape 导出 + pnnx inputshape2）
-已实测不可行：pnnx 对命名符号维 stoi 崩溃。
-依赖与已固定的工具链版本见 requirements.txt（含 onnxsim/pnnx 版本敏感行为
-说明；pip install -r requirements.txt 一次装齐）。
-
-用法：
-  python tools/export_af_raw.py yolo11n.pt --out-dir OUT [--cut pre-dfl|post-dfl] \
-      [--imgsz 640 640]
-产物：OUT/model.ncnn.param、OUT/model.ncnn.bin（fp32），stdout 打印输出 blob 名。
-"""
-
 import argparse
 import os
 import shutil
