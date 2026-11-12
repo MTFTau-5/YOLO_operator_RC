@@ -1,9 +1,0 @@
-[spacemit-ort] 加载完成: /home/epoch/work/k3/data/best.spacemit.fp16.onnx, head=v8-pose, N=8400, C=17, EP线程=8, 直接输出绑定=1
-[bench] 视频 1447x1080, 帧数 1, 串行 模式
-== 串行模式逐阶段（1 帧）==
-  letterbox    mean=52.565ms  P50=52.565ms  P99=52.565ms
-  infer        mean=35.884ms  P50=35.884ms  P99=35.884ms
-  decode+nms   mean= 0.021ms  P50= 0.021ms  P99= 0.021ms
-  tracker      mean= 0.002ms  P50= 0.002ms  P99= 0.002ms
-  端到端    mean=88.472ms  P50=88.472ms  P99=88.472ms
-  理论吞吐上限 ≈ 11.3 FPS
