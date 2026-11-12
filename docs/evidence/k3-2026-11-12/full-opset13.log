@@ -1,0 +1,2 @@
+[spacemit-ort] 加载完成: /tmp/k3-rootcause-20261112/full-opset13.onnx, head=v8-pose, N=8400, C=17, EP线程=1, 直接输出绑定=1
+[bench] 仅加载模型，未启动视频管线

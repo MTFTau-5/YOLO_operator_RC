@@ -1,0 +1,17 @@
+{
+  "seed": 20261112,
+  "provider": "CPUExecutionProvider",
+  "onnxruntime_version": "1.31.0",
+  "sample_count": 1,
+  "outputs": [
+    {
+      "shape": [
+        1,
+        17,
+        8400
+      ],
+      "max_abs_diff": 0.0,
+      "array_equal": true
+    }
+  ]
+}

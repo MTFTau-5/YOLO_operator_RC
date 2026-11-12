@@ -1,0 +1,8 @@
+TCM_GUARD start=0x3fa23a4000 end=0x3fa2404000 len=393216 offset=0
+TCM_GUARD start=0x3fa2342000 end=0x3fa23a2000 len=393216 offset=393216
+TCM_GUARD start=0x3fa22e0000 end=0x3fa2340000 len=393216 offset=786432
+TCM_GUARD start=0x3fa227e000 end=0x3fa22de000 len=393216 offset=1179648
+TCM_GUARD start=0x3fa221c000 end=0x3fa227c000 len=393216 offset=1572864
+TCM_GUARD start=0x3fa21ba000 end=0x3fa221a000 len=393216 offset=1966080
+TCM_GUARD start=0x3fa2158000 end=0x3fa21b8000 len=393216 offset=2359296
+TCM_GUARD start=0x3fa20f6000 end=0x3fa2156000 len=393216 offset=2752512

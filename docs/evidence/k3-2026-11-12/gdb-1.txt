@@ -1,0 +1,1226 @@
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/riscv64-linux-gnu/libthread_db.so.1".
+process 25931 is executing new program: /tmp/k3-rootcause-20261112/bench-system
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/riscv64-linux-gnu/libthread_db.so.1".
+[spacemit-ort] 首次试推理输入地址: 0x3f6d6fe010
+
+Thread 18 "bench-system" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x3f71445180 (LWP 25961)]
+0x0000003f9c7fb78e in void mlir::speir::spekernel::ime2::spe_direct_conv2d<_Float16, _Float16, _Float16, mlir::speir::spekernel::spe_kernel_block_m16n32k8, 1ul, 3ul, 3ul, 1ul, 1ul, 1ul, 1ul, 136ul>(void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 3ul> const&, long, long, long, long, long, long, long, void*) () from /usr/lib/libspacemit_ep.so.2
+#0  0x0000003f9c7fb78e in void mlir::speir::spekernel::ime2::spe_direct_conv2d<_Float16, _Float16, _Float16, mlir::speir::spekernel::spe_kernel_block_m16n32k8, 1ul, 3ul, 3ul, 1ul, 1ul, 1ul, 1ul, 136ul>(void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 3ul> const&, long, long, long, long, long, long, long, void*) () at /usr/lib/libspacemit_ep.so.2
+#1  0x0000003f9c682b0e in void onnxruntime::spacemit::ComputeDirectConv2DBlockThreaded<onnxruntime::spacemit::SpineConv2DDispatchDirectConv, (onnxruntime::spacemit::DirectConvScheduleType)0>(onnxruntime::spacemit::SpineComputeContext*, onnxruntime::spacemit::SpineComputeDispatch*, onnxruntime::spacemit::BlockPtr<4ul>&, onnxruntime::spacemit::BlockPtr<2ul>&, onnxruntime::spacemit::BlockPtr<4ul>&, long, long, long, long, long, long, long, long, void*, void*, void*) () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c67d456 in onnxruntime::spacemit::SpineConv2DDispatchDirectConv::operator()(onnxruntime::spacemit::SpineComputeContext*, onnxruntime::spacemit::SpineOperatorPackedTensor*, long, onnxruntime::spacemit::SpineOperatorPackedTensor*, long, void*, void*) () at /usr/lib/libspacemit_ep.so.2
+#3  0x0000003f9c6db296 in ??? () at /usr/lib/libspacemit_ep.so.2
+#4  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#5  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+$1 = {si_signo = 11, si_errno = 0, si_code = 1, _sifields = {_pad = {1914667008, 63, 0 <repeats 26 times>}, _kill = {si_pid = 1914667008, si_uid = 63}, _timer = {si_tid = 1914667008, si_overrun = 63, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _rt = {si_pid = 1914667008, si_uid = 63, si_sigval = {sival_int = 0, sival_ptr = 0x0}}, _sigchld = {si_pid = 1914667008, si_uid = 63, si_status = 0, si_utime = 0, si_stime = 0}, _sigfault = {si_addr = 0x3f721f8000}, _sigpoll = {si_band = 272497606656, si_fd = 0}, _sigsys = {_call_addr = 0x3f721f8000, _syscall = 0, _arch = 0}}}
+ra             0x3f9c682b0e	0x3f9c682b0e <void onnxruntime::spacemit::ComputeDirectConv2DBlockThreaded<onnxruntime::spacemit::SpineConv2DDispatchDirectConv, (onnxruntime::spacemit::DirectConvScheduleType)0>(onnxruntime::spacemit::SpineComputeContext*, onnxruntime::spacemit::SpineComputeDispatch*, onnxruntime::spacemit::BlockPtr<4ul>&, onnxruntime::spacemit::BlockPtr<2ul>&, onnxruntime::spacemit::BlockPtr<4ul>&, long, long, long, long, long, long, long, long, void*, void*, void*)+4114>
+sp             0x3f6d6fcca0	0x3f6d6fcca0
+gp             0x2abd6cd800	0x2abd6cd800
+tp             0x3f714458c0	0x3f714458c0
+t0             0x40	64
+t1             0x20	32
+t2             0x10	16
+fp             0x4	0x4
+s1             0x3f72198c00	272497216512
+a0             0x40	64
+a1             0x3f721f4100	272497590528
+a2             0x3f721f4080	272497590400
+a3             0x3f721f8000	272497606656
+a4             0x4000	16384
+a5             0x3f72198c00	272497216512
+a6             0x3f699f8100	272355000576
+a7             0x48000	294912
+s2             0x3f72198c80	272497216640
+s3             0x3f72198d00	272497216768
+s4             0x3f72198d80	272497216896
+s5             0x1	1
+s6             0x40	64
+s7             0x3f6a5f31c0	272367563200
+s8             0x8000	32768
+s9             0x20	32
+s10            0x4	4
+s11            0x3f721fc000	272497623040
+t3             0x1	1
+t4             0xe00	3584
+t5             0x3f6a5f31c0	272367563200
+t6             0x0	0
+pc             0x3f9c7fb78e	0x3f9c7fb78e <void mlir::speir::spekernel::ime2::spe_direct_conv2d<_Float16, _Float16, _Float16, mlir::speir::spekernel::spe_kernel_block_m16n32k8, 1ul, 3ul, 3ul, 1ul, 1ul, 1ul, 1ul, 136ul>(void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 3ul> const&, long, long, long, long, long, long, long, void*)+402>
+$2 = 64
+$3 = 8
+$4 = 32
+   0x3f9c7fb74e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+338>:	sd	gp,0(sp)
+   0x3f9c7fb750 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+340>:	vsetvli	t0,zero,e32,m8,tu,mu
+   0x3f9c7fb754 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+344>:	vxor.vv	v16,v16,v16
+   0x3f9c7fb758 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+348>:	vxor.vv	v24,v24,v24
+   0x3f9c7fb75c <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+352>:	vsetvli	t0,zero,e16,m1,tu,mu
+   0x3f9c7fb760 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+356>:	mv	s1,a5
+   0x3f9c7fb762 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+358>:	addi	s2,a5,128
+   0x3f9c7fb766 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+362>:	addi	s3,a5,256
+   0x3f9c7fb76a <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+366>:	addi	s4,a5,384
+   0x3f9c7fb76e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+370>:	mv	a1,s11
+   0x3f9c7fb770 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+372>:	addi	a2,s11,128
+   0x3f9c7fb774 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+376>:	add	a3,s11,a4
+   0x3f9c7fb778 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+380>:	add	s11,s11,s8
+   0x3f9c7fb77a <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+382>:	srli	t2,s6,0x2
+   0x3f9c7fb77e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+386>:	blez	t2,0x3f9c7fbe2e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+2098>
+   0x3f9c7fb782 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+390>:	vle16.v	v0,(a1)
+   0x3f9c7fb786 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+394>:	addi	a1,a1,256
+   0x3f9c7fb78a <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+398>:	vle16.v	v1,(a2)
+=> 0x3f9c7fb78e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+402>:	vle16.v	v3,(a3)
+   0x3f9c7fb792 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+406>:	addi	a3,a3,256
+   0x3f9c7fb796 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+410>:	vle16.v	v8,(s1)
+   0x3f9c7fb79a <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+414>:	addi	s1,s1,512
+   0x3f9c7fb79e <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+418>:	vle16.v	v9,(s2)
+   0x3f9c7fb7a2 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+422>:	addi	s2,s2,512
+   0x3f9c7fb7a6 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+426>:	vle16.v	v10,(s3)
+   0x3f9c7fb7aa <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+430>:	addi	s3,s3,512
+   0x3f9c7fb7ae <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+434>:	vle16.v	v11,(s4)
+   0x3f9c7fb7b2 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+438>:	addi	s4,s4,512
+   0x3f9c7fb7b6 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+442>:	vle16.v	v12,(s1)
+   0x3f9c7fb7ba <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+446>:	addi	s1,s1,512
+   0x3f9c7fb7be <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+450>:	vle16.v	v13,(s2)
+   0x3f9c7fb7c2 <_ZN4mlir5speir9spekernel4ime217spe_direct_conv2dIDF16_DF16_DF16_NS1_25spe_kernel_block_m16n32k8ELm1ELm3ELm3ELm1ELm1ELm1ELm1ELm136EEEvPvlRKSt5arrayIlLm4EES5_lS9_S5_lRKS6_IlLm3EElllllllS5_+454>:	addi	s2,s2,512
+process 25931
+Mapped address spaces:
+
+Start Addr         End Addr           Size               Offset             Perms File 
+0x0000002abd441000 0x0000002abd6c4000 0x283000           0x0                r-xp  /tmp/k3-rootcause-20261112/bench-system 
+0x0000002abd6c4000 0x0000002abd6cd000 0x9000             0x283000           r--p  /tmp/k3-rootcause-20261112/bench-system 
+0x0000002abd6cd000 0x0000002abd6ce000 0x1000             0x28c000           rw-p  /tmp/k3-rootcause-20261112/bench-system 
+0x0000002adad98000 0x0000002add53a000 0x27a2000          0x0                rw-p  [heap] 
+0x0000003f40000000 0x0000003f40159000 0x159000           0x0                rw-p   
+0x0000003f40159000 0x0000003f44000000 0x3ea7000          0x0                ---p   
+0x0000003f44000000 0x0000003f44159000 0x159000           0x0                rw-p   
+0x0000003f44159000 0x0000003f48000000 0x3ea7000          0x0                ---p   
+0x0000003f48000000 0x0000003f48159000 0x159000           0x0                rw-p   
+0x0000003f48159000 0x0000003f4c000000 0x3ea7000          0x0                ---p   
+0x0000003f4c000000 0x0000003f4c159000 0x159000           0x0                rw-p   
+0x0000003f4c159000 0x0000003f50000000 0x3ea7000          0x0                ---p   
+0x0000003f54000000 0x0000003f54159000 0x159000           0x0                rw-p   
+0x0000003f54159000 0x0000003f58000000 0x3ea7000          0x0                ---p   
+0x0000003f5c000000 0x0000003f5c159000 0x159000           0x0                rw-p   
+0x0000003f5c159000 0x0000003f60000000 0x3ea7000          0x0                ---p   
+0x0000003f60000000 0x0000003f60159000 0x159000           0x0                rw-p   
+0x0000003f60159000 0x0000003f64000000 0x3ea7000          0x0                ---p   
+0x0000003f64000000 0x0000003f64193000 0x193000           0x0                rw-p   
+0x0000003f64193000 0x0000003f68000000 0x3e6d000          0x0                ---p   
+0x0000003f68000000 0x0000003f69c00000 0x1c00000          0x0                rw-p   
+0x0000003f69c00000 0x0000003f6a000000 0x400000           0x0                ---p   
+0x0000003f6a000000 0x0000003f6c000000 0x2000000          0x0                rw-p   
+0x0000003f6d6ba000 0x0000003f6d6bb000 0x1000             0x0                ---p   
+0x0000003f6d6bb000 0x0000003f6d6cb000 0x10000            0x0                rw-p   
+0x0000003f6d6cb000 0x0000003f6d6cc000 0x1000             0x0                ---p   
+0x0000003f6d6cc000 0x0000003f6d6dc000 0x10000            0x0                rw-p   
+0x0000003f6d6dc000 0x0000003f6d6dd000 0x1000             0x0                ---p   
+0x0000003f6d6dd000 0x0000003f6d6ed000 0x10000            0x0                rw-p   
+0x0000003f6d6ed000 0x0000003f6d6ee000 0x1000             0x0                ---p   
+0x0000003f6d6ee000 0x0000003f6dc50000 0x562000           0x0                rw-p   
+0x0000003f6dc50000 0x0000003f71c58000 0x4008000          0x0                rw-p   
+0x0000003f71c58000 0x0000003f71f58000 0x300000           0x0                rw-s  /dev/tcm 
+0x0000003f71f58000 0x0000003f71fb8000 0x60000            0x2a0000           rw-s  /dev/tcm 
+0x0000003f71fb8000 0x0000003f72018000 0x60000            0x240000           rw-s  /dev/tcm 
+0x0000003f72018000 0x0000003f72078000 0x60000            0x1e0000           rw-s  /dev/tcm 
+0x0000003f72078000 0x0000003f720d8000 0x60000            0x180000           rw-s  /dev/tcm 
+0x0000003f720d8000 0x0000003f72138000 0x60000            0x120000           rw-s  /dev/tcm 
+0x0000003f72138000 0x0000003f72198000 0x60000            0xc0000            rw-s  /dev/tcm 
+0x0000003f72198000 0x0000003f721f8000 0x60000            0x60000            rw-s  /dev/tcm 
+0x0000003f721f8000 0x0000003f76200000 0x4008000          0x0                rw-p   
+0x0000003f76200000 0x0000003f76400000 0x200000           0x0                rw-p   
+0x0000003f76402000 0x0000003f76403000 0x1000             0x0                ---p   
+0x0000003f76403000 0x0000003f76413000 0x10000            0x0                rw-p   
+0x0000003f76413000 0x0000003f76473000 0x60000            0x0                rw-s  /dev/tcm 
+0x0000003f76473000 0x0000003f765f9000 0x186000           0x0                rw-p   
+0x0000003f765f9000 0x0000003f79e00000 0x3807000          0x0                rw-p   
+0x0000003f79e00000 0x0000003f89e00000 0x10000000         0x0                rw-p   
+0x0000003f89e06000 0x0000003f89e07000 0x1000             0x0                ---p   
+0x0000003f89e07000 0x0000003f89e17000 0x10000            0x0                rw-p   
+0x0000003f89e17000 0x0000003f89e18000 0x1000             0x0                ---p   
+0x0000003f89e18000 0x0000003f89e28000 0x10000            0x0                rw-p   
+0x0000003f89e28000 0x0000003f89e2a000 0x2000             0x0                rw-p   
+0x0000003f89e2a000 0x0000003f89e2b000 0x1000             0x0                ---p   
+0x0000003f89e2b000 0x0000003f89e3b000 0x10000            0x0                rw-p   
+0x0000003f89e3b000 0x0000003f89e3d000 0x2000             0x0                rw-s  /dev/shm/spert-arbiter-spacemit-k3.v5 
+0x0000003f89e3d000 0x0000003f89f0f000 0xd2000            0x0                rw-p   
+0x0000003f89f0f000 0x0000003f89f1c000 0xd000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtbbmalloc.so.2.17 
+0x0000003f89f1c000 0x0000003f89f1d000 0x1000             0xd000             r--p  /usr/lib/riscv64-linux-gnu/libtbbmalloc.so.2.17 
+0x0000003f89f1d000 0x0000003f89f1e000 0x1000             0xe000             rw-p  /usr/lib/riscv64-linux-gnu/libtbbmalloc.so.2.17 
+0x0000003f89f1e000 0x0000003f89f73000 0x55000            0x0                rw-p   
+0x0000003f89f73000 0x0000003f89f74000 0x1000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_utf8_for_code_point.so.20260107.0.0 
+0x0000003f89f74000 0x0000003f89f75000 0x1000             0x0                r--p  /usr/lib/riscv64-linux-gnu/libabsl_utf8_for_code_point.so.20260107.0.0 
+0x0000003f89f75000 0x0000003f89f76000 0x1000             0x1000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_utf8_for_code_point.so.20260107.0.0 
+0x0000003f89f76000 0x0000003f89f77000 0x1000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_decode_rust_punycode.so.20260107.0.0 
+0x0000003f89f77000 0x0000003f89f78000 0x1000             0x0                r--p  /usr/lib/riscv64-linux-gnu/libabsl_decode_rust_punycode.so.20260107.0.0 
+0x0000003f89f78000 0x0000003f89f79000 0x1000             0x1000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_decode_rust_punycode.so.20260107.0.0 
+0x0000003f89f79000 0x0000003f89f7c000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_throw_delegate.so.20260107.0.0 
+0x0000003f89f7c000 0x0000003f89f7d000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_throw_delegate.so.20260107.0.0 
+0x0000003f89f7d000 0x0000003f89f7e000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_throw_delegate.so.20260107.0.0 
+0x0000003f89f7e000 0x0000003f89f81000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_strings_internal.so.20260107.0.0 
+0x0000003f89f81000 0x0000003f89f82000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_strings_internal.so.20260107.0.0 
+0x0000003f89f82000 0x0000003f89f83000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_strings_internal.so.20260107.0.0 
+0x0000003f89f83000 0x0000003f89f85000 0x2000             0x0                rw-p   
+0x0000003f89f85000 0x0000003f89f89000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_demangle_rust.so.20260107.0.0 
+0x0000003f89f89000 0x0000003f89f8a000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_demangle_rust.so.20260107.0.0 
+0x0000003f89f8a000 0x0000003f89f8b000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_demangle_rust.so.20260107.0.0 
+0x0000003f89f8b000 0x0000003f89f8d000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_hash.so.20260107.0.0 
+0x0000003f89f8d000 0x0000003f89f8e000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_hash.so.20260107.0.0 
+0x0000003f89f8e000 0x0000003f89f8f000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_hash.so.20260107.0.0 
+0x0000003f89f8f000 0x0000003f89fa5000 0x16000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_time_zone.so.20260107.0.0 
+0x0000003f89fa5000 0x0000003f89fa6000 0x1000             0x15000            r--p  /usr/lib/riscv64-linux-gnu/libabsl_time_zone.so.20260107.0.0 
+0x0000003f89fa6000 0x0000003f89fa7000 0x1000             0x16000            rw-p  /usr/lib/riscv64-linux-gnu/libabsl_time_zone.so.20260107.0.0 
+0x0000003f89fa7000 0x0000003f89fc6000 0x1f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_strings.so.20260107.0.0 
+0x0000003f89fc6000 0x0000003f89fc7000 0x1000             0x1e000            r--p  /usr/lib/riscv64-linux-gnu/libabsl_strings.so.20260107.0.0 
+0x0000003f89fc7000 0x0000003f89fc8000 0x1000             0x1f000            rw-p  /usr/lib/riscv64-linux-gnu/libabsl_strings.so.20260107.0.0 
+0x0000003f89fc8000 0x0000003f89fd2000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_demangle_internal.so.20260107.0.0 
+0x0000003f89fd2000 0x0000003f89fd3000 0x1000             0xa000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_demangle_internal.so.20260107.0.0 
+0x0000003f89fd3000 0x0000003f89fd4000 0x1000             0xb000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_demangle_internal.so.20260107.0.0 
+0x0000003f89fd4000 0x0000003f89fd6000 0x2000             0x0                rw-p   
+0x0000003f89fd6000 0x0000003f89ffe000 0x28000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgpg-error.so.0.41.1 
+0x0000003f89ffe000 0x0000003f89fff000 0x1000             0x27000            r--p  /usr/lib/riscv64-linux-gnu/libgpg-error.so.0.41.1 
+0x0000003f89fff000 0x0000003f8a000000 0x1000             0x28000            rw-p  /usr/lib/riscv64-linux-gnu/libgpg-error.so.0.41.1 
+0x0000003f8a000000 0x0000003f8bf94000 0x1f94000          0x0                r-xp  /usr/lib/riscv64-linux-gnu/libicudata.so.78.2 
+0x0000003f8bf94000 0x0000003f8bf95000 0x1000             0x1f93000          r--p  /usr/lib/riscv64-linux-gnu/libicudata.so.78.2 
+0x0000003f8bf95000 0x0000003f8bf96000 0x1000             0x1f94000          rw-p  /usr/lib/riscv64-linux-gnu/libicudata.so.78.2 
+0x0000003f8bf96000 0x0000003f8bf9a000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_debugging_internal.so.20260107.0.0 
+0x0000003f8bf9a000 0x0000003f8bf9b000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_debugging_internal.so.20260107.0.0 
+0x0000003f8bf9b000 0x0000003f8bf9c000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_debugging_internal.so.20260107.0.0 
+0x0000003f8bf9c000 0x0000003f8bf9e000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_borrowed_fixup_buffer.so.20260107.0.0 
+0x0000003f8bf9e000 0x0000003f8bf9f000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_borrowed_fixup_buffer.so.20260107.0.0 
+0x0000003f8bf9f000 0x0000003f8bfa0000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_borrowed_fixup_buffer.so.20260107.0.0 
+0x0000003f8bfa0000 0x0000003f8bfb8000 0x18000            0x0                rw-p   
+0x0000003f8bfb8000 0x0000003f8bfca000 0x12000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libassuan.so.9.0.2 
+0x0000003f8bfca000 0x0000003f8bfcb000 0x1000             0x11000            r--p  /usr/lib/riscv64-linux-gnu/libassuan.so.9.0.2 
+0x0000003f8bfcb000 0x0000003f8bfcc000 0x1000             0x12000            rw-p  /usr/lib/riscv64-linux-gnu/libassuan.so.9.0.2 
+0x0000003f8bfcc000 0x0000003f8bfcd000 0x1000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_spinlock_wait.so.20260107.0.0 
+0x0000003f8bfcd000 0x0000003f8bfce000 0x1000             0x0                r--p  /usr/lib/riscv64-linux-gnu/libabsl_spinlock_wait.so.20260107.0.0 
+0x0000003f8bfce000 0x0000003f8bfcf000 0x1000             0x1000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_spinlock_wait.so.20260107.0.0 
+0x0000003f8bfcf000 0x0000003f8bfd1000 0x2000             0x0                rw-p   
+0x0000003f8bfd1000 0x0000003f8bfd3000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_raw_logging_internal.so.20260107.0.0 
+0x0000003f8bfd3000 0x0000003f8bfd4000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_raw_logging_internal.so.20260107.0.0 
+0x0000003f8bfd4000 0x0000003f8bfd5000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_raw_logging_internal.so.20260107.0.0 
+0x0000003f8bfd5000 0x0000003f8bfd8000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_base.so.20260107.0.0 
+0x0000003f8bfd8000 0x0000003f8bfd9000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_base.so.20260107.0.0 
+0x0000003f8bfd9000 0x0000003f8bfda000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_base.so.20260107.0.0 
+0x0000003f8bfda000 0x0000003f8bfde000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_malloc_internal.so.20260107.0.0 
+0x0000003f8bfde000 0x0000003f8bfdf000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_malloc_internal.so.20260107.0.0 
+0x0000003f8bfdf000 0x0000003f8bfe0000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_malloc_internal.so.20260107.0.0 
+0x0000003f8bfe0000 0x0000003f8bfe1000 0x1000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_tracing_internal.so.20260107.0.0 
+0x0000003f8bfe1000 0x0000003f8bfe2000 0x1000             0x0                r--p  /usr/lib/riscv64-linux-gnu/libabsl_tracing_internal.so.20260107.0.0 
+0x0000003f8bfe2000 0x0000003f8bfe3000 0x1000             0x1000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_tracing_internal.so.20260107.0.0 
+0x0000003f8bfe3000 0x0000003f8bff2000 0xf000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_time.so.20260107.0.0 
+0x0000003f8bff2000 0x0000003f8bff3000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_time.so.20260107.0.0 
+0x0000003f8bff3000 0x0000003f8bff4000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_time.so.20260107.0.0 
+0x0000003f8bff4000 0x0000003f8bff9000 0x5000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_symbolize.so.20260107.0.0 
+0x0000003f8bff9000 0x0000003f8bffa000 0x1000             0x5000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_symbolize.so.20260107.0.0 
+0x0000003f8bffa000 0x0000003f8bffb000 0x1000             0x6000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_symbolize.so.20260107.0.0 
+0x0000003f8bffb000 0x0000003f8bffd000 0x2000             0x0                rw-p   
+0x0000003f8bffd000 0x0000003f8bfff000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_stacktrace.so.20260107.0.0 
+0x0000003f8bfff000 0x0000003f8c000000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_stacktrace.so.20260107.0.0 
+0x0000003f8c000000 0x0000003f8c001000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_stacktrace.so.20260107.0.0 
+0x0000003f8c001000 0x0000003f8c003000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_kernel_timeout_internal.so.20260107.0.0 
+0x0000003f8c003000 0x0000003f8c004000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_kernel_timeout_internal.so.20260107.0.0 
+0x0000003f8c004000 0x0000003f8c005000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_kernel_timeout_internal.so.20260107.0.0 
+0x0000003f8c005000 0x0000003f8c00a000 0x5000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_graphcycles_internal.so.20260107.0.0 
+0x0000003f8c00a000 0x0000003f8c00b000 0x1000             0x4000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_graphcycles_internal.so.20260107.0.0 
+0x0000003f8c00b000 0x0000003f8c00c000 0x1000             0x5000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_graphcycles_internal.so.20260107.0.0 
+0x0000003f8c00c000 0x0000003f8c013000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdatrie.so.1.4.1 
+0x0000003f8c013000 0x0000003f8c014000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libdatrie.so.1.4.1 
+0x0000003f8c014000 0x0000003f8c015000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libdatrie.so.1.4.1 
+0x0000003f8c015000 0x0000003f8c034000 0x1f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgraphite2.so.3.2.1 
+0x0000003f8c034000 0x0000003f8c036000 0x2000             0x1e000            r--p  /usr/lib/riscv64-linux-gnu/libgraphite2.so.3.2.1 
+0x0000003f8c036000 0x0000003f8c037000 0x1000             0x20000            rw-p  /usr/lib/riscv64-linux-gnu/libgraphite2.so.3.2.1 
+0x0000003f8c037000 0x0000003f8c039000 0x2000             0x0                rw-p   
+0x0000003f8c039000 0x0000003f8c064000 0x2b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libseccomp.so.2.6.0 
+0x0000003f8c064000 0x0000003f8c065000 0x1000             0x2b000            r--p  /usr/lib/riscv64-linux-gnu/libseccomp.so.2.6.0 
+0x0000003f8c065000 0x0000003f8c066000 0x1000             0x2c000            rw-p  /usr/lib/riscv64-linux-gnu/libseccomp.so.2.6.0 
+0x0000003f8c066000 0x0000003f8c0bf000 0x59000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libblkid.so.1.1.0 
+0x0000003f8c0bf000 0x0000003f8c0c5000 0x6000             0x58000            r--p  /usr/lib/riscv64-linux-gnu/libblkid.so.1.1.0 
+0x0000003f8c0c5000 0x0000003f8c0c6000 0x1000             0x5e000            rw-p  /usr/lib/riscv64-linux-gnu/libblkid.so.1.1.0 
+0x0000003f8c0c6000 0x0000003f8c1fe000 0x138000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libharfbuzz.so.0.61232.0 
+0x0000003f8c1fe000 0x0000003f8c1ff000 0x1000             0x137000           r--p  /usr/lib/riscv64-linux-gnu/libharfbuzz.so.0.61232.0 
+0x0000003f8c1ff000 0x0000003f8c200000 0x1000             0x138000           rw-p  /usr/lib/riscv64-linux-gnu/libharfbuzz.so.0.61232.0 
+0x0000003f8c200000 0x0000003f8c62e000 0x42e000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libglycin-2.so.0 
+0x0000003f8c62e000 0x0000003f8c651000 0x23000            0x42d000           r--p  /usr/lib/riscv64-linux-gnu/libglycin-2.so.0 
+0x0000003f8c651000 0x0000003f8c654000 0x3000             0x450000           rw-p  /usr/lib/riscv64-linux-gnu/libglycin-2.so.0 
+0x0000003f8c655000 0x0000003f8c659000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkeyutils.so.1.10 
+0x0000003f8c659000 0x0000003f8c65a000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libkeyutils.so.1.10 
+0x0000003f8c65a000 0x0000003f8c65b000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libkeyutils.so.1.10 
+0x0000003f8c65b000 0x0000003f8c65e000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libplds4.so 
+0x0000003f8c65e000 0x0000003f8c65f000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libplds4.so 
+0x0000003f8c65f000 0x0000003f8c660000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libplds4.so 
+0x0000003f8c660000 0x0000003f8c662000 0x2000             0x0                rw-p   
+0x0000003f8c662000 0x0000003f8c68c000 0x2a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnssutil3.so 
+0x0000003f8c68c000 0x0000003f8c693000 0x7000             0x29000            r--p  /usr/lib/riscv64-linux-gnu/libnssutil3.so 
+0x0000003f8c693000 0x0000003f8c694000 0x1000             0x30000            rw-p  /usr/lib/riscv64-linux-gnu/libnssutil3.so 
+0x0000003f8c694000 0x0000003f8c6de000 0x4a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgpgme.so.45.0.1 
+0x0000003f8c6de000 0x0000003f8c6df000 0x1000             0x4a000            r--p  /usr/lib/riscv64-linux-gnu/libgpgme.so.45.0.1 
+0x0000003f8c6df000 0x0000003f8c6e1000 0x2000             0x4b000            rw-p  /usr/lib/riscv64-linux-gnu/libgpgme.so.45.0.1 
+0x0000003f8c6e1000 0x0000003f8c6f0000 0xf000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libabsl_synchronization.so.20260107.0.0 
+0x0000003f8c6f0000 0x0000003f8c6f1000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libabsl_synchronization.so.20260107.0.0 
+0x0000003f8c6f1000 0x0000003f8c6f2000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libabsl_synchronization.so.20260107.0.0 
+0x0000003f8c6f2000 0x0000003f8c6f4000 0x2000             0x0                rw-p   
+0x0000003f8c6f4000 0x0000003f8c70c000 0x18000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsasl2.so.2.0.25 
+0x0000003f8c70c000 0x0000003f8c70d000 0x1000             0x17000            r--p  /usr/lib/riscv64-linux-gnu/libsasl2.so.2.0.25 
+0x0000003f8c70d000 0x0000003f8c70e000 0x1000             0x18000            rw-p  /usr/lib/riscv64-linux-gnu/libsasl2.so.2.0.25 
+0x0000003f8c70e000 0x0000003f8c710000 0x2000             0x0                rw-p   
+0x0000003f8c710000 0x0000003f8c730000 0x20000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbrotlicommon.so.1.2.0 
+0x0000003f8c730000 0x0000003f8c731000 0x1000             0x1f000            r--p  /usr/lib/riscv64-linux-gnu/libbrotlicommon.so.1.2.0 
+0x0000003f8c731000 0x0000003f8c732000 0x1000             0x20000            rw-p  /usr/lib/riscv64-linux-gnu/libbrotlicommon.so.1.2.0 
+0x0000003f8c732000 0x0000003f8c737000 0x5000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libXdmcp.so.6.0.0 
+0x0000003f8c737000 0x0000003f8c738000 0x1000             0x4000             r--p  /usr/lib/riscv64-linux-gnu/libXdmcp.so.6.0.0 
+0x0000003f8c738000 0x0000003f8c739000 0x1000             0x5000             rw-p  /usr/lib/riscv64-linux-gnu/libXdmcp.so.6.0.0 
+0x0000003f8c739000 0x0000003f8c741000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libthai.so.0.3.2 
+0x0000003f8c741000 0x0000003f8c742000 0x1000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libthai.so.0.3.2 
+0x0000003f8c742000 0x0000003f8c743000 0x1000             0x8000             rw-p  /usr/lib/riscv64-linux-gnu/libthai.so.0.3.2 
+0x0000003f8c743000 0x0000003f8c75e000 0x1b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfribidi.so.0.4.0 
+0x0000003f8c75e000 0x0000003f8c75f000 0x1000             0x1a000            r--p  /usr/lib/riscv64-linux-gnu/libfribidi.so.0.4.0 
+0x0000003f8c75f000 0x0000003f8c760000 0x1000             0x1b000            rw-p  /usr/lib/riscv64-linux-gnu/libfribidi.so.0.4.0 
+0x0000003f8c760000 0x0000003f8c78c000 0x2c000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libselinux.so.1 
+0x0000003f8c78c000 0x0000003f8c78d000 0x1000             0x2b000            r--p  /usr/lib/riscv64-linux-gnu/libselinux.so.1 
+0x0000003f8c78d000 0x0000003f8c78e000 0x1000             0x2c000            rw-p  /usr/lib/riscv64-linux-gnu/libselinux.so.1 
+0x0000003f8c78e000 0x0000003f8c790000 0x2000             0x0                rw-p   
+0x0000003f8c790000 0x0000003f8c7fd000 0x6d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmount.so.1.1.0 
+0x0000003f8c7fd000 0x0000003f8c7ff000 0x2000             0x6d000            r--p  /usr/lib/riscv64-linux-gnu/libmount.so.1.1.0 
+0x0000003f8c7ff000 0x0000003f8c800000 0x1000             0x6f000            rw-p  /usr/lib/riscv64-linux-gnu/libmount.so.1.1.0 
+0x0000003f8c800000 0x0000003f8cae1000 0x2e1000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgeos.so.3.14.1 
+0x0000003f8cae1000 0x0000003f8caec000 0xb000             0x2e1000           r--p  /usr/lib/riscv64-linux-gnu/libgeos.so.3.14.1 
+0x0000003f8caec000 0x0000003f8caed000 0x1000             0x2ec000           rw-p  /usr/lib/riscv64-linux-gnu/libgeos.so.3.14.1 
+0x0000003f8caee000 0x0000003f8caf0000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libXau.so.6.0.0 
+0x0000003f8caf0000 0x0000003f8caf1000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libXau.so.6.0.0 
+0x0000003f8caf1000 0x0000003f8caf2000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libXau.so.6.0.0 
+0x0000003f8caf2000 0x0000003f8caf4000 0x2000             0x0                rw-p   
+0x0000003f8caf4000 0x0000003f8cb0f000 0x1b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpangoft2-1.0.so.0.5700.0 
+0x0000003f8cb0f000 0x0000003f8cb10000 0x1000             0x1b000            r--p  /usr/lib/riscv64-linux-gnu/libpangoft2-1.0.so.0.5700.0 
+0x0000003f8cb10000 0x0000003f8cb11000 0x1000             0x1c000            rw-p  /usr/lib/riscv64-linux-gnu/libpangoft2-1.0.so.0.5700.0 
+0x0000003f8cb11000 0x0000003f8cb13000 0x2000             0x0                rw-p   
+0x0000003f8cb13000 0x0000003f8cb1e000 0xb000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmd.so.0.1.0 
+0x0000003f8cb1e000 0x0000003f8cb1f000 0x1000             0xa000             r--p  /usr/lib/riscv64-linux-gnu/libmd.so.0.1.0 
+0x0000003f8cb1f000 0x0000003f8cb20000 0x1000             0xb000             rw-p  /usr/lib/riscv64-linux-gnu/libmd.so.0.1.0 
+0x0000003f8cb20000 0x0000003f8cb2a000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkrb5support.so.0.1 
+0x0000003f8cb2a000 0x0000003f8cb2b000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libkrb5support.so.0.1 
+0x0000003f8cb2b000 0x0000003f8cb2c000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libkrb5support.so.0.1 
+0x0000003f8cb2c000 0x0000003f8cb2f000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcom_err.so.2.1 
+0x0000003f8cb2f000 0x0000003f8cb30000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libcom_err.so.2.1 
+0x0000003f8cb30000 0x0000003f8cb31000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libcom_err.so.2.1 
+0x0000003f8cb31000 0x0000003f8cb5d000 0x2c000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libk5crypto.so.3.1 
+0x0000003f8cb5d000 0x0000003f8cb5e000 0x1000             0x2c000            r--p  /usr/lib/riscv64-linux-gnu/libk5crypto.so.3.1 
+0x0000003f8cb5e000 0x0000003f8cb5f000 0x1000             0x2d000            rw-p  /usr/lib/riscv64-linux-gnu/libk5crypto.so.3.1 
+0x0000003f8cb5f000 0x0000003f8cc19000 0xba000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkrb5.so.3.3 
+0x0000003f8cc19000 0x0000003f8cc24000 0xb000             0xba000            r--p  /usr/lib/riscv64-linux-gnu/libkrb5.so.3.3 
+0x0000003f8cc24000 0x0000003f8cc26000 0x2000             0xc5000            rw-p  /usr/lib/riscv64-linux-gnu/libkrb5.so.3.3 
+0x0000003f8cc26000 0x0000003f8cc28000 0x2000             0x0                rw-p   
+0x0000003f8cc28000 0x0000003f8cc33000 0xb000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libresolv.so.2 
+0x0000003f8cc33000 0x0000003f8cc34000 0x1000             0xa000             r--p  /usr/lib/riscv64-linux-gnu/libresolv.so.2 
+0x0000003f8cc34000 0x0000003f8cc35000 0x1000             0xb000             rw-p  /usr/lib/riscv64-linux-gnu/libresolv.so.2 
+0x0000003f8cc35000 0x0000003f8cc97000 0x62000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/librttopo.so.1.1.0 
+0x0000003f8cc97000 0x0000003f8cc98000 0x1000             0x62000            r--p  /usr/lib/riscv64-linux-gnu/librttopo.so.1.1.0 
+0x0000003f8cc98000 0x0000003f8cc99000 0x1000             0x63000            rw-p  /usr/lib/riscv64-linux-gnu/librttopo.so.1.1.0 
+0x0000003f8cc99000 0x0000003f8cc9e000 0x5000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfygm.so.0.0.0 
+0x0000003f8cc9e000 0x0000003f8cc9f000 0x1000             0x4000             r--p  /usr/lib/riscv64-linux-gnu/libfygm.so.0.0.0 
+0x0000003f8cc9f000 0x0000003f8cca0000 0x1000             0x5000             rw-p  /usr/lib/riscv64-linux-gnu/libfygm.so.0.0.0 
+0x0000003f8cca0000 0x0000003f8cca8000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfyut.so.0.0.0 
+0x0000003f8cca8000 0x0000003f8cca9000 0x1000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libfyut.so.0.0.0 
+0x0000003f8cca9000 0x0000003f8ccaa000 0x1000             0x8000             rw-p  /usr/lib/riscv64-linux-gnu/libfyut.so.0.0.0 
+0x0000003f8ccaa000 0x0000003f8ccbd000 0x13000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/liburiparser.so.1.0.31 
+0x0000003f8ccbd000 0x0000003f8ccbe000 0x1000             0x13000            r--p  /usr/lib/riscv64-linux-gnu/liburiparser.so.1.0.31 
+0x0000003f8ccbe000 0x0000003f8ccbf000 0x1000             0x14000            rw-p  /usr/lib/riscv64-linux-gnu/liburiparser.so.1.0.31 
+0x0000003f8ccbf000 0x0000003f8ccc9000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libminizip.so.1.0.0 
+0x0000003f8ccc9000 0x0000003f8ccca000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libminizip.so.1.0.0 
+0x0000003f8ccca000 0x0000003f8cccb000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libminizip.so.1.0.0 
+0x0000003f8cccb000 0x0000003f8ccd2000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsz.so.2.0.1 
+0x0000003f8ccd2000 0x0000003f8ccd3000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libsz.so.2.0.1 
+0x0000003f8ccd3000 0x0000003f8ccd4000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libsz.so.2.0.1 
+0x0000003f8ccd4000 0x0000003f8cda7000 0xd3000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcurl.so.4.8.0 
+0x0000003f8cda7000 0x0000003f8cdae000 0x7000             0xd2000            r--p  /usr/lib/riscv64-linux-gnu/libcurl.so.4.8.0 
+0x0000003f8cdae000 0x0000003f8cdaf000 0x1000             0xd9000            rw-p  /usr/lib/riscv64-linux-gnu/libcurl.so.4.8.0 
+0x0000003f8cdaf000 0x0000003f8cdcc000 0x1d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libhdf5_serial_hl.so.310.0.6 
+0x0000003f8cdcc000 0x0000003f8cdcd000 0x1000             0x1c000            r--p  /usr/lib/riscv64-linux-gnu/libhdf5_serial_hl.so.310.0.6 
+0x0000003f8cdcd000 0x0000003f8cdce000 0x1000             0x1d000            rw-p  /usr/lib/riscv64-linux-gnu/libhdf5_serial_hl.so.310.0.6 
+0x0000003f8cdce000 0x0000003f8cdcf000 0x1000             0x0                rw-p   
+0x0000003f8cdcf000 0x0000003f8ce08000 0x39000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnspr4.so 
+0x0000003f8ce08000 0x0000003f8ce09000 0x1000             0x39000            r--p  /usr/lib/riscv64-linux-gnu/libnspr4.so 
+0x0000003f8ce09000 0x0000003f8ce0a000 0x1000             0x3a000            rw-p  /usr/lib/riscv64-linux-gnu/libnspr4.so 
+0x0000003f8ce0a000 0x0000003f8ce0d000 0x3000             0x0                rw-p   
+0x0000003f8ce0d000 0x0000003f8ce11000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libplc4.so 
+0x0000003f8ce11000 0x0000003f8ce12000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libplc4.so 
+0x0000003f8ce12000 0x0000003f8ce13000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libplc4.so 
+0x0000003f8ce13000 0x0000003f8cf33000 0x120000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnss3.so 
+0x0000003f8cf33000 0x0000003f8cf3a000 0x7000             0x120000           r--p  /usr/lib/riscv64-linux-gnu/libnss3.so 
+0x0000003f8cf3a000 0x0000003f8cf3b000 0x1000             0x127000           rw-p  /usr/lib/riscv64-linux-gnu/libnss3.so 
+0x0000003f8cf3b000 0x0000003f8cf3d000 0x2000             0x0                rw-p   
+0x0000003f8cf3d000 0x0000003f8cf94000 0x57000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/liblcms2.so.2.0.17 
+0x0000003f8cf94000 0x0000003f8cf96000 0x2000             0x57000            r--p  /usr/lib/riscv64-linux-gnu/liblcms2.so.2.0.17 
+0x0000003f8cf96000 0x0000003f8cf99000 0x3000             0x59000            rw-p  /usr/lib/riscv64-linux-gnu/liblcms2.so.2.0.17 
+0x0000003f8cf99000 0x0000003f8cf9a000 0x1000             0x0                rw-p   
+0x0000003f8cf9a000 0x0000003f8cffd000 0x63000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgpgmepp.so.7.0.0 
+0x0000003f8cffd000 0x0000003f8cfff000 0x2000             0x63000            r--p  /usr/lib/riscv64-linux-gnu/libgpgmepp.so.7.0.0 
+0x0000003f8cfff000 0x0000003f8d000000 0x1000             0x65000            rw-p  /usr/lib/riscv64-linux-gnu/libgpgmepp.so.7.0.0 
+0x0000003f8d000000 0x0000003f8d1f2000 0x1f2000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libicuuc.so.78.2 
+0x0000003f8d1f2000 0x0000003f8d205000 0x13000            0x1f1000           r--p  /usr/lib/riscv64-linux-gnu/libicuuc.so.78.2 
+0x0000003f8d205000 0x0000003f8d206000 0x1000             0x204000           rw-p  /usr/lib/riscv64-linux-gnu/libicuuc.so.78.2 
+0x0000003f8d206000 0x0000003f8d208000 0x2000             0x0                rw-p   
+0x0000003f8d208000 0x0000003f8d231000 0x29000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsmime3.so 
+0x0000003f8d231000 0x0000003f8d235000 0x4000             0x29000            r--p  /usr/lib/riscv64-linux-gnu/libsmime3.so 
+0x0000003f8d235000 0x0000003f8d236000 0x1000             0x2d000            rw-p  /usr/lib/riscv64-linux-gnu/libsmime3.so 
+0x0000003f8d236000 0x0000003f8d31d000 0xe7000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgav1.so.2.0.0 
+0x0000003f8d31d000 0x0000003f8d31e000 0x1000             0xe6000            r--p  /usr/lib/riscv64-linux-gnu/libgav1.so.2.0.0 
+0x0000003f8d31e000 0x0000003f8d31f000 0x1000             0xe7000            rw-p  /usr/lib/riscv64-linux-gnu/libgav1.so.2.0.0 
+0x0000003f8d31f000 0x0000003f8d321000 0x2000             0x0                rw-p   
+0x0000003f8d321000 0x0000003f8d36e000 0x4d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libyuv.so.0.0.1922 
+0x0000003f8d36e000 0x0000003f8d36f000 0x1000             0x4d000            r--p  /usr/lib/riscv64-linux-gnu/libyuv.so.0.0.1922 
+0x0000003f8d36f000 0x0000003f8d370000 0x1000             0x4e000            rw-p  /usr/lib/riscv64-linux-gnu/libyuv.so.0.0.1922 
+0x0000003f8d370000 0x0000003f8d3cb000 0x5b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsuperlu.so.7.0.0 
+0x0000003f8d3cb000 0x0000003f8d3cc000 0x1000             0x5a000            r--p  /usr/lib/riscv64-linux-gnu/libsuperlu.so.7.0.0 
+0x0000003f8d3cc000 0x0000003f8d3cd000 0x1000             0x5b000            rw-p  /usr/lib/riscv64-linux-gnu/libsuperlu.so.7.0.0 
+0x0000003f8d3cd000 0x0000003f8d405000 0x38000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libarpack.so.2.1.0 
+0x0000003f8d405000 0x0000003f8d406000 0x1000             0x37000            r--p  /usr/lib/riscv64-linux-gnu/libarpack.so.2.1.0 
+0x0000003f8d406000 0x0000003f8d407000 0x1000             0x38000            rw-p  /usr/lib/riscv64-linux-gnu/libarpack.so.2.1.0 
+0x0000003f8d407000 0x0000003f8d416000 0xf000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxxhash.so.0.8.3 
+0x0000003f8d416000 0x0000003f8d417000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libxxhash.so.0.8.3 
+0x0000003f8d417000 0x0000003f8d418000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libxxhash.so.0.8.3 
+0x0000003f8d418000 0x0000003f8d429000 0x11000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpsl.so.5.3.4 
+0x0000003f8d429000 0x0000003f8d42a000 0x1000             0x10000            r--p  /usr/lib/riscv64-linux-gnu/libpsl.so.5.3.4 
+0x0000003f8d42a000 0x0000003f8d42b000 0x1000             0x11000            rw-p  /usr/lib/riscv64-linux-gnu/libpsl.so.5.3.4 
+0x0000003f8d42b000 0x0000003f8d469000 0x3e000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libssh2.so.1.0.1 
+0x0000003f8d469000 0x0000003f8d46b000 0x2000             0x3e000            r--p  /usr/lib/riscv64-linux-gnu/libssh2.so.1.0.1 
+0x0000003f8d46b000 0x0000003f8d46c000 0x1000             0x40000            rw-p  /usr/lib/riscv64-linux-gnu/libssh2.so.1.0.1 
+0x0000003f8d46c000 0x0000003f8d478000 0xc000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/liblber.so.2.0.200 
+0x0000003f8d478000 0x0000003f8d479000 0x1000             0xb000             r--p  /usr/lib/riscv64-linux-gnu/liblber.so.2.0.200 
+0x0000003f8d479000 0x0000003f8d47a000 0x1000             0xc000             rw-p  /usr/lib/riscv64-linux-gnu/liblber.so.2.0.200 
+0x0000003f8d47a000 0x0000003f8d4cd000 0x53000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libldap.so.2.0.200 
+0x0000003f8d4cd000 0x0000003f8d4cf000 0x2000             0x52000            r--p  /usr/lib/riscv64-linux-gnu/libldap.so.2.0.200 
+0x0000003f8d4cf000 0x0000003f8d4d0000 0x1000             0x54000            rw-p  /usr/lib/riscv64-linux-gnu/libldap.so.2.0.200 
+0x0000003f8d4d0000 0x0000003f8d4d2000 0x2000             0x0                rw-p   
+0x0000003f8d4d2000 0x0000003f8d4eb000 0x19000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/librtmp.so.1 
+0x0000003f8d4eb000 0x0000003f8d4ec000 0x1000             0x19000            r--p  /usr/lib/riscv64-linux-gnu/librtmp.so.1 
+0x0000003f8d4ec000 0x0000003f8d4ed000 0x1000             0x1a000            rw-p  /usr/lib/riscv64-linux-gnu/librtmp.so.1 
+0x0000003f8d4ed000 0x0000003f8d514000 0x27000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnghttp2.so.14.29.2 
+0x0000003f8d514000 0x0000003f8d517000 0x3000             0x26000            r--p  /usr/lib/riscv64-linux-gnu/libnghttp2.so.14.29.2 
+0x0000003f8d517000 0x0000003f8d518000 0x1000             0x29000            rw-p  /usr/lib/riscv64-linux-gnu/libnghttp2.so.14.29.2 
+0x0000003f8d518000 0x0000003f8d5ad000 0x95000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbrotlienc.so.1.2.0 
+0x0000003f8d5ad000 0x0000003f8d5ae000 0x1000             0x94000            r--p  /usr/lib/riscv64-linux-gnu/libbrotlienc.so.1.2.0 
+0x0000003f8d5ae000 0x0000003f8d5af000 0x1000             0x95000            rw-p  /usr/lib/riscv64-linux-gnu/libbrotlienc.so.1.2.0 
+0x0000003f8d5af000 0x0000003f8d5b9000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbrotlidec.so.1.2.0 
+0x0000003f8d5b9000 0x0000003f8d5ba000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libbrotlidec.so.1.2.0 
+0x0000003f8d5ba000 0x0000003f8d5bb000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libbrotlidec.so.1.2.0 
+0x0000003f8d5bb000 0x0000003f8d5ca000 0xf000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjxl_cms.so.0.11.1 
+0x0000003f8d5ca000 0x0000003f8d5cb000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libjxl_cms.so.0.11.1 
+0x0000003f8d5cb000 0x0000003f8d5cc000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libjxl_cms.so.0.11.1 
+0x0000003f8d5cc000 0x0000003f8d62d000 0x61000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpixman-1.so.0.46.4 
+0x0000003f8d62d000 0x0000003f8d631000 0x4000             0x61000            r--p  /usr/lib/riscv64-linux-gnu/libpixman-1.so.0.46.4 
+0x0000003f8d631000 0x0000003f8d632000 0x1000             0x65000            rw-p  /usr/lib/riscv64-linux-gnu/libpixman-1.so.0.46.4 
+0x0000003f8d632000 0x0000003f8d63e000 0xc000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxcb-render.so.0.0.0 
+0x0000003f8d63e000 0x0000003f8d63f000 0x1000             0xc000             r--p  /usr/lib/riscv64-linux-gnu/libxcb-render.so.0.0.0 
+0x0000003f8d63f000 0x0000003f8d640000 0x1000             0xd000             rw-p  /usr/lib/riscv64-linux-gnu/libxcb-render.so.0.0.0 
+0x0000003f8d640000 0x0000003f8d667000 0x27000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxcb.so.1.1.0 
+0x0000003f8d667000 0x0000003f8d668000 0x1000             0x26000            r--p  /usr/lib/riscv64-linux-gnu/libxcb.so.1.1.0 
+0x0000003f8d668000 0x0000003f8d669000 0x1000             0x27000            rw-p  /usr/lib/riscv64-linux-gnu/libxcb.so.1.1.0 
+0x0000003f8d669000 0x0000003f8d6cd000 0x64000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpango-1.0.so.0.5700.0 
+0x0000003f8d6cd000 0x0000003f8d6d1000 0x4000             0x63000            r--p  /usr/lib/riscv64-linux-gnu/libpango-1.0.so.0.5700.0 
+0x0000003f8d6d1000 0x0000003f8d6d2000 0x1000             0x67000            rw-p  /usr/lib/riscv64-linux-gnu/libpango-1.0.so.0.5700.0 
+0x0000003f8d6d2000 0x0000003f8d6ff000 0x2d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdk_pixbuf-2.0.so.0.4400.5 
+0x0000003f8d6ff000 0x0000003f8d701000 0x2000             0x2c000            r--p  /usr/lib/riscv64-linux-gnu/libgdk_pixbuf-2.0.so.0.4400.5 
+0x0000003f8d701000 0x0000003f8d702000 0x1000             0x2e000            rw-p  /usr/lib/riscv64-linux-gnu/libgdk_pixbuf-2.0.so.0.4400.5 
+0x0000003f8d702000 0x0000003f8d8d8000 0x1d6000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgio-2.0.so.0.8800.0 
+0x0000003f8d8d8000 0x0000003f8d8e0000 0x8000             0x1d6000           r--p  /usr/lib/riscv64-linux-gnu/libgio-2.0.so.0.8800.0 
+0x0000003f8d8e0000 0x0000003f8d8e1000 0x1000             0x1de000           rw-p  /usr/lib/riscv64-linux-gnu/libgio-2.0.so.0.8800.0 
+0x0000003f8d8e1000 0x0000003f8d8e3000 0x2000             0x0                rw-p   
+0x0000003f8d8e3000 0x0000003f8d902000 0x1f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsoxr.so.0.1.2 
+0x0000003f8d902000 0x0000003f8d903000 0x1000             0x1f000            r--p  /usr/lib/riscv64-linux-gnu/libsoxr.so.0.1.2 
+0x0000003f8d903000 0x0000003f8d904000 0x1000             0x20000            rw-p  /usr/lib/riscv64-linux-gnu/libsoxr.so.0.1.2 
+0x0000003f8d904000 0x0000003f8d939000 0x35000            0x0                rw-p   
+0x0000003f8d939000 0x0000003f8d9a3000 0x6a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnorm.so.1 
+0x0000003f8d9a3000 0x0000003f8d9a6000 0x3000             0x69000            r--p  /usr/lib/riscv64-linux-gnu/libnorm.so.1 
+0x0000003f8d9a6000 0x0000003f8d9a7000 0x1000             0x6c000            rw-p  /usr/lib/riscv64-linux-gnu/libnorm.so.1 
+0x0000003f8d9a7000 0x0000003f8da57000 0xb0000            0x0                rw-p   
+0x0000003f8da57000 0x0000003f8da9c000 0x45000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpgm-5.3.so.0.0.128 
+0x0000003f8da9c000 0x0000003f8da9d000 0x1000             0x44000            r--p  /usr/lib/riscv64-linux-gnu/libpgm-5.3.so.0.0.128 
+0x0000003f8da9d000 0x0000003f8da9e000 0x1000             0x45000            rw-p  /usr/lib/riscv64-linux-gnu/libpgm-5.3.so.0.0.128 
+0x0000003f8da9e000 0x0000003f8daa2000 0x4000             0x0                rw-p   
+0x0000003f8daa2000 0x0000003f8dae0000 0x3e000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsodium.so.23.3.0 
+0x0000003f8dae0000 0x0000003f8dae1000 0x1000             0x3e000            r--p  /usr/lib/riscv64-linux-gnu/libsodium.so.23.3.0 
+0x0000003f8dae1000 0x0000003f8dae2000 0x1000             0x3f000            rw-p  /usr/lib/riscv64-linux-gnu/libsodium.so.23.3.0 
+0x0000003f8dae2000 0x0000003f8db28000 0x46000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgssapi_krb5.so.2.2 
+0x0000003f8db28000 0x0000003f8db2a000 0x2000             0x46000            r--p  /usr/lib/riscv64-linux-gnu/libgssapi_krb5.so.2.2 
+0x0000003f8db2a000 0x0000003f8db2c000 0x2000             0x48000            rw-p  /usr/lib/riscv64-linux-gnu/libgssapi_krb5.so.2.2 
+0x0000003f8db2c000 0x0000003f8dbac000 0x80000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmbedcrypto.so.3.6.5 
+0x0000003f8dbac000 0x0000003f8dbb2000 0x6000             0x7f000            r--p  /usr/lib/riscv64-linux-gnu/libmbedcrypto.so.3.6.5 
+0x0000003f8dbb2000 0x0000003f8dbb3000 0x1000             0x85000            rw-p  /usr/lib/riscv64-linux-gnu/libmbedcrypto.so.3.6.5 
+0x0000003f8dbb3000 0x0000003f8dbb5000 0x2000             0x0                rw-p   
+0x0000003f8dbb5000 0x0000003f8dc9d000 0xe8000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libssl.so.3 
+0x0000003f8dc9d000 0x0000003f8dca7000 0xa000             0xe8000            r--p  /usr/lib/riscv64-linux-gnu/libssl.so.3 
+0x0000003f8dca7000 0x0000003f8dcab000 0x4000             0xf2000            rw-p  /usr/lib/riscv64-linux-gnu/libssl.so.3 
+0x0000003f8dcab000 0x0000003f8dd1b000 0x70000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgmp.so.10.5.0 
+0x0000003f8dd1b000 0x0000003f8dd1c000 0x1000             0x70000            r--p  /usr/lib/riscv64-linux-gnu/libgmp.so.10.5.0 
+0x0000003f8dd1c000 0x0000003f8dd1d000 0x1000             0x71000            rw-p  /usr/lib/riscv64-linux-gnu/libgmp.so.10.5.0 
+0x0000003f8dd1d000 0x0000003f8dd68000 0x4b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnettle.so.8.11 
+0x0000003f8dd68000 0x0000003f8dd6a000 0x2000             0x4a000            r--p  /usr/lib/riscv64-linux-gnu/libnettle.so.8.11 
+0x0000003f8dd6a000 0x0000003f8dd6b000 0x1000             0x4c000            rw-p  /usr/lib/riscv64-linux-gnu/libnettle.so.8.11 
+0x0000003f8dd6b000 0x0000003f8ddad000 0x42000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libhogweed.so.6.11 
+0x0000003f8ddad000 0x0000003f8ddaf000 0x2000             0x41000            r--p  /usr/lib/riscv64-linux-gnu/libhogweed.so.6.11 
+0x0000003f8ddaf000 0x0000003f8ddb0000 0x1000             0x43000            rw-p  /usr/lib/riscv64-linux-gnu/libhogweed.so.6.11 
+0x0000003f8ddb0000 0x0000003f8df82000 0x1d2000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libunistring.so.5.2.0 
+0x0000003f8df82000 0x0000003f8df86000 0x4000             0x1d1000           r--p  /usr/lib/riscv64-linux-gnu/libunistring.so.5.2.0 
+0x0000003f8df86000 0x0000003f8df87000 0x1000             0x1d5000           rw-p  /usr/lib/riscv64-linux-gnu/libunistring.so.5.2.0 
+0x0000003f8df87000 0x0000003f8e120000 0x199000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libp11-kit.so.0.4.8 
+0x0000003f8e120000 0x0000003f8e132000 0x12000            0x199000           r--p  /usr/lib/riscv64-linux-gnu/libp11-kit.so.0.4.8 
+0x0000003f8e132000 0x0000003f8e141000 0xf000             0x1ab000           rw-p  /usr/lib/riscv64-linux-gnu/libp11-kit.so.0.4.8 
+0x0000003f8e141000 0x0000003f8e1f8000 0xb7000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfreetype.so.6.20.5 
+0x0000003f8e1f8000 0x0000003f8e1ff000 0x7000             0xb6000            r--p  /usr/lib/riscv64-linux-gnu/libfreetype.so.6.20.5 
+0x0000003f8e1ff000 0x0000003f8e200000 0x1000             0xbd000            rw-p  /usr/lib/riscv64-linux-gnu/libfreetype.so.6.20.5 
+0x0000003f8e200000 0x0000003f8e589000 0x389000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libproj.so.25.9.7.1 
+0x0000003f8e589000 0x0000003f8e5a4000 0x1b000            0x389000           r--p  /usr/lib/riscv64-linux-gnu/libproj.so.25.9.7.1 
+0x0000003f8e5a4000 0x0000003f8e5a5000 0x1000             0x3a4000           rw-p  /usr/lib/riscv64-linux-gnu/libproj.so.25.9.7.1 
+0x0000003f8e5a5000 0x0000003f8e5a9000 0x4000             0x0                rw-p   
+0x0000003f8e5a9000 0x0000003f8e5b0000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libacl.so.1.1.2302 
+0x0000003f8e5b0000 0x0000003f8e5b1000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libacl.so.1.1.2302 
+0x0000003f8e5b1000 0x0000003f8e5b2000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libacl.so.1.1.2302 
+0x0000003f8e5b2000 0x0000003f8e5ba000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libXrender.so.1.3.0 
+0x0000003f8e5ba000 0x0000003f8e5bb000 0x1000             0x8000             r--p  /usr/lib/riscv64-linux-gnu/libXrender.so.1.3.0 
+0x0000003f8e5bb000 0x0000003f8e5bc000 0x1000             0x9000             rw-p  /usr/lib/riscv64-linux-gnu/libXrender.so.1.3.0 
+0x0000003f8e5bc000 0x0000003f8e5cc000 0x10000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libXext.so.6.4.0 
+0x0000003f8e5cc000 0x0000003f8e5cd000 0x1000             0xf000             r--p  /usr/lib/riscv64-linux-gnu/libXext.so.6.4.0 
+0x0000003f8e5cd000 0x0000003f8e5ce000 0x1000             0x10000            rw-p  /usr/lib/riscv64-linux-gnu/libXext.so.6.4.0 
+0x0000003f8e5ce000 0x0000003f8e5fe000 0x30000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libidn2.so.0.4.0 
+0x0000003f8e5fe000 0x0000003f8e5ff000 0x1000             0x2f000            r--p  /usr/lib/riscv64-linux-gnu/libidn2.so.0.4.0 
+0x0000003f8e5ff000 0x0000003f8e600000 0x1000             0x30000            rw-p  /usr/lib/riscv64-linux-gnu/libidn2.so.0.4.0 
+0x0000003f8e600000 0x0000003f8e98c000 0x38c000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmysqlclient.so.24.0.8 
+0x0000003f8e98c000 0x0000003f8e991000 0x5000             0x38b000           r--p  /usr/lib/riscv64-linux-gnu/libmysqlclient.so.24.0.8 
+0x0000003f8e991000 0x0000003f8ec82000 0x2f1000           0x390000           rw-p  /usr/lib/riscv64-linux-gnu/libmysqlclient.so.24.0.8 
+0x0000003f8ec82000 0x0000003f8ec88000 0x6000             0x0                rw-p   
+0x0000003f8ec89000 0x0000003f8ec8b000 0x2000             0x0                rw-p   
+0x0000003f8ec8b000 0x0000003f8ecd5000 0x4a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfontconfig.so.1.16.1 
+0x0000003f8ecd5000 0x0000003f8ecd7000 0x2000             0x49000            r--p  /usr/lib/riscv64-linux-gnu/libfontconfig.so.1.16.1 
+0x0000003f8ecd7000 0x0000003f8ecd8000 0x1000             0x4b000            rw-p  /usr/lib/riscv64-linux-gnu/libfontconfig.so.1.16.1 
+0x0000003f8ecd8000 0x0000003f8ed24000 0x4c000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmpg123.so.0.49.4 
+0x0000003f8ed24000 0x0000003f8ed25000 0x1000             0x4c000            r--p  /usr/lib/riscv64-linux-gnu/libmpg123.so.0.49.4 
+0x0000003f8ed25000 0x0000003f8ed26000 0x1000             0x4d000            rw-p  /usr/lib/riscv64-linux-gnu/libmpg123.so.0.49.4 
+0x0000003f8ed26000 0x0000003f8ed5f000 0x39000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libudev.so.1.7.12 
+0x0000003f8ed5f000 0x0000003f8ed64000 0x5000             0x39000            r--p  /usr/lib/riscv64-linux-gnu/libudev.so.1.7.12 
+0x0000003f8ed64000 0x0000003f8ed65000 0x1000             0x3e000            rw-p  /usr/lib/riscv64-linux-gnu/libudev.so.1.7.12 
+0x0000003f8ed65000 0x0000003f8ed87000 0x22000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmfhdf.so.0.0.0 
+0x0000003f8ed87000 0x0000003f8ed88000 0x1000             0x22000            r--p  /usr/lib/riscv64-linux-gnu/libmfhdf.so.0.0.0 
+0x0000003f8ed88000 0x0000003f8ed89000 0x1000             0x23000            rw-p  /usr/lib/riscv64-linux-gnu/libmfhdf.so.0.0.0 
+0x0000003f8ed89000 0x0000003f8ed8a000 0x1000             0x0                rw-p   
+0x0000003f8ed8a000 0x0000003f8edf4000 0x6a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdf.so.0.0.0 
+0x0000003f8edf4000 0x0000003f8edf6000 0x2000             0x69000            r--p  /usr/lib/riscv64-linux-gnu/libdf.so.0.0.0 
+0x0000003f8edf6000 0x0000003f8edf7000 0x1000             0x6b000            rw-p  /usr/lib/riscv64-linux-gnu/libdf.so.0.0.0 
+0x0000003f8edf7000 0x0000003f8ee00000 0x9000             0x0                rw-p   
+0x0000003f8ee00000 0x0000003f8f4eb000 0x6eb000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libspatialite.so.8.1.0 
+0x0000003f8f4eb000 0x0000003f8f4ed000 0x2000             0x6eb000           r--p  /usr/lib/riscv64-linux-gnu/libspatialite.so.8.1.0 
+0x0000003f8f4ed000 0x0000003f8f4ef000 0x2000             0x6ed000           rw-p  /usr/lib/riscv64-linux-gnu/libspatialite.so.8.1.0 
+0x0000003f8f4ef000 0x0000003f8f4f0000 0x1000             0x0                rw-p   
+0x0000003f8f4f0000 0x0000003f8f4f7000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libogg.so.0.8.6 
+0x0000003f8f4f7000 0x0000003f8f4f8000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libogg.so.0.8.6 
+0x0000003f8f4f8000 0x0000003f8f4f9000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libogg.so.0.8.6 
+0x0000003f8f4f9000 0x0000003f8f506000 0xd000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpangocairo-1.0.so.0.5700.0 
+0x0000003f8f506000 0x0000003f8f507000 0x1000             0xd000             r--p  /usr/lib/riscv64-linux-gnu/libpangocairo-1.0.so.0.5700.0 
+0x0000003f8f507000 0x0000003f8f508000 0x1000             0xe000             rw-p  /usr/lib/riscv64-linux-gnu/libpangocairo-1.0.so.0.5700.0 
+0x0000003f8f508000 0x0000003f8f50f000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcairo-gobject.so.2.11804.4 
+0x0000003f8f50f000 0x0000003f8f511000 0x2000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libcairo-gobject.so.2.11804.4 
+0x0000003f8f511000 0x0000003f8f512000 0x1000             0x9000             rw-p  /usr/lib/riscv64-linux-gnu/libcairo-gobject.so.2.11804.4 
+0x0000003f8f512000 0x0000003f8f569000 0x57000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgeos_c.so.1.20.5 
+0x0000003f8f569000 0x0000003f8f56b000 0x2000             0x56000            r--p  /usr/lib/riscv64-linux-gnu/libgeos_c.so.1.20.5 
+0x0000003f8f56b000 0x0000003f8f56c000 0x1000             0x58000            rw-p  /usr/lib/riscv64-linux-gnu/libgeos_c.so.1.20.5 
+0x0000003f8f56c000 0x0000003f8f5f9000 0x8d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkmldom.so.1.3.0 
+0x0000003f8f5f9000 0x0000003f8f5ff000 0x6000             0x8d000            r--p  /usr/lib/riscv64-linux-gnu/libkmldom.so.1.3.0 
+0x0000003f8f5ff000 0x0000003f8f600000 0x1000             0x93000            rw-p  /usr/lib/riscv64-linux-gnu/libkmldom.so.1.3.0 
+0x0000003f8f600000 0x0000003f8f987000 0x387000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libhdf5_serial.so.310.5.1 
+0x0000003f8f987000 0x0000003f8f994000 0xd000             0x386000           r--p  /usr/lib/riscv64-linux-gnu/libhdf5_serial.so.310.5.1 
+0x0000003f8f994000 0x0000003f8f998000 0x4000             0x393000           rw-p  /usr/lib/riscv64-linux-gnu/libhdf5_serial.so.310.5.1 
+0x0000003f8f998000 0x0000003f8f99c000 0x4000             0x0                rw-p   
+0x0000003f8f99c000 0x0000003f8f9ac000 0x10000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbsd.so.0.12.2 
+0x0000003f8f9ac000 0x0000003f8f9ad000 0x1000             0x10000            r--p  /usr/lib/riscv64-linux-gnu/libbsd.so.0.12.2 
+0x0000003f8f9ad000 0x0000003f8f9ae000 0x1000             0x11000            rw-p  /usr/lib/riscv64-linux-gnu/libbsd.so.0.12.2 
+0x0000003f8f9ae000 0x0000003f8f9df000 0x31000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfyba.so.0.0.0 
+0x0000003f8f9df000 0x0000003f8f9e0000 0x1000             0x30000            r--p  /usr/lib/riscv64-linux-gnu/libfyba.so.0.0.0 
+0x0000003f8f9e0000 0x0000003f8f9e1000 0x1000             0x31000            rw-p  /usr/lib/riscv64-linux-gnu/libfyba.so.0.0.0 
+0x0000003f8f9e1000 0x0000003f8fa00000 0x1f000            0x0                rw-p   
+0x0000003f8fa00000 0x0000003f8fb4c000 0x14c000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcfitsio.so.10.0.0 
+0x0000003f8fb4c000 0x0000003f8fb4d000 0x1000             0x14c000           r--p  /usr/lib/riscv64-linux-gnu/libcfitsio.so.10.0.0 
+0x0000003f8fb4d000 0x0000003f8fb4f000 0x2000             0x14d000           rw-p  /usr/lib/riscv64-linux-gnu/libcfitsio.so.10.0.0 
+0x0000003f8fb4f000 0x0000003f8fce3000 0x194000           0x0                rw-p   
+0x0000003f8fce3000 0x0000003f8fd06000 0x23000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libexpat.so.1.11.2 
+0x0000003f8fd06000 0x0000003f8fd08000 0x2000             0x23000            r--p  /usr/lib/riscv64-linux-gnu/libexpat.so.1.11.2 
+0x0000003f8fd08000 0x0000003f8fd09000 0x1000             0x25000            rw-p  /usr/lib/riscv64-linux-gnu/libexpat.so.1.11.2 
+0x0000003f8fd09000 0x0000003f8fd37000 0x2e000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkmlengine.so.1.3.0 
+0x0000003f8fd37000 0x0000003f8fd38000 0x1000             0x2e000            r--p  /usr/lib/riscv64-linux-gnu/libkmlengine.so.1.3.0 
+0x0000003f8fd38000 0x0000003f8fd39000 0x1000             0x2f000            rw-p  /usr/lib/riscv64-linux-gnu/libkmlengine.so.1.3.0 
+0x0000003f8fd39000 0x0000003f8fe77000 0x13e000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsqlite3.so.0.8.6 
+0x0000003f8fe77000 0x0000003f8fe7a000 0x3000             0x13e000           r--p  /usr/lib/riscv64-linux-gnu/libsqlite3.so.0.8.6 
+0x0000003f8fe7a000 0x0000003f8fe7f000 0x5000             0x141000           rw-p  /usr/lib/riscv64-linux-gnu/libsqlite3.so.0.8.6 
+0x0000003f8fe7f000 0x0000003f8ffdd000 0x15e000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libnetcdf.so.22 
+0x0000003f8ffdd000 0x0000003f8ffe0000 0x3000             0x15d000           r--p  /usr/lib/riscv64-linux-gnu/libnetcdf.so.22 
+0x0000003f8ffe0000 0x0000003f8ffe9000 0x9000             0x160000           rw-p  /usr/lib/riscv64-linux-gnu/libnetcdf.so.22 
+0x0000003f8ffe9000 0x0000003f90000000 0x17000            0x0                rw-p   
+0x0000003f90000000 0x0000003f9030c000 0x30c000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpoppler.so.156.0.0 
+0x0000003f9030c000 0x0000003f90364000 0x58000            0x30c000           r--p  /usr/lib/riscv64-linux-gnu/libpoppler.so.156.0.0 
+0x0000003f90364000 0x0000003f9036a000 0x6000             0x364000           rw-p  /usr/lib/riscv64-linux-gnu/libpoppler.so.156.0.0 
+0x0000003f9036a000 0x0000003f9036e000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxcb-dri3.so.0.1.0 
+0x0000003f9036e000 0x0000003f9036f000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libxcb-dri3.so.0.1.0 
+0x0000003f9036f000 0x0000003f90370000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libxcb-dri3.so.0.1.0 
+0x0000003f90370000 0x0000003f90382000 0x12000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtasn1.so.6.6.5 
+0x0000003f90382000 0x0000003f90383000 0x1000             0x12000            r--p  /usr/lib/riscv64-linux-gnu/libtasn1.so.6.6.5 
+0x0000003f90383000 0x0000003f90384000 0x1000             0x13000            rw-p  /usr/lib/riscv64-linux-gnu/libtasn1.so.6.6.5 
+0x0000003f90384000 0x0000003f903dc000 0x58000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpq.so.5.18 
+0x0000003f903dc000 0x0000003f903e0000 0x4000             0x57000            r--p  /usr/lib/riscv64-linux-gnu/libpq.so.5.18 
+0x0000003f903e0000 0x0000003f903e1000 0x1000             0x5b000            rw-p  /usr/lib/riscv64-linux-gnu/libpq.so.5.18 
+0x0000003f903e1000 0x0000003f9058e000 0x1ad000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libheif.so.1.21.2 
+0x0000003f9058e000 0x0000003f9059a000 0xc000             0x1ac000           r--p  /usr/lib/riscv64-linux-gnu/libheif.so.1.21.2 
+0x0000003f9059a000 0x0000003f9059b000 0x1000             0x1b8000           rw-p  /usr/lib/riscv64-linux-gnu/libheif.so.1.21.2 
+0x0000003f9059b000 0x0000003f905fd000 0x62000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmuparser.so.2.3.4 
+0x0000003f905fd000 0x0000003f905fe000 0x1000             0x62000            r--p  /usr/lib/riscv64-linux-gnu/libmuparser.so.2.3.4 
+0x0000003f905fe000 0x0000003f905ff000 0x1000             0x63000            rw-p  /usr/lib/riscv64-linux-gnu/libmuparser.so.2.3.4 
+0x0000003f905ff000 0x0000003f90600000 0x1000             0x0                rw-p   
+0x0000003f90600000 0x0000003f90908000 0x308000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxerces-c-3.2.so 
+0x0000003f90908000 0x0000003f9091c000 0x14000            0x308000           r--p  /usr/lib/riscv64-linux-gnu/libxerces-c-3.2.so 
+0x0000003f9091c000 0x0000003f9093e000 0x22000            0x31c000           rw-p  /usr/lib/riscv64-linux-gnu/libxerces-c-3.2.so 
+0x0000003f9093f000 0x0000003f90946000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcjson.so.1.7.19 
+0x0000003f90946000 0x0000003f90947000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libcjson.so.1.7.19 
+0x0000003f90947000 0x0000003f90948000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libcjson.so.1.7.19 
+0x0000003f90948000 0x0000003f9094f000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libudfread.so.3.0.0 
+0x0000003f9094f000 0x0000003f90950000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libudfread.so.3.0.0 
+0x0000003f90950000 0x0000003f90951000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libudfread.so.3.0.0 
+0x0000003f90951000 0x0000003f90968000 0x17000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libkmlbase.so.1.3.0 
+0x0000003f90968000 0x0000003f90969000 0x1000             0x17000            r--p  /usr/lib/riscv64-linux-gnu/libkmlbase.so.1.3.0 
+0x0000003f90969000 0x0000003f9096a000 0x1000             0x18000            rw-p  /usr/lib/riscv64-linux-gnu/libkmlbase.so.1.3.0 
+0x0000003f9096a000 0x0000003f90999000 0x2f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libavif.so.16.3.0 
+0x0000003f90999000 0x0000003f9099b000 0x2000             0x2f000            r--p  /usr/lib/riscv64-linux-gnu/libavif.so.16.3.0 
+0x0000003f9099b000 0x0000003f9099c000 0x1000             0x31000            rw-p  /usr/lib/riscv64-linux-gnu/libavif.so.16.3.0 
+0x0000003f9099c000 0x0000003f909fe000 0x62000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libqhull_r.so.8.0.2 
+0x0000003f909fe000 0x0000003f909ff000 0x1000             0x61000            r--p  /usr/lib/riscv64-linux-gnu/libqhull_r.so.8.0.2 
+0x0000003f909ff000 0x0000003f90a00000 0x1000             0x62000            rw-p  /usr/lib/riscv64-linux-gnu/libqhull_r.so.8.0.2 
+0x0000003f90a00000 0x0000003f90e3f000 0x43f000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcrypto.so.3 
+0x0000003f90e3f000 0x0000003f90eb4000 0x75000            0x43e000           r--p  /usr/lib/riscv64-linux-gnu/libcrypto.so.3 
+0x0000003f90eb4000 0x0000003f90eb7000 0x3000             0x4b3000           rw-p  /usr/lib/riscv64-linux-gnu/libcrypto.so.3 
+0x0000003f90eb7000 0x0000003f90eba000 0x3000             0x0                rw-p   
+0x0000003f90ebb000 0x0000003f90ec0000 0x5000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libXfixes.so.3.1.0 
+0x0000003f90ec0000 0x0000003f90ec1000 0x1000             0x4000             r--p  /usr/lib/riscv64-linux-gnu/libXfixes.so.3.1.0 
+0x0000003f90ec1000 0x0000003f90ec2000 0x1000             0x5000             rw-p  /usr/lib/riscv64-linux-gnu/libXfixes.so.3.1.0 
+0x0000003f90ec2000 0x0000003f90f1f000 0x5d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libodbc.so.2.0.0 
+0x0000003f90f1f000 0x0000003f90f20000 0x1000             0x5d000            r--p  /usr/lib/riscv64-linux-gnu/libodbc.so.2.0.0 
+0x0000003f90f20000 0x0000003f90f27000 0x7000             0x5e000            rw-p  /usr/lib/riscv64-linux-gnu/libodbc.so.2.0.0 
+0x0000003f90f27000 0x0000003f90f2b000 0x4000             0x0                rw-p   
+0x0000003f90f2b000 0x0000003f90ff8000 0xcd000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcurl-gnutls.so.4.8.0 
+0x0000003f90ff8000 0x0000003f90fff000 0x7000             0xcc000            r--p  /usr/lib/riscv64-linux-gnu/libcurl-gnutls.so.4.8.0 
+0x0000003f90fff000 0x0000003f91000000 0x1000             0xd3000            rw-p  /usr/lib/riscv64-linux-gnu/libcurl-gnutls.so.4.8.0 
+0x0000003f91000000 0x0000003f911b0000 0x1b0000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmDICT.so.3.0.24 
+0x0000003f911b0000 0x0000003f912e1000 0x131000           0x1af000           r--p  /usr/lib/riscv64-linux-gnu/libgdcmDICT.so.3.0.24 
+0x0000003f912e1000 0x0000003f912e2000 0x1000             0x2e0000           rw-p  /usr/lib/riscv64-linux-gnu/libgdcmDICT.so.3.0.24 
+0x0000003f912e2000 0x0000003f912e3000 0x1000             0x0                rw-p   
+0x0000003f912e4000 0x0000003f912e6000 0x2000             0x0                rw-p   
+0x0000003f912e6000 0x0000003f912e7000 0x1000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libX11-xcb.so.1.0.0 
+0x0000003f912e7000 0x0000003f912e8000 0x1000             0x0                r--p  /usr/lib/riscv64-linux-gnu/libX11-xcb.so.1.0.0 
+0x0000003f912e8000 0x0000003f912e9000 0x1000             0x1000             rw-p  /usr/lib/riscv64-linux-gnu/libX11-xcb.so.1.0.0 
+0x0000003f912e9000 0x0000003f912eb000 0x2000             0x0                rw-p   
+0x0000003f912eb000 0x0000003f912f9000 0xe000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libfreexl.so.1.2.0 
+0x0000003f912f9000 0x0000003f912fa000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libfreexl.so.1.2.0 
+0x0000003f912fa000 0x0000003f912fb000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libfreexl.so.1.2.0 
+0x0000003f912fb000 0x0000003f91325000 0x2a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgeotiff.so.5.2.3 
+0x0000003f91325000 0x0000003f9132e000 0x9000             0x2a000            r--p  /usr/lib/riscv64-linux-gnu/libgeotiff.so.5.2.3 
+0x0000003f9132e000 0x0000003f9132f000 0x1000             0x33000            rw-p  /usr/lib/riscv64-linux-gnu/libgeotiff.so.5.2.3 
+0x0000003f9132f000 0x0000003f913ec000 0xbd000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libarchive.so.13.8.5 
+0x0000003f913ec000 0x0000003f913f0000 0x4000             0xbc000            r--p  /usr/lib/riscv64-linux-gnu/libarchive.so.13.8.5 
+0x0000003f913f0000 0x0000003f913f1000 0x1000             0xc0000            rw-p  /usr/lib/riscv64-linux-gnu/libarchive.so.13.8.5 
+0x0000003f913f1000 0x0000003f9146f000 0x7e000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libIex-3_1.so.30.13.1 
+0x0000003f9146f000 0x0000003f91473000 0x4000             0x7e000            r--p  /usr/lib/riscv64-linux-gnu/libIex-3_1.so.30.13.1 
+0x0000003f91473000 0x0000003f91474000 0x1000             0x82000            rw-p  /usr/lib/riscv64-linux-gnu/libIex-3_1.so.30.13.1 
+0x0000003f91474000 0x0000003f915fd000 0x189000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgfortran.so.5.0.0 
+0x0000003f915fd000 0x0000003f915fe000 0x1000             0x188000           r--p  /usr/lib/riscv64-linux-gnu/libgfortran.so.5.0.0 
+0x0000003f915fe000 0x0000003f91600000 0x2000             0x189000           rw-p  /usr/lib/riscv64-linux-gnu/libgfortran.so.5.0.0 
+0x0000003f91600000 0x0000003f91e69000 0x869000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so 
+0x0000003f91e69000 0x0000003f91e6f000 0x6000             0x869000           r--p  /usr/lib/riscv64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so 
+0x0000003f91e6f000 0x0000003f91e78000 0x9000             0x86f000           rw-p  /usr/lib/riscv64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so 
+0x0000003f91e78000 0x0000003f91e83000 0xb000             0x0                rw-p   
+0x0000003f91e83000 0x0000003f91e85000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxcb-shm.so.0.0.0 
+0x0000003f91e85000 0x0000003f91e86000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libxcb-shm.so.0.0.0 
+0x0000003f91e86000 0x0000003f91e87000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libxcb-shm.so.0.0.0 
+0x0000003f91e87000 0x0000003f91e89000 0x2000             0x0                rw-p   
+0x0000003f91e89000 0x0000003f91e90000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libvorbisfile.so.3.3.8 
+0x0000003f91e90000 0x0000003f91e91000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libvorbisfile.so.3.3.8 
+0x0000003f91e91000 0x0000003f91e92000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libvorbisfile.so.3.3.8 
+0x0000003f91e92000 0x0000003f91e9a000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgif.so.7.2.0 
+0x0000003f91e9a000 0x0000003f91e9b000 0x1000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libgif.so.7.2.0 
+0x0000003f91e9b000 0x0000003f91e9c000 0x1000             0x8000             rw-p  /usr/lib/riscv64-linux-gnu/libgif.so.7.2.0 
+0x0000003f91e9c000 0x0000003f91eaf000 0x13000            0x0                r-xp  /usr/lib/libarmadillo.so.15.2.1 
+0x0000003f91eaf000 0x0000003f91eb0000 0x1000             0x13000            r--p  /usr/lib/libarmadillo.so.15.2.1 
+0x0000003f91eb0000 0x0000003f91eb1000 0x1000             0x14000            rw-p  /usr/lib/libarmadillo.so.15.2.1 
+0x0000003f91eb1000 0x0000003f91ed6000 0x25000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/liblz4.so.1.10.0 
+0x0000003f91ed6000 0x0000003f91ed7000 0x1000             0x24000            r--p  /usr/lib/riscv64-linux-gnu/liblz4.so.1.10.0 
+0x0000003f91ed7000 0x0000003f91ed8000 0x1000             0x25000            rw-p  /usr/lib/riscv64-linux-gnu/liblz4.so.1.10.0 
+0x0000003f91ed8000 0x0000003f91f20000 0x48000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libImath-3_1.so.29.11.0 
+0x0000003f91f20000 0x0000003f91f21000 0x1000             0x48000            r--p  /usr/lib/riscv64-linux-gnu/libImath-3_1.so.29.11.0 
+0x0000003f91f21000 0x0000003f91f22000 0x1000             0x49000            rw-p  /usr/lib/riscv64-linux-gnu/libImath-3_1.so.29.11.0 
+0x0000003f91f22000 0x0000003f91fd4000 0xb2000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libGLdispatch.so.0.0.0 
+0x0000003f91fd4000 0x0000003f91ff7000 0x23000            0xb1000            r--p  /usr/lib/riscv64-linux-gnu/libGLdispatch.so.0.0.0 
+0x0000003f91ff7000 0x0000003f91ff8000 0x1000             0xd4000            rw-p  /usr/lib/riscv64-linux-gnu/libGLdispatch.so.0.0.0 
+0x0000003f91ff8000 0x0000003f92000000 0x8000             0x0                rw-p   
+0x0000003f92000000 0x0000003f92320000 0x320000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libx265.so.215 
+0x0000003f92320000 0x0000003f92327000 0x7000             0x31f000           r--p  /usr/lib/riscv64-linux-gnu/libx265.so.215 
+0x0000003f92327000 0x0000003f9232a000 0x3000             0x326000           rw-p  /usr/lib/riscv64-linux-gnu/libx265.so.215 
+0x0000003f9232a000 0x0000003f92338000 0xe000             0x0                rw-p   
+0x0000003f92338000 0x0000003f9233e000 0x6000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libaec.so.0.1.5 
+0x0000003f9233e000 0x0000003f9233f000 0x1000             0x5000             r--p  /usr/lib/riscv64-linux-gnu/libaec.so.0.1.5 
+0x0000003f9233f000 0x0000003f92340000 0x1000             0x6000             rw-p  /usr/lib/riscv64-linux-gnu/libaec.so.0.1.5 
+0x0000003f92340000 0x0000003f92348000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libblosc.so.1.21.5 
+0x0000003f92348000 0x0000003f92349000 0x1000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libblosc.so.1.21.5 
+0x0000003f92349000 0x0000003f9234a000 0x1000             0x8000             rw-p  /usr/lib/riscv64-linux-gnu/libblosc.so.1.21.5 
+0x0000003f9234a000 0x0000003f9235c000 0x12000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libodbcinst.so.2.0.0 
+0x0000003f9235c000 0x0000003f9235d000 0x1000             0x12000            r--p  /usr/lib/riscv64-linux-gnu/libodbcinst.so.2.0.0 
+0x0000003f9235d000 0x0000003f9235e000 0x1000             0x13000            rw-p  /usr/lib/riscv64-linux-gnu/libodbcinst.so.2.0.0 
+0x0000003f9235e000 0x0000003f92361000 0x3000             0x0                rw-p   
+0x0000003f92361000 0x0000003f92369000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libIlmThread-3_1.so.30.13.1 
+0x0000003f92369000 0x0000003f9236a000 0x1000             0x8000             r--p  /usr/lib/riscv64-linux-gnu/libIlmThread-3_1.so.30.13.1 
+0x0000003f9236a000 0x0000003f9236b000 0x1000             0x9000             rw-p  /usr/lib/riscv64-linux-gnu/libIlmThread-3_1.so.30.13.1 
+0x0000003f9236b000 0x0000003f923fe000 0x93000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libzstd.so.1.5.6 
+0x0000003f923fe000 0x0000003f923ff000 0x1000             0x93000            r--p  /usr/lib/riscv64-linux-gnu/libzstd.so.1.5.6 
+0x0000003f923ff000 0x0000003f92400000 0x1000             0x94000            rw-p  /usr/lib/riscv64-linux-gnu/libzstd.so.1.5.6 
+0x0000003f92400000 0x0000003f92508000 0x108000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libx264.so.165 
+0x0000003f92508000 0x0000003f9250a000 0x2000             0x107000           r--p  /usr/lib/riscv64-linux-gnu/libx264.so.165 
+0x0000003f9250a000 0x0000003f9250b000 0x1000             0x109000           rw-p  /usr/lib/riscv64-linux-gnu/libx264.so.165 
+0x0000003f9250b000 0x0000003f92608000 0xfd000            0x0                rw-p   
+0x0000003f92608000 0x0000003f92615000 0xd000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdeflate.so.0 
+0x0000003f92615000 0x0000003f92616000 0x1000             0xc000             r--p  /usr/lib/riscv64-linux-gnu/libdeflate.so.0 
+0x0000003f92616000 0x0000003f92617000 0x1000             0xd000             rw-p  /usr/lib/riscv64-linux-gnu/libdeflate.so.0 
+0x0000003f92617000 0x0000003f92621000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjbig.so.0 
+0x0000003f92621000 0x0000003f92622000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libjbig.so.0 
+0x0000003f92622000 0x0000003f92625000 0x3000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libjbig.so.0 
+0x0000003f92625000 0x0000003f9268b000 0x66000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libLerc.so.4 
+0x0000003f9268b000 0x0000003f9268c000 0x1000             0x66000            r--p  /usr/lib/riscv64-linux-gnu/libLerc.so.4 
+0x0000003f9268c000 0x0000003f9268d000 0x1000             0x67000            rw-p  /usr/lib/riscv64-linux-gnu/libLerc.so.4 
+0x0000003f9268d000 0x0000003f926c9000 0x3c000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcharls.so.2.4.2 
+0x0000003f926c9000 0x0000003f926ca000 0x1000             0x3c000            r--p  /usr/lib/riscv64-linux-gnu/libcharls.so.2.4.2 
+0x0000003f926ca000 0x0000003f926cb000 0x1000             0x3d000            rw-p  /usr/lib/riscv64-linux-gnu/libcharls.so.2.4.2 
+0x0000003f926cb000 0x0000003f926d3000 0x8000             0x0                rw-p   
+0x0000003f926d3000 0x0000003f927fb000 0x128000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libX11.so.6.4.0 
+0x0000003f927fb000 0x0000003f927fc000 0x1000             0x128000           r--p  /usr/lib/riscv64-linux-gnu/libX11.so.6.4.0 
+0x0000003f927fc000 0x0000003f92800000 0x4000             0x129000           rw-p  /usr/lib/riscv64-linux-gnu/libX11.so.6.4.0 
+0x0000003f92800000 0x0000003f92ae4000 0x2e4000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libSvtAv1Enc.so.2.3.0 
+0x0000003f92ae4000 0x0000003f92aed000 0x9000             0x2e3000           r--p  /usr/lib/riscv64-linux-gnu/libSvtAv1Enc.so.2.3.0 
+0x0000003f92aed000 0x0000003f92af3000 0x6000             0x2ec000           rw-p  /usr/lib/riscv64-linux-gnu/libSvtAv1Enc.so.2.3.0 
+0x0000003f92af3000 0x0000003f92c3f000 0x14c000           0x0                rw-p   
+0x0000003f92c3f000 0x0000003f92c61000 0x22000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmCommon.so.3.0.24 
+0x0000003f92c61000 0x0000003f92c62000 0x1000             0x22000            r--p  /usr/lib/riscv64-linux-gnu/libgdcmCommon.so.3.0.24 
+0x0000003f92c62000 0x0000003f92c63000 0x1000             0x23000            rw-p  /usr/lib/riscv64-linux-gnu/libgdcmCommon.so.3.0.24 
+0x0000003f92c63000 0x0000003f92c65000 0x2000             0x0                rw-p   
+0x0000003f92c65000 0x0000003f92c8a000 0x25000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmjpeg16.so.3.0.24 
+0x0000003f92c8a000 0x0000003f92c8b000 0x1000             0x25000            r--p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg16.so.3.0.24 
+0x0000003f92c8b000 0x0000003f92c8c000 0x1000             0x26000            rw-p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg16.so.3.0.24 
+0x0000003f92c8c000 0x0000003f92cb1000 0x25000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmjpeg12.so.3.0.24 
+0x0000003f92cb1000 0x0000003f92cb2000 0x1000             0x25000            r--p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg12.so.3.0.24 
+0x0000003f92cb2000 0x0000003f92cb3000 0x1000             0x26000            rw-p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg12.so.3.0.24 
+0x0000003f92cb3000 0x0000003f92cd8000 0x25000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmjpeg8.so.3.0.24 
+0x0000003f92cd8000 0x0000003f92cd9000 0x1000             0x24000            r--p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg8.so.3.0.24 
+0x0000003f92cd9000 0x0000003f92cda000 0x1000             0x25000            rw-p  /usr/lib/riscv64-linux-gnu/libgdcmjpeg8.so.3.0.24 
+0x0000003f92cda000 0x0000003f92d10000 0x36000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libexif.so.12.3.4 
+0x0000003f92d10000 0x0000003f92d25000 0x15000            0x36000            r--p  /usr/lib/riscv64-linux-gnu/libexif.so.12.3.4 
+0x0000003f92d25000 0x0000003f92d26000 0x1000             0x4b000            rw-p  /usr/lib/riscv64-linux-gnu/libexif.so.12.3.4 
+0x0000003f92d26000 0x0000003f92d8c000 0x66000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxvidcore.so.4.3 
+0x0000003f92d8c000 0x0000003f92d8d000 0x1000             0x66000            r--p  /usr/lib/riscv64-linux-gnu/libxvidcore.so.4.3 
+0x0000003f92d8d000 0x0000003f92d8e000 0x1000             0x67000            rw-p  /usr/lib/riscv64-linux-gnu/libxvidcore.so.4.3 
+0x0000003f92d8e000 0x0000003f92e00000 0x72000            0x0                rw-p   
+0x0000003f92e00000 0x0000003f931ed000 0x3ed000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopus.so.0.11.1 
+0x0000003f931ed000 0x0000003f931f0000 0x3000             0x3ec000           r--p  /usr/lib/riscv64-linux-gnu/libopus.so.0.11.1 
+0x0000003f931f0000 0x0000003f931f1000 0x1000             0x3ef000           rw-p  /usr/lib/riscv64-linux-gnu/libopus.so.0.11.1 
+0x0000003f931f1000 0x0000003f93204000 0x13000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmIOD.so.3.0.24 
+0x0000003f93204000 0x0000003f93205000 0x1000             0x12000            r--p  /usr/lib/riscv64-linux-gnu/libgdcmIOD.so.3.0.24 
+0x0000003f93205000 0x0000003f93206000 0x1000             0x13000            rw-p  /usr/lib/riscv64-linux-gnu/libgdcmIOD.so.3.0.24 
+0x0000003f93206000 0x0000003f933fa000 0x1f4000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjxl.so.0.11.1 
+0x0000003f933fa000 0x0000003f933fd000 0x3000             0x1f4000           r--p  /usr/lib/riscv64-linux-gnu/libjxl.so.0.11.1 
+0x0000003f933fd000 0x0000003f933fe000 0x1000             0x1f7000           rw-p  /usr/lib/riscv64-linux-gnu/libjxl.so.0.11.1 
+0x0000003f933fe000 0x0000003f93400000 0x2000             0x0                rw-p   
+0x0000003f93400000 0x0000003f9351b000 0x11b000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcodec2.so.1.2 
+0x0000003f9351b000 0x0000003f9351c000 0x1000             0x11b000           r--p  /usr/lib/riscv64-linux-gnu/libcodec2.so.1.2 
+0x0000003f9351c000 0x0000003f9440a000 0xeee000           0x11c000           rw-p  /usr/lib/riscv64-linux-gnu/libcodec2.so.1.2 
+0x0000003f9440b000 0x0000003f94413000 0x8000             0x0                rw-p   
+0x0000003f94413000 0x0000003f945ef000 0x1dc000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/librav1e.so.0.8.1 
+0x0000003f945ef000 0x0000003f945ff000 0x10000            0x1dc000           r--p  /usr/lib/riscv64-linux-gnu/librav1e.so.0.8.1 
+0x0000003f945ff000 0x0000003f94600000 0x1000             0x1ec000           rw-p  /usr/lib/riscv64-linux-gnu/librav1e.so.0.8.1 
+0x0000003f94600000 0x0000003f948bf000 0x2bf000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libaom.so.3.13.1 
+0x0000003f948bf000 0x0000003f948ce000 0xf000             0x2bf000           r--p  /usr/lib/riscv64-linux-gnu/libaom.so.3.13.1 
+0x0000003f948ce000 0x0000003f948d1000 0x3000             0x2ce000           rw-p  /usr/lib/riscv64-linux-gnu/libaom.so.3.13.1 
+0x0000003f948d1000 0x0000003f9491c000 0x4b000            0x0                rw-p   
+0x0000003f9491d000 0x0000003f94925000 0x8000             0x0                rw-p   
+0x0000003f94925000 0x0000003f94935000 0x10000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjson-c.so.5.4.0 
+0x0000003f94935000 0x0000003f94936000 0x1000             0xf000             r--p  /usr/lib/riscv64-linux-gnu/libjson-c.so.5.4.0 
+0x0000003f94936000 0x0000003f94937000 0x1000             0x10000            rw-p  /usr/lib/riscv64-linux-gnu/libjson-c.so.5.4.0 
+0x0000003f94937000 0x0000003f9493e000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libuuid.so.1.3.0 
+0x0000003f9493e000 0x0000003f9493f000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libuuid.so.1.3.0 
+0x0000003f9493f000 0x0000003f94940000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libuuid.so.1.3.0 
+0x0000003f94940000 0x0000003f94942000 0x2000             0x0                rw-p   
+0x0000003f94942000 0x0000003f9494a000 0x8000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libltdl.so.7.3.3 
+0x0000003f9494a000 0x0000003f9494b000 0x1000             0x7000             r--p  /usr/lib/riscv64-linux-gnu/libltdl.so.7.3.3 
+0x0000003f9494b000 0x0000003f9494c000 0x1000             0x8000             rw-p  /usr/lib/riscv64-linux-gnu/libltdl.so.7.3.3 
+0x0000003f9494c000 0x0000003f94962000 0x16000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libOpenCL.so.1.0.0 
+0x0000003f94962000 0x0000003f94963000 0x1000             0x16000            r--p  /usr/lib/riscv64-linux-gnu/libOpenCL.so.1.0.0 
+0x0000003f94963000 0x0000003f94964000 0x1000             0x17000            rw-p  /usr/lib/riscv64-linux-gnu/libOpenCL.so.1.0.0 
+0x0000003f94964000 0x0000003f94978000 0x14000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdrm.so.2.131.0 
+0x0000003f94978000 0x0000003f94979000 0x1000             0x13000            r--p  /usr/lib/riscv64-linux-gnu/libdrm.so.2.131.0 
+0x0000003f94979000 0x0000003f9497a000 0x1000             0x14000            rw-p  /usr/lib/riscv64-linux-gnu/libdrm.so.2.131.0 
+0x0000003f9497a000 0x0000003f9498f000 0x15000            0x0                r-xp  /usr/lib/libspacemit_mpp.so.0.0.15 
+0x0000003f9498f000 0x0000003f94990000 0x1000             0x14000            r--p  /usr/lib/libspacemit_mpp.so.0.0.15 
+0x0000003f94990000 0x0000003f94991000 0x1000             0x15000            rw-p  /usr/lib/libspacemit_mpp.so.0.0.15 
+0x0000003f94991000 0x0000003f949c1000 0x30000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libva.so.2.2300.0 
+0x0000003f949c1000 0x0000003f949c2000 0x1000             0x2f000            r--p  /usr/lib/riscv64-linux-gnu/libva.so.2.2300.0 
+0x0000003f949c2000 0x0000003f949c3000 0x1000             0x30000            rw-p  /usr/lib/riscv64-linux-gnu/libva.so.2.2300.0 
+0x0000003f949c3000 0x0000003f94a4b000 0x88000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libvorbisenc.so.2.0.12 
+0x0000003f94a4b000 0x0000003f94a62000 0x17000            0x87000            r--p  /usr/lib/riscv64-linux-gnu/libvorbisenc.so.2.0.12 
+0x0000003f94a62000 0x0000003f94a63000 0x1000             0x9e000            rw-p  /usr/lib/riscv64-linux-gnu/libvorbisenc.so.2.0.12 
+0x0000003f94a63000 0x0000003f94a89000 0x26000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libvorbis.so.0.4.9 
+0x0000003f94a89000 0x0000003f94a8a000 0x1000             0x25000            r--p  /usr/lib/riscv64-linux-gnu/libvorbis.so.0.4.9 
+0x0000003f94a8a000 0x0000003f94a8b000 0x1000             0x26000            rw-p  /usr/lib/riscv64-linux-gnu/libvorbis.so.0.4.9 
+0x0000003f94a8b000 0x0000003f94aa8000 0x1d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtwolame.so.0.0.0 
+0x0000003f94aa8000 0x0000003f94aa9000 0x1000             0x1c000            r--p  /usr/lib/riscv64-linux-gnu/libtwolame.so.0.0.0 
+0x0000003f94aa9000 0x0000003f94aaa000 0x1000             0x1d000            rw-p  /usr/lib/riscv64-linux-gnu/libtwolame.so.0.0.0 
+0x0000003f94aaa000 0x0000003f94aae000 0x4000             0x0                rw-p   
+0x0000003f94aae000 0x0000003f94adb000 0x2d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtheoraenc.so.2.2.1 
+0x0000003f94adb000 0x0000003f94adc000 0x1000             0x2c000            r--p  /usr/lib/riscv64-linux-gnu/libtheoraenc.so.2.2.1 
+0x0000003f94adc000 0x0000003f94add000 0x1000             0x2d000            rw-p  /usr/lib/riscv64-linux-gnu/libtheoraenc.so.2.2.1 
+0x0000003f94add000 0x0000003f94bf9000 0x11c000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libcairo.so.2.11804.4 
+0x0000003f94bf9000 0x0000003f94bfd000 0x4000             0x11c000           r--p  /usr/lib/riscv64-linux-gnu/libcairo.so.2.11804.4 
+0x0000003f94bfd000 0x0000003f94bff000 0x2000             0x120000           rw-p  /usr/lib/riscv64-linux-gnu/libcairo.so.2.11804.4 
+0x0000003f94bff000 0x0000003f94c00000 0x1000             0x0                rw-p   
+0x0000003f94c00000 0x0000003f95090000 0x490000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/librsvg-2.so.2.61.3 
+0x0000003f95090000 0x0000003f95122000 0x92000            0x48f000           r--p  /usr/lib/riscv64-linux-gnu/librsvg-2.so.2.61.3 
+0x0000003f95122000 0x0000003f95123000 0x1000             0x521000           rw-p  /usr/lib/riscv64-linux-gnu/librsvg-2.so.2.61.3 
+0x0000003f95123000 0x0000003f95127000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsharpyuv.so.0.1.1 
+0x0000003f95127000 0x0000003f95128000 0x1000             0x3000             r--p  /usr/lib/riscv64-linux-gnu/libsharpyuv.so.0.1.1 
+0x0000003f95128000 0x0000003f95129000 0x1000             0x4000             rw-p  /usr/lib/riscv64-linux-gnu/libsharpyuv.so.0.1.1 
+0x0000003f95129000 0x0000003f9512c000 0x3000             0x0                rw-p   
+0x0000003f9512c000 0x0000003f9512f000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libvdpau.so.1.0.0 
+0x0000003f9512f000 0x0000003f95130000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libvdpau.so.1.0.0 
+0x0000003f95130000 0x0000003f95131000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libvdpau.so.1.0.0 
+0x0000003f95131000 0x0000003f95145000 0x14000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtheoradec.so.2.1.1 
+0x0000003f95145000 0x0000003f95146000 0x1000             0x13000            r--p  /usr/lib/riscv64-linux-gnu/libtheoradec.so.2.1.1 
+0x0000003f95146000 0x0000003f95147000 0x1000             0x14000            rw-p  /usr/lib/riscv64-linux-gnu/libtheoradec.so.2.1.1 
+0x0000003f95147000 0x0000003f9517d000 0x36000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libmp3lame.so.0.0.0 
+0x0000003f9517d000 0x0000003f9517e000 0x1000             0x35000            r--p  /usr/lib/riscv64-linux-gnu/libmp3lame.so.0.0.0 
+0x0000003f9517e000 0x0000003f9517f000 0x1000             0x36000            rw-p  /usr/lib/riscv64-linux-gnu/libmp3lame.so.0.0.0 
+0x0000003f9517f000 0x0000003f9518f000 0x10000            0x0                rw-p   
+0x0000003f9518f000 0x0000003f95200000 0x71000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libzvbi.so.0.13.2 
+0x0000003f95200000 0x0000003f95209000 0x9000             0x70000            r--p  /usr/lib/riscv64-linux-gnu/libzvbi.so.0.13.2 
+0x0000003f95209000 0x0000003f95215000 0xc000             0x79000            rw-p  /usr/lib/riscv64-linux-gnu/libzvbi.so.0.13.2 
+0x0000003f95215000 0x0000003f9528b000 0x76000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdav1d.so.7.0.0 
+0x0000003f9528b000 0x0000003f9528c000 0x1000             0x76000            r--p  /usr/lib/riscv64-linux-gnu/libdav1d.so.7.0.0 
+0x0000003f9528c000 0x0000003f9528d000 0x1000             0x77000            rw-p  /usr/lib/riscv64-linux-gnu/libdav1d.so.7.0.0 
+0x0000003f9528d000 0x0000003f952c6000 0x39000            0x0                rw-p   
+0x0000003f952c6000 0x0000003f9548c000 0x1c6000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libvpx.so.12.0.0 
+0x0000003f9548c000 0x0000003f95490000 0x4000             0x1c6000           r--p  /usr/lib/riscv64-linux-gnu/libvpx.so.12.0.0 
+0x0000003f95490000 0x0000003f95491000 0x1000             0x1ca000           rw-p  /usr/lib/riscv64-linux-gnu/libvpx.so.12.0.0 
+0x0000003f95491000 0x0000003f95497000 0x6000             0x0                rw-p   
+0x0000003f95497000 0x0000003f95543000 0xac000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libzmq.so.5.2.5 
+0x0000003f95543000 0x0000003f9554b000 0x8000             0xac000            r--p  /usr/lib/riscv64-linux-gnu/libzmq.so.5.2.5 
+0x0000003f9554b000 0x0000003f9554c000 0x1000             0xb4000            rw-p  /usr/lib/riscv64-linux-gnu/libzmq.so.5.2.5 
+0x0000003f9554c000 0x0000003f9560c000 0xc0000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsrt-gnutls.so.1.5.4 
+0x0000003f9560c000 0x0000003f9560e000 0x2000             0xbf000            r--p  /usr/lib/riscv64-linux-gnu/libsrt-gnutls.so.1.5.4 
+0x0000003f9560e000 0x0000003f9560f000 0x1000             0xc1000            rw-p  /usr/lib/riscv64-linux-gnu/libsrt-gnutls.so.1.5.4 
+0x0000003f9560f000 0x0000003f95614000 0x5000             0x0                rw-p   
+0x0000003f95614000 0x0000003f957ea000 0x1d6000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgnutls.so.30.41.1 
+0x0000003f957ea000 0x0000003f957fa000 0x10000            0x1d6000           r--p  /usr/lib/riscv64-linux-gnu/libgnutls.so.30.41.1 
+0x0000003f957fa000 0x0000003f957fd000 0x3000             0x1e6000           rw-p  /usr/lib/riscv64-linux-gnu/libgnutls.so.30.41.1 
+0x0000003f957fd000 0x0000003f95800000 0x3000             0x0                rw-p   
+0x0000003f95800000 0x0000003f959f7000 0x1f7000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopenmpt.so.0.5.5 
+0x0000003f959f7000 0x0000003f959fd000 0x6000             0x1f6000           r--p  /usr/lib/riscv64-linux-gnu/libopenmpt.so.0.5.5 
+0x0000003f959fd000 0x0000003f959fe000 0x1000             0x1fc000           rw-p  /usr/lib/riscv64-linux-gnu/libopenmpt.so.0.5.5 
+0x0000003f959fe000 0x0000003f95a58000 0x5a000            0x0                rw-p   
+0x0000003f95a59000 0x0000003f95a6e000 0x15000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libspeex.so.1.5.2 
+0x0000003f95a6e000 0x0000003f95a6f000 0x1000             0x15000            r--p  /usr/lib/riscv64-linux-gnu/libspeex.so.1.5.2 
+0x0000003f95a6f000 0x0000003f95a70000 0x1000             0x16000            rw-p  /usr/lib/riscv64-linux-gnu/libspeex.so.1.5.2 
+0x0000003f95a70000 0x0000003f95a7a000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libshine.so.3.0.1 
+0x0000003f95a7a000 0x0000003f95a7b000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libshine.so.3.0.1 
+0x0000003f95a7b000 0x0000003f95a7c000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libshine.so.3.0.1 
+0x0000003f95a7c000 0x0000003f95aa5000 0x29000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/liblzma.so.5.8.3 
+0x0000003f95aa5000 0x0000003f95aa6000 0x1000             0x29000            r--p  /usr/lib/riscv64-linux-gnu/liblzma.so.5.8.3 
+0x0000003f95aa6000 0x0000003f95aa7000 0x1000             0x2a000            rw-p  /usr/lib/riscv64-linux-gnu/liblzma.so.5.8.3 
+0x0000003f95aa7000 0x0000003f95b19000 0x72000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libssh.so.4.10.3 
+0x0000003f95b19000 0x0000003f95b1b000 0x2000             0x71000            r--p  /usr/lib/riscv64-linux-gnu/libssh.so.4.10.3 
+0x0000003f95b1b000 0x0000003f95b1d000 0x2000             0x73000            rw-p  /usr/lib/riscv64-linux-gnu/libssh.so.4.10.3 
+0x0000003f95b1d000 0x0000003f95b68000 0x4b000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgme.so.0.6.4 
+0x0000003f95b68000 0x0000003f95b6a000 0x2000             0x4b000            r--p  /usr/lib/riscv64-linux-gnu/libgme.so.0.6.4 
+0x0000003f95b6a000 0x0000003f95b6b000 0x1000             0x4d000            rw-p  /usr/lib/riscv64-linux-gnu/libgme.so.0.6.4 
+0x0000003f95b6b000 0x0000003f95bcd000 0x62000            0x0                rw-p   
+0x0000003f95bcd000 0x0000003f95cf9000 0x12c000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libxml2.so.16.1.2 
+0x0000003f95cf9000 0x0000003f95d01000 0x8000             0x12b000           r--p  /usr/lib/riscv64-linux-gnu/libxml2.so.16.1.2 
+0x0000003f95d01000 0x0000003f95d02000 0x1000             0x133000           rw-p  /usr/lib/riscv64-linux-gnu/libxml2.so.16.1.2 
+0x0000003f95d02000 0x0000003f95d03000 0x1000             0x0                rw-p   
+0x0000003f95d03000 0x0000003f95df4000 0xf1000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/liborc-0.4.so.0.42.0 
+0x0000003f95df4000 0x0000003f95df7000 0x3000             0xf1000            r--p  /usr/lib/riscv64-linux-gnu/liborc-0.4.so.0.42.0 
+0x0000003f95df7000 0x0000003f95dff000 0x8000             0xf4000            rw-p  /usr/lib/riscv64-linux-gnu/liborc-0.4.so.0.42.0 
+0x0000003f95dff000 0x0000003f95e00000 0x1000             0x0                rw-p   
+0x0000003f95e00000 0x0000003f97cfb000 0x1efb000          0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdal.so.38.3.12.2 
+0x0000003f97cfb000 0x0000003f97e89000 0x18e000           0x1efa000          r--p  /usr/lib/riscv64-linux-gnu/libgdal.so.38.3.12.2 
+0x0000003f97e89000 0x0000003f97e8b000 0x2000             0x2088000          rw-p  /usr/lib/riscv64-linux-gnu/libgdal.so.38.3.12.2 
+0x0000003f97e8b000 0x0000003f97e9d000 0x12000            0x0                rw-p   
+0x0000003f97e9e000 0x0000003f97ea0000 0x2000             0x0                rw-p   
+0x0000003f97ea0000 0x0000003f97ea4000 0x4000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libva-x11.so.2.2300.0 
+0x0000003f97ea4000 0x0000003f97ea5000 0x1000             0x4000             r--p  /usr/lib/riscv64-linux-gnu/libva-x11.so.2.2300.0 
+0x0000003f97ea5000 0x0000003f97ea6000 0x1000             0x5000             rw-p  /usr/lib/riscv64-linux-gnu/libva-x11.so.2.2300.0 
+0x0000003f97ea6000 0x0000003f97eb2000 0xc000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgsm.so.1.0.19 
+0x0000003f97eb2000 0x0000003f97eb3000 0x1000             0xb000             r--p  /usr/lib/riscv64-linux-gnu/libgsm.so.1.0.19 
+0x0000003f97eb3000 0x0000003f97eb4000 0x1000             0xc000             rw-p  /usr/lib/riscv64-linux-gnu/libgsm.so.1.0.19 
+0x0000003f97eb4000 0x0000003f97ebd000 0x9000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libsnappy.so.1.2.2 
+0x0000003f97ebd000 0x0000003f97ebe000 0x1000             0x8000             r--p  /usr/lib/riscv64-linux-gnu/libsnappy.so.1.2.2 
+0x0000003f97ebe000 0x0000003f97ebf000 0x1000             0x9000             rw-p  /usr/lib/riscv64-linux-gnu/libsnappy.so.1.2.2 
+0x0000003f97ebf000 0x0000003f97ed2000 0x13000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libswresample.so.6.1.100 
+0x0000003f97ed2000 0x0000003f97ed4000 0x2000             0x13000            r--p  /usr/lib/riscv64-linux-gnu/libswresample.so.6.1.100 
+0x0000003f97ed4000 0x0000003f97ed5000 0x1000             0x15000            rw-p  /usr/lib/riscv64-linux-gnu/libswresample.so.6.1.100 
+0x0000003f97ed5000 0x0000003f97ffc000 0x127000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmDSED.so.3.0.24 
+0x0000003f97ffc000 0x0000003f97fff000 0x3000             0x127000           r--p  /usr/lib/riscv64-linux-gnu/libgdcmDSED.so.3.0.24 
+0x0000003f97fff000 0x0000003f98000000 0x1000             0x12a000           rw-p  /usr/lib/riscv64-linux-gnu/libgdcmDSED.so.3.0.24 
+0x0000003f98000000 0x0000003f982da000 0x2da000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libOpenEXR-3_1.so.30.13.1 
+0x0000003f982da000 0x0000003f982dd000 0x3000             0x2d9000           r--p  /usr/lib/riscv64-linux-gnu/libOpenEXR-3_1.so.30.13.1 
+0x0000003f982dd000 0x0000003f982de000 0x1000             0x2dc000           rw-p  /usr/lib/riscv64-linux-gnu/libOpenEXR-3_1.so.30.13.1 
+0x0000003f982de000 0x0000003f982e0000 0x2000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libva-drm.so.2.2300.0 
+0x0000003f982e0000 0x0000003f982e1000 0x1000             0x1000             r--p  /usr/lib/riscv64-linux-gnu/libva-drm.so.2.2300.0 
+0x0000003f982e1000 0x0000003f982e2000 0x1000             0x2000             rw-p  /usr/lib/riscv64-linux-gnu/libva-drm.so.2.2300.0 
+0x0000003f982e2000 0x0000003f982ec000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libwebpmux.so.3.1.1 
+0x0000003f982ec000 0x0000003f982ed000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libwebpmux.so.3.1.1 
+0x0000003f982ed000 0x0000003f982ee000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libwebpmux.so.3.1.1 
+0x0000003f982ee000 0x0000003f98312000 0x24000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/librist.so.4.4.0 
+0x0000003f98312000 0x0000003f98313000 0x1000             0x23000            r--p  /usr/lib/riscv64-linux-gnu/librist.so.4.4.0 
+0x0000003f98313000 0x0000003f98314000 0x1000             0x24000            rw-p  /usr/lib/riscv64-linux-gnu/librist.so.4.4.0 
+0x0000003f98314000 0x0000003f98329000 0x15000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/librabbitmq.so.0.15.0 
+0x0000003f98329000 0x0000003f9832a000 0x1000             0x14000            r--p  /usr/lib/riscv64-linux-gnu/librabbitmq.so.0.15.0 
+0x0000003f9832a000 0x0000003f9832b000 0x1000             0x15000            rw-p  /usr/lib/riscv64-linux-gnu/librabbitmq.so.0.15.0 
+0x0000003f9832b000 0x0000003f9836c000 0x41000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbluray.so.3.1.0 
+0x0000003f9836c000 0x0000003f9836e000 0x2000             0x41000            r--p  /usr/lib/riscv64-linux-gnu/libbluray.so.3.1.0 
+0x0000003f9836e000 0x0000003f9836f000 0x1000             0x43000            rw-p  /usr/lib/riscv64-linux-gnu/libbluray.so.3.1.0 
+0x0000003f9836f000 0x0000003f983fe000 0x8f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpcre2-8.so.0.14.0 
+0x0000003f983fe000 0x0000003f983ff000 0x1000             0x8e000            r--p  /usr/lib/riscv64-linux-gnu/libpcre2-8.so.0.14.0 
+0x0000003f983ff000 0x0000003f98400000 0x1000             0x8f000            rw-p  /usr/lib/riscv64-linux-gnu/libpcre2-8.so.0.14.0 
+0x0000003f98400000 0x0000003f986a7000 0x2a7000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgdcmMSFF.so.3.0.24 
+0x0000003f986a7000 0x0000003f986b2000 0xb000             0x2a7000           r--p  /usr/lib/riscv64-linux-gnu/libgdcmMSFF.so.3.0.24 
+0x0000003f986b2000 0x0000003f986b3000 0x1000             0x2b2000           rw-p  /usr/lib/riscv64-linux-gnu/libgdcmMSFF.so.3.0.24 
+0x0000003f986b3000 0x0000003f986bc000 0x9000             0x0                rw-p   
+0x0000003f986bc000 0x0000003f986bf000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjxl_threads.so.0.11.1 
+0x0000003f986bf000 0x0000003f986c0000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libjxl_threads.so.0.11.1 
+0x0000003f986c0000 0x0000003f986c1000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libjxl_threads.so.0.11.1 
+0x0000003f986c1000 0x0000003f986d2000 0x11000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libchromaprint.so.1.6.0 
+0x0000003f986d2000 0x0000003f986d3000 0x1000             0x10000            r--p  /usr/lib/riscv64-linux-gnu/libchromaprint.so.1.6.0 
+0x0000003f986d3000 0x0000003f986d4000 0x1000             0x11000            rw-p  /usr/lib/riscv64-linux-gnu/libchromaprint.so.1.6.0 
+0x0000003f986d4000 0x0000003f986f6000 0x22000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdvdread.so.8.1.0 
+0x0000003f986f6000 0x0000003f986f7000 0x1000             0x21000            r--p  /usr/lib/riscv64-linux-gnu/libdvdread.so.8.1.0 
+0x0000003f986f7000 0x0000003f986f8000 0x1000             0x22000            rw-p  /usr/lib/riscv64-linux-gnu/libdvdread.so.8.1.0 
+0x0000003f986f8000 0x0000003f9870e000 0x16000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdvdnav.so.4.4.0 
+0x0000003f9870e000 0x0000003f9870f000 0x1000             0x15000            r--p  /usr/lib/riscv64-linux-gnu/libdvdnav.so.4.4.0 
+0x0000003f9870f000 0x0000003f98710000 0x1000             0x16000            rw-p  /usr/lib/riscv64-linux-gnu/libdvdnav.so.4.4.0 
+0x0000003f98710000 0x0000003f9871e000 0xe000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libbz2.so.1.0.4 
+0x0000003f9871e000 0x0000003f9871f000 0x1000             0xe000             r--p  /usr/lib/riscv64-linux-gnu/libbz2.so.1.0.4 
+0x0000003f9871f000 0x0000003f98720000 0x1000             0xf000             rw-p  /usr/lib/riscv64-linux-gnu/libbz2.so.1.0.4 
+0x0000003f98720000 0x0000003f9877d000 0x5d000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopenjp2.so.2.5.4 
+0x0000003f9877d000 0x0000003f9877f000 0x2000             0x5c000            r--p  /usr/lib/riscv64-linux-gnu/libopenjp2.so.2.5.4 
+0x0000003f9877f000 0x0000003f98780000 0x1000             0x5e000            rw-p  /usr/lib/riscv64-linux-gnu/libopenjp2.so.2.5.4 
+0x0000003f98780000 0x0000003f987fa000 0x7a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtiff.so.6.1.0 
+0x0000003f987fa000 0x0000003f987ff000 0x5000             0x7a000            r--p  /usr/lib/riscv64-linux-gnu/libtiff.so.6.1.0 
+0x0000003f987ff000 0x0000003f98800000 0x1000             0x7f000            rw-p  /usr/lib/riscv64-linux-gnu/libtiff.so.6.1.0 
+0x0000003f98800000 0x0000003f98cc9000 0x4c9000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/openblas-pthread/liblapack.so.3 
+0x0000003f98cc9000 0x0000003f98cca000 0x1000             0x4c9000           r--p  /usr/lib/riscv64-linux-gnu/openblas-pthread/liblapack.so.3 
+0x0000003f98cca000 0x0000003f98ccf000 0x5000             0x4ca000           rw-p  /usr/lib/riscv64-linux-gnu/openblas-pthread/liblapack.so.3 
+0x0000003f98cd0000 0x0000003f98d0a000 0x3a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgsttag-1.0.so.0.2800.0 
+0x0000003f98d0a000 0x0000003f98d0c000 0x2000             0x3a000            r--p  /usr/lib/riscv64-linux-gnu/libgsttag-1.0.so.0.2800.0 
+0x0000003f98d0c000 0x0000003f98d0d000 0x1000             0x3c000            rw-p  /usr/lib/riscv64-linux-gnu/libgsttag-1.0.so.0.2800.0 
+0x0000003f98d0d000 0x0000003f98d3c000 0x2f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libpng16.so.16.50.0 
+0x0000003f98d3c000 0x0000003f98d3d000 0x1000             0x2e000            r--p  /usr/lib/riscv64-linux-gnu/libpng16.so.16.50.0 
+0x0000003f98d3d000 0x0000003f98d3e000 0x1000             0x2f000            rw-p  /usr/lib/riscv64-linux-gnu/libpng16.so.16.50.0 
+0x0000003f98d3e000 0x0000003f98d94000 0x56000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libwebp.so.7.1.10 
+0x0000003f98d94000 0x0000003f98d95000 0x1000             0x55000            r--p  /usr/lib/riscv64-linux-gnu/libwebp.so.7.1.10 
+0x0000003f98d95000 0x0000003f98d96000 0x1000             0x56000            rw-p  /usr/lib/riscv64-linux-gnu/libwebp.so.7.1.10 
+0x0000003f98d96000 0x0000003f98d97000 0x1000             0x0                rw-p   
+0x0000003f98d97000 0x0000003f98dfe000 0x67000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libjpeg.so.8.2.2 
+0x0000003f98dfe000 0x0000003f98dff000 0x1000             0x67000            r--p  /usr/lib/riscv64-linux-gnu/libjpeg.so.8.2.2 
+0x0000003f98dff000 0x0000003f98e00000 0x1000             0x68000            rw-p  /usr/lib/riscv64-linux-gnu/libjpeg.so.8.2.2 
+0x0000003f98e00000 0x0000003f98eb7000 0xb7000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libavutil.so.60.8.100 
+0x0000003f98eb7000 0x0000003f98eca000 0x13000            0xb7000            r--p  /usr/lib/riscv64-linux-gnu/libavutil.so.60.8.100 
+0x0000003f98eca000 0x0000003f98ecb000 0x1000             0xca000            rw-p  /usr/lib/riscv64-linux-gnu/libavutil.so.60.8.100 
+0x0000003f98ecb000 0x0000003f99ee2000 0x1017000          0x0                rw-p   
+0x0000003f99ee2000 0x0000003f99ee9000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstallocators-1.0.so.0.2800.0 
+0x0000003f99ee9000 0x0000003f99eea000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libgstallocators-1.0.so.0.2800.0 
+0x0000003f99eea000 0x0000003f99eeb000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libgstallocators-1.0.so.0.2800.0 
+0x0000003f99eeb000 0x0000003f99ef2000 0x7000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libffi.so.8.2.0 
+0x0000003f99ef2000 0x0000003f99ef3000 0x1000             0x6000             r--p  /usr/lib/riscv64-linux-gnu/libffi.so.8.2.0 
+0x0000003f99ef3000 0x0000003f99ef4000 0x1000             0x7000             rw-p  /usr/lib/riscv64-linux-gnu/libffi.so.8.2.0 
+0x0000003f99ef4000 0x0000003f99f1b000 0x27000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libtbb.so.12.17 
+0x0000003f99f1b000 0x0000003f99f1d000 0x2000             0x26000            r--p  /usr/lib/riscv64-linux-gnu/libtbb.so.12.17 
+0x0000003f99f1d000 0x0000003f99f1e000 0x1000             0x28000            rw-p  /usr/lib/riscv64-linux-gnu/libtbb.so.12.17 
+0x0000003f99f1e000 0x0000003f99f33000 0x15000            0x0                rw-p   
+0x0000003f99f33000 0x0000003f99fb9000 0x86000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libswscale.so.9.1.100 
+0x0000003f99fb9000 0x0000003f99fbb000 0x2000             0x85000            r--p  /usr/lib/riscv64-linux-gnu/libswscale.so.9.1.100 
+0x0000003f99fbb000 0x0000003f99fbc000 0x1000             0x87000            rw-p  /usr/lib/riscv64-linux-gnu/libswscale.so.9.1.100 
+0x0000003f99fbc000 0x0000003f9a000000 0x44000            0x0                rw-p   
+0x0000003f9a000000 0x0000003f9b2a7000 0x12a7000          0x0                r-xp  /usr/lib/riscv64-linux-gnu/libavcodec.so.62.11.100 
+0x0000003f9b2a7000 0x0000003f9b330000 0x89000            0x12a7000          r--p  /usr/lib/riscv64-linux-gnu/libavcodec.so.62.11.100 
+0x0000003f9b330000 0x0000003f9b333000 0x3000             0x1330000          rw-p  /usr/lib/riscv64-linux-gnu/libavcodec.so.62.11.100 
+0x0000003f9b333000 0x0000003f9b95d000 0x62a000           0x0                rw-p   
+0x0000003f9b95e000 0x0000003f9b960000 0x2000             0x0                rw-p   
+0x0000003f9b960000 0x0000003f9b97a000 0x1a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libusb-1.0.so.0.5.0 
+0x0000003f9b97a000 0x0000003f9b97b000 0x1000             0x1a000            r--p  /usr/lib/riscv64-linux-gnu/libusb-1.0.so.0.5.0 
+0x0000003f9b97b000 0x0000003f9b97c000 0x1000             0x1b000            rw-p  /usr/lib/riscv64-linux-gnu/libusb-1.0.so.0.5.0 
+0x0000003f9b97c000 0x0000003f9b99e000 0x22000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgphoto2.so.6.4.0 
+0x0000003f9b99e000 0x0000003f9b99f000 0x1000             0x21000            r--p  /usr/lib/riscv64-linux-gnu/libgphoto2.so.6.4.0 
+0x0000003f9b99f000 0x0000003f9b9a0000 0x1000             0x22000            rw-p  /usr/lib/riscv64-linux-gnu/libgphoto2.so.6.4.0 
+0x0000003f9b9a0000 0x0000003f9ba00000 0x60000            0x0                rw-p   
+0x0000003f9ba00000 0x0000003f9bc61000 0x261000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libavformat.so.62.3.100 
+0x0000003f9bc61000 0x0000003f9bc97000 0x36000            0x261000           r--p  /usr/lib/riscv64-linux-gnu/libavformat.so.62.3.100 
+0x0000003f9bc97000 0x0000003f9bc98000 0x1000             0x297000           rw-p  /usr/lib/riscv64-linux-gnu/libavformat.so.62.3.100 
+0x0000003f9bc98000 0x0000003f9bc9a000 0x2000             0x0                rw-p   
+0x0000003f9bc9a000 0x0000003f9bd04000 0x6a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/openblas-pthread/libblas.so.3 
+0x0000003f9bd04000 0x0000003f9bd0a000 0x6000             0x6a000            r--p  /usr/lib/riscv64-linux-gnu/openblas-pthread/libblas.so.3 
+0x0000003f9bd0a000 0x0000003f9bd0b000 0x1000             0x70000            rw-p  /usr/lib/riscv64-linux-gnu/openblas-pthread/libblas.so.3 
+0x0000003f9bd0b000 0x0000003f9bd7f000 0x74000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstaudio-1.0.so.0.2800.0 
+0x0000003f9bd7f000 0x0000003f9bd83000 0x4000             0x73000            r--p  /usr/lib/riscv64-linux-gnu/libgstaudio-1.0.so.0.2800.0 
+0x0000003f9bd83000 0x0000003f9bd84000 0x1000             0x77000            rw-p  /usr/lib/riscv64-linux-gnu/libgstaudio-1.0.so.0.2800.0 
+0x0000003f9bd84000 0x0000003f9be41000 0xbd000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstvideo-1.0.so.0.2800.0 
+0x0000003f9be41000 0x0000003f9be55000 0x14000            0xbc000            r--p  /usr/lib/riscv64-linux-gnu/libgstvideo-1.0.so.0.2800.0 
+0x0000003f9be55000 0x0000003f9be56000 0x1000             0xd0000            rw-p  /usr/lib/riscv64-linux-gnu/libgstvideo-1.0.so.0.2800.0 
+0x0000003f9be56000 0x0000003f9be57000 0x1000             0x0                rw-p   
+0x0000003f9be57000 0x0000003f9bf9f000 0x148000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libglib-2.0.so.0.8800.0 
+0x0000003f9bf9f000 0x0000003f9bfa0000 0x1000             0x148000           r--p  /usr/lib/riscv64-linux-gnu/libglib-2.0.so.0.8800.0 
+0x0000003f9bfa0000 0x0000003f9bfa1000 0x1000             0x149000           rw-p  /usr/lib/riscv64-linux-gnu/libglib-2.0.so.0.8800.0 
+0x0000003f9bfa1000 0x0000003f9bfa2000 0x1000             0x0                rw-p   
+0x0000003f9bfa2000 0x0000003f9bffc000 0x5a000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgobject-2.0.so.0.8800.0 
+0x0000003f9bffc000 0x0000003f9bfff000 0x3000             0x5a000            r--p  /usr/lib/riscv64-linux-gnu/libgobject-2.0.so.0.8800.0 
+0x0000003f9bfff000 0x0000003f9c000000 0x1000             0x5d000            rw-p  /usr/lib/riscv64-linux-gnu/libgobject-2.0.so.0.8800.0 
+0x0000003f9c000000 0x0000003f9c23f000 0x23f000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libstdc++.so.6.0.35 
+0x0000003f9c23f000 0x0000003f9c24f000 0x10000            0x23e000           r--p  /usr/lib/riscv64-linux-gnu/libstdc++.so.6.0.35 
+0x0000003f9c24f000 0x0000003f9c251000 0x2000             0x24e000           rw-p  /usr/lib/riscv64-linux-gnu/libstdc++.so.6.0.35 
+0x0000003f9c251000 0x0000003f9c255000 0x4000             0x0                rw-p   
+0x0000003f9c256000 0x0000003f9c263000 0xd000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libraw1394.so.11.1.0 
+0x0000003f9c263000 0x0000003f9c264000 0x1000             0xc000             r--p  /usr/lib/riscv64-linux-gnu/libraw1394.so.11.1.0 
+0x0000003f9c264000 0x0000003f9c265000 0x1000             0xd000             rw-p  /usr/lib/riscv64-linux-gnu/libraw1394.so.11.1.0 
+0x0000003f9c265000 0x0000003f9c281000 0x1c000            0x0                r-xp  /usr/lib/libspert.so.0.6.3 
+0x0000003f9c281000 0x0000003f9c282000 0x1000             0x1b000            r--p  /usr/lib/libspert.so.0.6.3 
+0x0000003f9c282000 0x0000003f9c283000 0x1000             0x1c000            rw-p  /usr/lib/libspert.so.0.6.3 
+0x0000003f9c283000 0x0000003f9c2a9000 0x26000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libz.so.1.3.1.zlib-ng 
+0x0000003f9c2a9000 0x0000003f9c2aa000 0x1000             0x25000            r--p  /usr/lib/riscv64-linux-gnu/libz.so.1.3.1.zlib-ng 
+0x0000003f9c2aa000 0x0000003f9c2ab000 0x1000             0x26000            rw-p  /usr/lib/riscv64-linux-gnu/libz.so.1.3.1.zlib-ng 
+0x0000003f9c2ab000 0x0000003f9c3f6000 0x14b000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstreamer-1.0.so.0.2800.0 
+0x0000003f9c3f6000 0x0000003f9c3fc000 0x6000             0x14a000           r--p  /usr/lib/riscv64-linux-gnu/libgstreamer-1.0.so.0.2800.0 
+0x0000003f9c3fc000 0x0000003f9c3ff000 0x3000             0x150000           rw-p  /usr/lib/riscv64-linux-gnu/libgstreamer-1.0.so.0.2800.0 
+0x0000003f9c3ff000 0x0000003f9c400000 0x1000             0x0                rw-p   
+0x0000003f9c400000 0x0000003f9c9ae000 0x5ae000           0x0                r-xp  /usr/lib/libspacemit_ep.so.2.0.7 
+0x0000003f9c9ae000 0x0000003f9c9bc000 0xe000             0x5ae000           r--p  /usr/lib/libspacemit_ep.so.2.0.7 
+0x0000003f9c9bc000 0x0000003f9c9c2000 0x6000             0x5bc000           rw-p  /usr/lib/libspacemit_ep.so.2.0.7 
+0x0000003f9c9c2000 0x0000003f9ca20000 0x5e000            0x0                rw-p   
+0x0000003f9ca20000 0x0000003f9ca23000 0x3000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgmodule-2.0.so.0.8800.0 
+0x0000003f9ca23000 0x0000003f9ca24000 0x1000             0x2000             r--p  /usr/lib/riscv64-linux-gnu/libgmodule-2.0.so.0.8800.0 
+0x0000003f9ca24000 0x0000003f9ca25000 0x1000             0x3000             rw-p  /usr/lib/riscv64-linux-gnu/libgmodule-2.0.so.0.8800.0 
+0x0000003f9ca25000 0x0000003f9ca27000 0x2000             0x0                rw-p   
+0x0000003f9ca27000 0x0000003f9ca37000 0x10000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libGLX.so.0.0.0 
+0x0000003f9ca37000 0x0000003f9ca38000 0x1000             0xf000             r--p  /usr/lib/riscv64-linux-gnu/libGLX.so.0.0.0 
+0x0000003f9ca38000 0x0000003f9ca39000 0x1000             0x10000            rw-p  /usr/lib/riscv64-linux-gnu/libGLX.so.0.0.0 
+0x0000003f9ca39000 0x0000003f9ca78000 0x3f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstpbutils-1.0.so.0.2800.0 
+0x0000003f9ca78000 0x0000003f9ca7b000 0x3000             0x3f000            r--p  /usr/lib/riscv64-linux-gnu/libgstpbutils-1.0.so.0.2800.0 
+0x0000003f9ca7b000 0x0000003f9ca7c000 0x1000             0x42000            rw-p  /usr/lib/riscv64-linux-gnu/libgstpbutils-1.0.so.0.2800.0 
+0x0000003f9ca7c000 0x0000003f9cbef000 0x173000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libc.so.6 
+0x0000003f9cbef000 0x0000003f9cbf2000 0x3000             0x172000           r--p  /usr/lib/riscv64-linux-gnu/libc.so.6 
+0x0000003f9cbf2000 0x0000003f9cbf4000 0x2000             0x175000           rw-p  /usr/lib/riscv64-linux-gnu/libc.so.6 
+0x0000003f9cbf4000 0x0000003f9cc00000 0xc000             0x0                rw-p   
+0x0000003f9cc00000 0x0000003f9df1d000 0x131d000          0x0                r-xp  /usr/lib/libonnxruntime.so.1.24.2+spacemit.a1 
+0x0000003f9df1d000 0x0000003f9df67000 0x4a000            0x131d000          r--p  /usr/lib/libonnxruntime.so.1.24.2+spacemit.a1 
+0x0000003f9df67000 0x0000003f9df6d000 0x6000             0x1367000          rw-p  /usr/lib/libonnxruntime.so.1.24.2+spacemit.a1 
+0x0000003f9df6d000 0x0000003f9df78000 0xb000             0x0                rw-p   
+0x0000003f9df78000 0x0000003f9df7e000 0x6000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libatomic.so.1.2.0 
+0x0000003f9df7e000 0x0000003f9df7f000 0x1000             0x5000             r--p  /usr/lib/riscv64-linux-gnu/libatomic.so.1.2.0 
+0x0000003f9df7f000 0x0000003f9df80000 0x1000             0x6000             rw-p  /usr/lib/riscv64-linux-gnu/libatomic.so.1.2.0 
+0x0000003f9df80000 0x0000003f9df81000 0x1000             0x0                rw-p   
+0x0000003f9df81000 0x0000003f9df8b000 0xa000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgphoto2_port.so.12.2.0 
+0x0000003f9df8b000 0x0000003f9df8c000 0x1000             0x9000             r--p  /usr/lib/riscv64-linux-gnu/libgphoto2_port.so.12.2.0 
+0x0000003f9df8c000 0x0000003f9df8d000 0x1000             0xa000             rw-p  /usr/lib/riscv64-linux-gnu/libgphoto2_port.so.12.2.0 
+0x0000003f9df8d000 0x0000003f9dffe000 0x71000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstbase-1.0.so.0.2800.0 
+0x0000003f9dffe000 0x0000003f9dfff000 0x1000             0x71000            r--p  /usr/lib/riscv64-linux-gnu/libgstbase-1.0.so.0.2800.0 
+0x0000003f9dfff000 0x0000003f9e000000 0x1000             0x72000            rw-p  /usr/lib/riscv64-linux-gnu/libgstbase-1.0.so.0.2800.0 
+0x0000003f9e000000 0x0000003f9e2a4000 0x2a4000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopencv_core.so.4.10.0 
+0x0000003f9e2a4000 0x0000003f9e2b1000 0xd000             0x2a3000           r--p  /usr/lib/riscv64-linux-gnu/libopencv_core.so.4.10.0 
+0x0000003f9e2b1000 0x0000003f9e2b3000 0x2000             0x2b0000           rw-p  /usr/lib/riscv64-linux-gnu/libopencv_core.so.4.10.0 
+0x0000003f9e2b3000 0x0000003f9e2b8000 0x5000             0x0                rw-p   
+0x0000003f9e2b9000 0x0000003f9e2bf000 0x6000             0x0                rw-p   
+0x0000003f9e2bf000 0x0000003f9e2cc000 0xd000             0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstriff-1.0.so.0.2800.0 
+0x0000003f9e2cc000 0x0000003f9e2cd000 0x1000             0xc000             r--p  /usr/lib/riscv64-linux-gnu/libgstriff-1.0.so.0.2800.0 
+0x0000003f9e2cd000 0x0000003f9e2ce000 0x1000             0xd000             rw-p  /usr/lib/riscv64-linux-gnu/libgstriff-1.0.so.0.2800.0 
+0x0000003f9e2ce000 0x0000003f9e2e3000 0x15000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgstapp-1.0.so.0.2800.0 
+0x0000003f9e2e3000 0x0000003f9e2e4000 0x1000             0x14000            r--p  /usr/lib/riscv64-linux-gnu/libgstapp-1.0.so.0.2800.0 
+0x0000003f9e2e4000 0x0000003f9e2e5000 0x1000             0x15000            rw-p  /usr/lib/riscv64-linux-gnu/libgstapp-1.0.so.0.2800.0 
+0x0000003f9e2e5000 0x0000003f9e2e7000 0x2000             0x0                rw-p   
+0x0000003f9e2e7000 0x0000003f9e31a000 0x33000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libdc1394.so.25.0.0 
+0x0000003f9e31a000 0x0000003f9e31b000 0x1000             0x32000            r--p  /usr/lib/riscv64-linux-gnu/libdc1394.so.25.0.0 
+0x0000003f9e31b000 0x0000003f9e31c000 0x1000             0x33000            rw-p  /usr/lib/riscv64-linux-gnu/libdc1394.so.25.0.0 
+0x0000003f9e31c000 0x0000003f9e35c000 0x40000            0x0                rw-p   
+0x0000003f9e35c000 0x0000003f9e3fe000 0xa2000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libm.so.6 
+0x0000003f9e3fe000 0x0000003f9e3ff000 0x1000             0xa1000            r--p  /usr/lib/riscv64-linux-gnu/libm.so.6 
+0x0000003f9e3ff000 0x0000003f9e400000 0x1000             0xa2000            rw-p  /usr/lib/riscv64-linux-gnu/libm.so.6 
+0x0000003f9e400000 0x0000003f9e6c7000 0x2c7000           0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopencv_imgproc.so.4.10.0 
+0x0000003f9e6c7000 0x0000003f9e6d6000 0xf000             0x2c6000           r--p  /usr/lib/riscv64-linux-gnu/libopencv_imgproc.so.4.10.0 
+0x0000003f9e6d6000 0x0000003f9e6dd000 0x7000             0x2d5000           rw-p  /usr/lib/riscv64-linux-gnu/libopencv_imgproc.so.4.10.0 
+0x0000003f9e6dd000 0x0000003f9e773000 0x96000            0x0                rw-p   
+0x0000003f9e773000 0x0000003f9e7c9000 0x56000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopencv_imgcodecs.so.4.10.0 
+0x0000003f9e7c9000 0x0000003f9e7cd000 0x4000             0x55000            r--p  /usr/lib/riscv64-linux-gnu/libopencv_imgcodecs.so.4.10.0 
+0x0000003f9e7cd000 0x0000003f9e7ce000 0x1000             0x59000            rw-p  /usr/lib/riscv64-linux-gnu/libopencv_imgcodecs.so.4.10.0 
+0x0000003f9e7ce000 0x0000003f9e7ef000 0x21000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgcc_s.so.1 
+0x0000003f9e7ef000 0x0000003f9e7f0000 0x1000             0x20000            r--p  /usr/lib/riscv64-linux-gnu/libgcc_s.so.1 
+0x0000003f9e7f0000 0x0000003f9e7f1000 0x1000             0x21000            rw-p  /usr/lib/riscv64-linux-gnu/libgcc_s.so.1 
+0x0000003f9e7f1000 0x0000003f9e7f3000 0x2000             0x0                rw-p   
+0x0000003f9e7f3000 0x0000003f9e83f000 0x4c000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libgomp.so.1.0.0 
+0x0000003f9e83f000 0x0000003f9e840000 0x1000             0x4b000            r--p  /usr/lib/riscv64-linux-gnu/libgomp.so.1.0.0 
+0x0000003f9e840000 0x0000003f9e841000 0x1000             0x4c000            rw-p  /usr/lib/riscv64-linux-gnu/libgomp.so.1.0.0 
+0x0000003f9e841000 0x0000003f9e8e0000 0x9f000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/libopencv_videoio.so.4.10.0 
+0x0000003f9e8e0000 0x0000003f9e8e4000 0x4000             0x9e000            r--p  /usr/lib/riscv64-linux-gnu/libopencv_videoio.so.4.10.0 
+0x0000003f9e8e4000 0x0000003f9e8e5000 0x1000             0xa2000            rw-p  /usr/lib/riscv64-linux-gnu/libopencv_videoio.so.4.10.0 
+0x0000003f9e8e5000 0x0000003f9e8ea000 0x5000             0x0                rw-p   
+0x0000003f9e8ea000 0x0000003f9e8eb000 0x1000             0x0                rw-s  /dev/shm/tcm_sync_standalone 
+0x0000003f9e8eb000 0x0000003f9e8f2000 0x7000             0x0                r-xp  /usr/lib/libspine_tcm.so.3.0.1 
+0x0000003f9e8f2000 0x0000003f9e8f3000 0x1000             0x6000             r--p  /usr/lib/libspine_tcm.so.3.0.1 
+0x0000003f9e8f3000 0x0000003f9e8f4000 0x1000             0x7000             rw-p  /usr/lib/libspine_tcm.so.3.0.1 
+0x0000003f9e8f4000 0x0000003f9e917000 0x23000            0x0                rw-p   
+0x0000003f9e917000 0x0000003f9e918000 0x1000             0x0                rw-p   
+0x0000003f9e918000 0x0000003f9e91c000 0x4000             0x0                r--p  [vvar] 
+0x0000003f9e91c000 0x0000003f9e91e000 0x2000             0x0                r-xp  [vdso] 
+0x0000003f9e91e000 0x0000003f9e941000 0x23000            0x0                r-xp  /usr/lib/riscv64-linux-gnu/ld-linux-riscv64-lp64d.so.1 
+0x0000003f9e941000 0x0000003f9e943000 0x2000             0x22000            r--p  /usr/lib/riscv64-linux-gnu/ld-linux-riscv64-lp64d.so.1 
+0x0000003f9e943000 0x0000003f9e944000 0x1000             0x24000            rw-p  /usr/lib/riscv64-linux-gnu/ld-linux-riscv64-lp64d.so.1 
+0x0000003f9e944000 0x0000003f9e945000 0x1000             0x0                rw-p   
+0x0000003fc4258000 0x0000003fc4279000 0x21000            0x0                rw-p  [stack] 
+
+Thread 24 (Thread 0x3f6e43f180 (LWP 25967) "bench-system"):
+#0  0x0000003f9c27a46c in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 23 (Thread 0x3f6ec40180 (LWP 25966) "bench-system"):
+#0  0x0000003f9c27a46c in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 22 (Thread 0x3f6f441180 (LWP 25965) "bench-system"):
+#0  0x0000003f9c27a460 in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 21 (Thread 0x3f6fc42180 (LWP 25964) "bench-system"):
+#0  0x0000003f9c27a468 in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 20 (Thread 0x3f70443180 (LWP 25963) "bench-system"):
+#0  0x0000003f9c27a470 in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 19 (Thread 0x3f70c44180 (LWP 25962) "bench-system"):
+#0  0x0000003f9c27a46c in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 18 (Thread 0x3f71445180 (LWP 25961) "bench-system"):
+#0  0x0000003f9c7fb78e in void mlir::speir::spekernel::ime2::spe_direct_conv2d<_Float16, _Float16, _Float16, mlir::speir::spekernel::spe_kernel_block_m16n32k8, 1ul, 3ul, 3ul, 1ul, 1ul, 1ul, 1ul, 136ul>(void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 4ul> const&, void*, long, std::array<long, 3ul> const&, long, long, long, long, long, long, long, void*) () at /usr/lib/libspacemit_ep.so.2
+#1  0x0000003f9c682b0e in void onnxruntime::spacemit::ComputeDirectConv2DBlockThreaded<onnxruntime::spacemit::SpineConv2DDispatchDirectConv, (onnxruntime::spacemit::DirectConvScheduleType)0>(onnxruntime::spacemit::SpineComputeContext*, onnxruntime::spacemit::SpineComputeDispatch*, onnxruntime::spacemit::BlockPtr<4ul>&, onnxruntime::spacemit::BlockPtr<2ul>&, onnxruntime::spacemit::BlockPtr<4ul>&, long, long, long, long, long, long, long, long, void*, void*, void*) () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c67d456 in onnxruntime::spacemit::SpineConv2DDispatchDirectConv::operator()(onnxruntime::spacemit::SpineComputeContext*, onnxruntime::spacemit::SpineOperatorPackedTensor*, long, onnxruntime::spacemit::SpineOperatorPackedTensor*, long, void*, void*) () at /usr/lib/libspacemit_ep.so.2
+#3  0x0000003f9c6db296 in ??? () at /usr/lib/libspacemit_ep.so.2
+
+Thread 17 (Thread 0x3f71c46180 (LWP 25960) "bench-system"):
+#0  0x0000003f9c27a46c in spert::detail::barrier_coro(spert::detail::Tile*, spert::detail::Barrier*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6db2b2 in ??? () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c26dfac in spert::detail::tile_trampoline() () at /usr/lib/libspert.so.1
+#3  0x0000003f9c26df92 in ??? () at /usr/lib/libspert.so.1
+
+Thread 16 (Thread 0x3f729e7180 (LWP 25957) "av:vp8:df7"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 15 (Thread 0x3f731e8180 (LWP 25956) "av:vp8:df6"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 14 (Thread 0x3f739e9180 (LWP 25955) "av:vp8:df5"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 13 (Thread 0x3f741ea180 (LWP 25954) "av:vp8:df4"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 12 (Thread 0x3f749eb180 (LWP 25953) "av:vp8:df3"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 11 (Thread 0x3f751ec180 (LWP 25952) "av:vp8:df2"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 10 (Thread 0x3f759ed180 (LWP 25951) "av:vp8:df1"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 9 (Thread 0x3f761ee180 (LWP 25950) "av:vp8:df0"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=1, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x1, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x1, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 8 (Thread 0x3f76de8180 (LWP 25949) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 7 (Thread 0x3f775e9180 (LWP 25948) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 6 (Thread 0x3f77dea180 (LWP 25947) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 5 (Thread 0x3f785eb180 (LWP 25946) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 4 (Thread 0x3f78dec180 (LWP 25945) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 3 (Thread 0x3f795ed180 (LWP 25944) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 2 (Thread 0x3f79dee180 (LWP 25943) "bench-system"):
+#0  __syscall_cancel_arch () at ../sysdeps/unix/sysv/linux/riscv/syscall_cancel.S:54
+#1  0x0000003f9caef540 in __internal_syscall_cancel (a1=a1@entry=0, a2=<optimized out>, a3=<optimized out>, a4=a4@entry=0, a5=a5@entry=0, a6=a6@entry=4294967295, nr=nr@entry=98) at ./nptl/cancellation.c:49
+#2  0x0000003f9caef802 in __futex_abstimed_wait_common64 (private=0, futex_word=0x0, expected=<optimized out>, op=393, abstime=0x0, cancel=true) at ./nptl/futex-internal.c:57
+#3  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x0, expected=<optimized out>, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=true) at ./nptl/futex-internal.c:87
+
+Thread 1 (Thread 0x3f89f4b040 (LWP 25931) "bench-system"):
+#0  0x0000003f9c27057e in spert::detail::sync_impl(spert::detail::Future*) () at /usr/lib/libspert.so.1
+#1  0x0000003f9c6e73aa in onnxruntime::spacemit::SpineGraphExecutor::Predict(std::unordered_map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, onnxruntime::spacemit::OnnxTensorData, std::hash<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::equal_to<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, onnxruntime::spacemit::OnnxTensorData> > > const&) () at /usr/lib/libspacemit_ep.so.2
+#2  0x0000003f9c525300 in ??? () at /usr/lib/libspacemit_ep.so.2
+#3  0x0000003f9c526674 in ??? () at /usr/lib/libspacemit_ep.so.2

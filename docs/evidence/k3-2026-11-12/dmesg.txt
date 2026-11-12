@@ -1,0 +1,1456 @@
+[    0.000000] Booting Linux on hartid 0
+[    0.000000] Linux version 6.18.3-generic (root@bianbu-26.04-build-bsp-new-ctqdw-nqb41) (gcc (Bianbu 15.2.0-16ubuntu1bb5) 15.2.0, GNU ld (GNU Binutils for Bianbu) 2.46) #1.0.10.4 SMP PREEMPT_DYNAMIC Fri Oct 16 12:04:02 CST 2026
+[    0.000000] random: crng init done
+[    0.000000] Machine model: SpacemiT K3 CoM260 IFX
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10006
+[    0.000000] SBI TIME extension detected
+[    0.000000] SBI IPI extension detected
+[    0.000000] SBI RFENCE extension detected
+[    0.000000] SBI SRST extension detected
+[    0.000000] SBI DBCN extension detected
+[    0.000000] earlycon: sbi0 at I/O port 0x0 (options '')
+[    0.000000] printk: legacy bootconsole [sbi0] enabled
+[    0.000000] efi: UEFI not found.
+[    0.000000] Reserved memory: created CMA memory pool at 0x0000000140000000, size 512 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x0000000140000000..0x000000015fffffff (524288 KiB) map reusable linux,cma
+[    0.000000] OF: reserved mem: 0x00000003fe000000..0x00000003ffffffff (32768 KiB) map non-reusable framebuffer@3,fe000000
+[    0.000000] OF: reserved mem: 0x00000000d4282000..0x00000000d4282fff (4 KiB) nomap non-reusable mmode_resv0@d4282000
+[    0.000000] OF: reserved mem: 0x0000000100000000..0x00000001000fffff (1024 KiB) nomap non-reusable mmode_resv1@1,0
+[    0.000000] OF: reserved mem: 0x0000000100800000..0x0000000100bfffff (4096 KiB) nomap non-reusable mmode_resv5@1,800000
+[    0.000000] OF: reserved mem: 0x0000000100200000..0x00000001003fffff (2048 KiB) nomap non-reusable rcpu0_pwr@100200000
+[    0.000000] OF: reserved mem: 0x0000000100400000..0x00000001005fffff (2048 KiB) nomap non-reusable rcpu0_heap@100400000
+[    0.000000] OF: reserved mem: 0x00000000c0876000..0x00000000c0878fff (12 KiB) nomap non-reusable vdev0vring0@c0876000
+[    0.000000] OF: reserved mem: 0x00000000c0879000..0x00000000c087bfff (12 KiB) nomap non-reusable vdev0vring1@c0879000
+[    0.000000] OF: reserved mem: 0x00000000c087c000..0x00000000c087ffff (16 KiB) nomap non-reusable rcpu0_misc-used@c087c000
+[    0.000000] Reserved memory: created DMA memory pool at 0x0000000100600000, size 0 MiB
+[    0.000000] OF: reserved mem: initialized node vdev0buffer@100600000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x0000000100600000..0x00000001006fbfff (1008 KiB) nomap non-reusable vdev0buffer@100600000
+[    0.000000] OF: reserved mem: 0x00000001006fc000..0x00000001006fffff (16 KiB) nomap non-reusable rcpu0_rsc_table@1006fc000
+[    0.000000] OF: reserved mem: 0x0000000100800000..0x00000001009fffff (2048 KiB) nomap non-reusable rcpu1_runtime@100800000
+[    0.000000] OF: reserved mem: 0x0000000100a00000..0x0000000100bfffff (2048 KiB) nomap non-reusable rcpu1_heap@100a00000
+[    0.000000] OF: reserved mem: 0x00000000c086c000..0x00000000c086efff (12 KiB) nomap non-reusable vdev0vring0@c086c000
+[    0.000000] OF: reserved mem: 0x00000000c086f000..0x00000000c0871fff (12 KiB) nomap non-reusable vdev0vring1@c086f000
+[    0.000000] OF: reserved mem: 0x00000000c0872000..0x00000000c0875fff (16 KiB) nomap non-reusable rcpu1_misc-used@c0872000
+[    0.000000] OF: reserved mem: 0x00000000c0868000..0x00000000c086bfff (16 KiB) nomap non-reusable sram_for_tcm@c0868000
+[    0.000000] Reserved memory: created DMA memory pool at 0x0000000100c00000, size 0 MiB
+[    0.000000] OF: reserved mem: initialized node vdev0buffer@100c00000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x0000000100c00000..0x0000000100cfbfff (1008 KiB) nomap non-reusable vdev0buffer@100c00000
+[    0.000000] OF: reserved mem: 0x0000000100cfc000..0x0000000100cfffff (16 KiB) nomap non-reusable rcpu1_rsc_table@100cfc000
+[    0.000000] OF: reserved mem: 0x0000000100e00000..0x0000000100e03fff (16 KiB) nomap non-reusable rpmi0@100e00000
+[    0.000000] OF: reserved mem: 0x0000000100d00000..0x0000000100dfffff (1024 KiB) nomap non-reusable rcpu_dtb_table@100d00000
+[    0.000000] OF: reserved mem: 0x0000000100700000..0x00000001007853ff (533 KiB) nomap non-reusable hibernation_nomap@100700000
+[    0.000000] OF: reserved mem: 0x0000000100f00000..0x0000000101afffff (12288 KiB) nomap non-reusable hibernation_snap_rcpu@100f00000
+[    0.000000] Reserved memory: created DMA memory pool at 0x0000000101b00000, size 2 MiB
+[    0.000000] OF: reserved mem: initialized node dpu_reserved@101b00000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x0000000101b00000..0x0000000101d7ffff (2560 KiB) nomap non-reusable dpu_reserved@101b00000
+[    0.000000] Reserved memory: created DMA memory pool at 0x0000000101d80000, size 2 MiB
+[    0.000000] OF: reserved mem: initialized node dpu_reserved1@101d80000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x0000000101d80000..0x0000000101ffffff (2560 KiB) nomap non-reusable dpu_reserved1@101d80000
+[    0.000000] OF: reserved mem: OVERLAP DETECTED!
+               rcpu1_runtime@100800000 (0x0000000100800000--0x0000000100a00000) overlaps with mmode_resv5@1,800000 (0x0000000100800000--0x0000000100c00000)
+[    0.000000] OF: reserved mem: OVERLAP DETECTED!
+               mmode_resv5@1,800000 (0x0000000100800000--0x0000000100c00000) overlaps with rcpu1_heap@100a00000 (0x0000000100a00000--0x0000000100c00000)
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000102000000-0x00000004ffffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000102000000-0x00000004ffffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000102000000-0x00000004ffffffff]
+[    0.000000] On node 0, zone Normal: 8192 pages in unavailable ranges
+[    0.000000] SBI HSM extension detected
+[    0.000000] riscv: base ISA extensions acdfhimv
+[    0.000000] riscv: ELF capabilities acdfimv
+[    0.000000] Ticket spinlock: enabled
+[    0.000000] percpu: Embedded 52 pages/cpu s88600 r8192 d116200 u212992
+[    0.000000] pcpu-alloc: s88600 r8192 d116200 u212992 alloc=52*4096
+[    0.000000] pcpu-alloc: [0] 00 [0] 01 [0] 02 [0] 03 [0] 04 [0] 05 [0] 06 [0] 07 
+[    0.000000] pcpu-alloc: [0] 08 [0] 09 [0] 10 [0] 11 [0] 12 [0] 13 [0] 14 [0] 15 
+[    0.000000] Kernel command line: plymouth.prefer-fbcon plymouth.ignore-serial-consoles splash loglevel=8 mtdparts=d420c000.spi:128K@0(bootinfo),512K@128K(fsbl),64K@640K(env),1M@704K(esos),384K@1728K(opensbi),-@2112K(uboot) rootfstype=ext4 root=PARTUUID=5c9a249f-0b91-4c81-bde3-12662396d675 bootfs=PARTUUID=4e356a9e-cfbc-40c0-bbdc-0f321fc793f8 boot_mode=nor earlycon=sbi console=ttyS0,115200 random.trust_bootloader=1 unaligned_scalar_speed=fast unaligned_vector_speed=fast
+[    0.000000] Unknown kernel command line parameters "splash bootfs=PARTUUID=4e356a9e-cfbc-40c0-bbdc-0f321fc793f8 boot_mode=nor", will be passed to user space.
+[    0.000000] printk: log buffer data + meta data: 131072 + 458752 = 589824 bytes
+[    0.000000] Dentry cache hash table entries: 2097152 (order: 12, 16777216 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 1048576 (order: 11, 8388608 bytes, linear)
+[    0.000000] software IO TLB: SWIOTLB bounce buffer size adjusted to 15MB
+[    0.000000] software IO TLB: area num 16.
+[    0.000000] software IO TLB: mapped [mem 0x00000004ec2c0000-0x00000004ed2c0000] (16MB)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 4186112
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:on, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=16, Nodes=1
+
+[    0.000000] **********************************************************
+[    0.000000] **   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **
+[    0.000000] **                                                      **
+[    0.000000] ** trace_printk() being used. Allocating extra memory.  **
+[    0.000000] **                                                      **
+[    0.000000] ** This means that this is a DEBUG kernel and it is     **
+[    0.000000] ** unsafe for production use.                           **
+[    0.000000] **                                                      **
+[    0.000000] ** If you see this message and you are not debugging    **
+[    0.000000] ** the kernel, report this immediately to your vendor!  **
+[    0.000000] **                                                      **
+[    0.000000] **   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **
+[    0.000000] **********************************************************
+[    0.000000] Dynamic Preempt: voluntary
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] 	Trampoline variant of Tasks RCU enabled.
+[    0.000000] 	Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] RCU Tasks: Setting shift to 4 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=16.
+[    0.000000] RCU Tasks Trace: Setting shift to 4 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=16.
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] riscv-intc: 64 local interrupts mapped using AIA
+[    0.000000] riscv-imsic: interrupt-controller@e0400000: providing IPIs using interrupt 1
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+[    0.000000] sched_clock: 64 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+[    0.007985] riscv-timer: Timer interrupt in S-mode is available via sstc extension
+[    0.015811] init_sbi_dbtr: mcontrol6 trigger available.
+[    0.020836] Console: colour dummy device 80x25
+[    0.025207] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=96000)
+[    0.035419] pid_max: default: 32768 minimum: 301
+[    0.040109] LSM: initializing lsm=capability,landlock,apparmor
+[    0.045950] landlock: Up and running.
+[    0.049671] AppArmor: AppArmor initialized
+[    0.053652] Mount-cache hash table entries: 32768 (order: 6, 262144 bytes, linear)
+[    0.061131] Mountpoint-cache hash table entries: 32768 (order: 6, 262144 bytes, linear)
+[    0.071219] riscv: ELF compat mode unsupported
+[    0.071234] ASID allocator using 16 bits (65536 entries)
+[    0.078884] rcu: Hierarchical SRCU implementation.
+[    0.083598] rcu: 	Max phase no-delay instances is 1000.
+[    0.088916] Timer migration: 2 hierarchy levels; 8 children per group; 2 crossnode level
+[    0.097213] EFI services will not be available.
+[    0.101701] smp: Bringing up secondary CPUs ...
+[    0.118583] smp: Brought up 1 node, 16 CPUs
+[    0.120519] Memory: 15747000K/16744448K available (16803K kernel code, 6279K rwdata, 8192K rodata, 2446K init, 571K bss, 432996K reserved, 524288K cma-reserved)
+[    0.136101] devtmpfs: initialized
+[    0.154834] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.161664] posixtimers hash table entries: 8192 (order: 5, 131072 bytes, linear)
+[    0.169198] futex hash table entries: 4096 (262144 bytes on 1 NUMA nodes, total 256 KiB, linear).
+[    0.180139] pinctrl core: initialized pinctrl subsystem
+[    0.184528] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.189887] DMA: preallocated 2048 KiB GFP_KERNEL pool for atomic allocations
+[    0.196207] audit: initializing netlink subsys (disabled)
+[    0.201688] audit: type=2000 audit(0.124:1): state=initialized audit_enabled=0 res=1
+[    0.201849] display class register
+[    0.212764] thermal_sys: Registered thermal governor 'step_wise'
+[    0.213395] riscv-sdtrig: Writing 'PID' to scontext CSR is enabled
+[    0.224869] scalar unaligned access speed set to 'fast' (3) by command line
+[    0.231775] vector unaligned access speed set to 'fast' (3) by command line
+[    0.238718] suspend: SBI SUSP extension detected
+[    0.243320] arch_hw_breakpoint_init: total number of type 6 triggers: 3
+[    0.249924] CPU 0: HW Breakpoint shared memory registered.
+[    0.255395] CPU 1: HW Breakpoint shared memory registered.
+[    0.260863] CPU 2: HW Breakpoint shared memory registered.
+[    0.266336] CPU 3: HW Breakpoint shared memory registered.
+[    0.271806] CPU 4: HW Breakpoint shared memory registered.
+[    0.277276] CPU 5: HW Breakpoint shared memory registered.
+[    0.282744] CPU 6: HW Breakpoint shared memory registered.
+[    0.288213] CPU 7: HW Breakpoint shared memory registered.
+[    0.293687] CPU 8: HW Breakpoint shared memory registered.
+[    0.299157] CPU 9: HW Breakpoint shared memory registered.
+[    0.304626] CPU 10: HW Breakpoint shared memory registered.
+[    0.310181] CPU 11: HW Breakpoint shared memory registered.
+[    0.315740] CPU 12: HW Breakpoint shared memory registered.
+[    0.321293] CPU 13: HW Breakpoint shared memory registered.
+[    0.326847] CPU 14: HW Breakpoint shared memory registered.
+[    0.332403] CPU 15: HW Breakpoint shared memory registered.
+[    0.368099] HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.371943] HugeTLB: 16380 KiB vmemmap can be freed for a 1.00 GiB page
+[    0.378536] HugeTLB: registered 64.0 KiB page size, pre-allocated 0 pages
+[    0.385305] HugeTLB: 0 KiB vmemmap can be freed for a 64.0 KiB page
+[    0.391557] HugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.398325] HugeTLB: 28 KiB vmemmap can be freed for a 2.00 MiB page
+[    0.472700] raid6: rvvx1    gen() 17447 MB/s
+[    0.540733] raid6: rvvx2    gen() 18651 MB/s
+[    0.608767] raid6: rvvx4    gen() 18294 MB/s
+[    0.676800] raid6: rvvx8    gen() 18083 MB/s
+[    0.744839] raid6: int64x8  gen()  3667 MB/s
+[    0.812872] raid6: int64x4  gen()  4210 MB/s
+[    0.880905] raid6: int64x2  gen()  3401 MB/s
+[    0.948936] raid6: int64x1  gen()  2523 MB/s
+[    0.950250] raid6: using algorithm rvvx2 gen() 18651 MB/s
+[    1.023668] raid6: .... xor() 11806 MB/s, rmw enabled
+[    1.025762] raid6: using rvv recovery algorithm
+[    1.031005] iommu: Default domain type: Translated
+[    1.035050] iommu: DMA domain TLB invalidation policy: strict mode
+[    1.042023] SCSI subsystem initialized
+[    1.045065] libata version 3.00 loaded.
+[    1.048929] usbcore: registered new interface driver usbfs
+[    1.054266] usbcore: registered new interface driver hub
+[    1.059564] usbcore: registered new device driver usb
+[    1.064668] mc: Linux media interface: v0.10
+[    1.068849] videodev: Linux video capture interface: v2.00
+[    1.074342] pps_core: LinuxPPS API ver. 1 registered
+[    1.079238] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    1.088358] PTP clock support registered
+[    1.092543] Advanced Linux Sound Architecture Driver Initialized.
+[    1.098863] NetLabel: Initializing
+[    1.101717] NetLabel:  domain hash size = 128
+[    1.106062] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    1.111745] NetLabel:  unlabeled traffic allowed by default
+[    1.117411] mctp: management component transport protocol core
+[    1.123081] NET: Registered PF_MCTP protocol family
+[    1.128046] vgaarb: loaded
+[    1.130980] clocksource: Switched to clocksource riscv_clocksource
+[    1.138964] VFS: Disk quotas dquot_6.6.0
+[    1.140721] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    1.148038] AppArmor: AppArmor Filesystem Enabled
+[    1.155912] NET: Registered PF_INET protocol family
+[    1.158035] IP idents hash table entries: 262144 (order: 9, 2097152 bytes, linear)
+[    1.171609] tcp_listen_portaddr_hash hash table entries: 8192 (order: 5, 131072 bytes, linear)
+[    1.177331] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    1.185103] TCP established hash table entries: 131072 (order: 8, 1048576 bytes, linear)
+[    1.193471] TCP bind hash table entries: 65536 (order: 9, 2097152 bytes, linear)
+[    1.200929] TCP: Hash tables configured (established 131072 bind 65536)
+[    1.207244] MPTCP token hash table entries: 16384 (order: 7, 393216 bytes, linear)
+[    1.214728] UDP hash table entries: 8192 (order: 7, 524288 bytes, linear)
+[    1.221547] UDP-Lite hash table entries: 8192 (order: 7, 524288 bytes, linear)
+[    1.228865] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    1.234244] NET: Registered PF_XDP protocol family
+[    1.239000] PCI: CLS 0 bytes, default 64
+[    1.243053] Unpacking initramfs...
+[    1.244105] Initialise system trusted keyrings
+[    1.250824] workingset: timestamp_bits=46 max_order=22 bucket_order=0
+[    1.257807] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    1.263220] fuse: init (API version 7.45)
+[    1.290117] xor: measuring software checksum speed
+[    1.292341]    8regs           :  8794 MB/sec
+[    1.296677]    32regs          :  8836 MB/sec
+[    1.300966]    rvv             : 10222 MB/sec
+[    1.304984] xor: using function: rvv (10222 MB/sec)
+[    1.309857] Key type asymmetric registered
+[    1.313930] Asymmetric key parser 'x509' registered
+[    1.318864] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 240)
+[    1.326296] io scheduler mq-deadline registered
+[    1.336147] riscv-imsic: interrupt-controller@e0400000:  hart-index-bits: 4,  guest-index-bits: 6
+[    1.342090] riscv-imsic: interrupt-controller@e0400000: group-index-bits: 0, group-index-shift: 24
+[    1.351024] riscv-imsic: interrupt-controller@e0400000: per-CPU IDs 511 at base address 0x00000000e0400000
+[    1.360659] riscv-imsic: interrupt-controller@e0400000: total 8160 interrupts available
+[    1.369144] riscv-aplic e0804000.interrupt-controller: 512 interrupts forwarded to MSI base 0x00000000e0400000
+[    1.379767] OF: /soc/phy@81f00000: Read of boolean property 'combo-usb-bit' with a value.
+[    1.393879] spacemit-reboot c087c000.reboot-mode-helper: initializing...
+[    1.398493] Serial: 8250/16550 driver, 17 ports, IRQ sharing disabled
+[    1.407721] [drm] spacemit_drm_probe()
+[    1.408655] [drm] spacemit_drm_probe()
+[    1.412514] [drm] spacemit_dsi_probe()
+[    1.416599] [drm] dphy driver probe success
+[    1.434285] loop: module loaded
+[    1.434835] tcm 0.tcm: direct mmap phys 0x0 size 0x300000 block_size 0x60000 block_num 8 via /dev/tcm
+[    1.444792] Rounding down aligned max_sectors from 4294967295 to 4294967288
+[    1.450738] db_root: cannot open: /etc/target
+[    1.456117] tun: Universal TUN/TAP device driver, 1.6
+[    1.460658] EtherCAT: 1 master waiting for devices.
+[    1.464992] usbcore: registered new interface driver ax88179_178a
+[    1.470978] usbcore: registered new interface driver cdc_ether
+[    1.476785] usbcore: registered new interface driver cdc_ncm
+[    1.482600] VFIO - User Level meta-driver version: 0.3
+[    1.488158] usbcore: registered new interface driver uas
+[    1.492846] usbcore: registered new interface driver usb-storage
+[    1.498823] usbcore: registered new device driver onboard-usb-dev
+[    1.505660] i2c_dev: i2c /dev entries driver
+[    1.509472] IR NEC protocol handler initialized
+[    1.514116] d420a800.csiphy probed
+[    1.514165] d4206000.csiphy probed
+[    1.517322] spacemit_ccic d420a800.cam_ccic: found endpoint id 0 lanes 0 mipi_mbps 0
+[    1.528159] spacemit_ccic d420a800.cam_ccic: active endpoint csi lanes 0 mipi_mbps 0
+[    1.535878] spacemit_ccic d420a800.cam_ccic: remote default csi lanes 2 mipi_mbps 0
+[    1.536114] Freeing initrd memory: 39016K
+[    1.543522] spacemit_ccic d420a800.cam_ccic: found endpoint id 1 lanes 0 mipi_mbps 0
+[    1.543554] spacemit_ccic d420a800.cam_ccic: active endpoint csi lanes 0 mipi_mbps 0
+[    1.562957] spacemit_ccic d420a800.cam_ccic: remote default csi lanes 4 mipi_mbps 0
+[    1.570917] rsvd_phy_addr=0x10ea68040 size=4096
+[    1.580011] ccic mmu tbl size alloc:3145728 needed:3145728
+[    1.581587] d420a800.cam_ccic probed
+[    1.587282] spacemit_ccic d4206000.cam_ccic: found endpoint id 0 lanes 0 mipi_mbps 0
+[    1.598358] spacemit_ccic d4206000.cam_ccic: active endpoint csi lanes 0 mipi_mbps 0
+[    1.606077] spacemit_ccic d4206000.cam_ccic: remote default csi lanes 2 mipi_mbps 0
+[    1.613722] spacemit_ccic d4206000.cam_ccic: found endpoint id 1 lanes 0 mipi_mbps 0
+[    1.621761] d4206000.cam_ccic probed
+[    1.622033] d420f000.cam_ccic_dma probed
+[    1.625137] usbcore: registered new interface driver uvcvideo
+[    1.635136] System boots up not because of SoC watchdog reset.
+[    1.647150] device-mapper: ioctl: 4.50.0-ioctl (2025-04-28) initialised: dm-devel@lists.linux.dev
+[    1.653297] sdhci: Secure Digital Host Controller Interface driver
+[    1.659248] sdhci: Copyright(c) Pierre Ossman
+[    1.663581] sdhci-pltfm: SDHCI platform and OF driver helper
+[    1.669551] Timer 0: loop_delay_fastclk is 26
+[    1.669801] ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
+[    1.673825] hid: raw HID events driver (C) Jiri Kosina
+[    1.684674] ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find vcc-supply regulator, assuming enabled
+[    1.684679] ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find vccq-supply regulator, assuming enabled
+[    1.684682] ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
+[    1.689937] usbcore: registered new interface driver usbhid
+[    1.727904] usbhid: USB HID core driver
+[    1.733167] riscv-sbi-mpxy-mbox soc:mpxy_mbox@0: mailbox registered with 5 channels
+[    1.740502] remoteproc remoteproc0: rcpu_rproc1 is available
+[    1.744768] ufshcd-spacemit c0e00000.ufshc: UniPro v1.6 init completed
+[    1.745066] remoteproc remoteproc0: attaching to rcpu_rproc1
+[    1.757605] rproc-virtio rproc-virtio.0.auto: vdev 0 buffer already mapped
+[    1.765039] virtio_rpmsg_bus virtio0: rpmsg host is online
+[    1.769496] rproc-virtio rproc-virtio.0.auto: registered virtio0 (type 7)
+[    1.773678] virtio_rpmsg_bus virtio0: creating channel adma-service addr 0x400
+[    1.776255] remoteproc remoteproc0: remote processor rcpu_rproc1 is now attached
+[    1.783536] adma_spacemit virtio0.adma-service.-1.1024: new channel: 0x400 -> 0x400!
+[    1.791065] riscv-pmu-sbi: SBI PMU extension is available
+[    1.798564] adma_spacemit virtio0.adma-service.-1.1024: rpmsg service 'adma-service' registered
+[    1.803961] riscv-pmu-sbi: 16 firmware and 18 hardware counters
+[    1.812639] virtio_rpmsg_bus virtio0: creating channel rpmsg-tty addr 0x401
+[    1.825886]  cs_system_cfg: CoreSight Configuration manager initialised
+[    1.843630] usbcore: registered new interface driver snd-usb-audio
+[    1.847864] NET: Registered PF_INET6 protocol family
+[    1.852517] Segment Routing with IPv6
+[    1.855700] In-situ OAM (IOAM) with IPv6
+[    1.859402] NET: Registered PF_PACKET protocol family
+[    1.870703] NET: Registered PF_RXRPC protocol family
+[    1.872794] Key type rxrpc registered
+[    1.876368] Key type rxrpc_s registered
+[    1.880465] Key type dns_resolver registered
+[    1.892318] Loading compiled-in X.509 certificates
+[    1.908413] Key type .fscrypt registered
+[    1.909383] Key type fscrypt-provisioning registered
+[    1.915493] Btrfs loaded, zoned=yes, fsverity=yes
+[    1.919075] AppArmor: AppArmor sha256 policy hashing enabled
+[    1.952647] v2d irq num = 35
+[    1.954120] probe v2d driver done!
+[    1.957943] spacemit,k3-usb3-phy cad30000.phy: Using orientation-switch mode, flip: 0
+[    1.963859] OF: /soc/phy@81f00000: Read of boolean property 'combo-usb-bit' with a value.
+[    1.972809] k1-pinctrl d401e000.pinctrl: Wake-up interrupt initialized (IRQ 38)
+[    1.980579] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    1.988400] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    1.997182] gpio gpiochip2: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    2.006029] gpio gpiochip3: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    2.015338] spacemit-k1-pcie 80000000.pcie: iommu bypassed
+[    2.015502] spacemit-k1-pcie 80c00000.pcie: host bridge /soc/pcie@80c00000 ranges:
+[    2.015617] spacemit-k1-pcie 81000000.pcie: host bridge /soc/pcie@81000000 ranges:
+[    2.015641] spacemit-k1-pcie 81000000.pcie:       IO 0x12c0010000..0x12c010ffff -> 0x0000000000
+[    2.015658] spacemit-k1-pcie 81000000.pcie:      MEM 0x12c0110000..0x12ffffffff -> 0x00c0110000
+[    2.015668] spacemit-k1-pcie 81000000.pcie:      MEM 0x1300000000..0x13ffffffff -> 0x1300000000
+[    2.015923] mmp-pdma d4000000.pdma: initialized 16 channels
+[    2.017776] spacemit,k3-pcie-phy 82200000.phy-pcie: waiting PLL lock...
+[    2.018710] spacemit-socinfo soc:socinfo@0: Spacemit: CPU[K3-6370-V1B] REV[A] DRO[208] Detected
+[    2.018988] input: soc:pwrkey_monitor@1101 as /devices/platform/soc/soc:pwrkey_monitor@1101/input/input0
+[    2.020195] spacemit-k1-pcie 80000000.pcie: host bridge /soc/pcie@80000000 ranges:
+[    2.027695] spacemit-k1-pcie 80c00000.pcie:       IO 0x1280010000..0x128010ffff -> 0x0000010000
+[    2.035243] spacemit-k1-pcie 80000000.pcie:       IO 0x1100010000..0x110010ffff -> 0x0000010000
+[    2.043920] spacemit-k1-pcie 80c00000.pcie:      MEM 0x1280110000..0x12bfffffff -> 0x0080110000
+[    2.052609] spacemit-k1-pcie 80000000.pcie:      MEM 0x1100110000..0x117fffffff -> 0x0000110000
+[    2.061274] spacemit-k1-pcie 80c00000.pcie:      MEM 0x1400000000..0x14ffffffff -> 0x1400000000
+[    2.066831] spacemit-k1-pcie 80000000.pcie:      MEM 0x1800000000..0x18ffffffff -> 0x1800000000
+[    2.075588] spacemit,k3-pcie-phy 82100000.phy-pcie: waiting PLL lock...
+[    2.075985] spacemit,k3-pcie-phy 82200000.phy-pcie: PHY PLL Locked.
+[    2.078386] printk: legacy console [ttyS0] disabled
+[    2.080013] scsi host0: ufshcd
+[    2.081558] scsi 0:0:0:49488: Well-known LUN    KINGSTON TY7B-128         0004 PQ: 0 ANSI: 6
+[    2.084209] spacemit,k3-pcie-phy 81d00000.phy-pcie: waiting PLL lock...
+[    2.086919] scsi 0:0:0:49476: Well-known LUN    KINGSTON TY7B-128         0004 PQ: 0 ANSI: 6
+[    2.091566] spacemit,k3-pcie-phy 82100000.phy-pcie: PHY PLL Locked.
+[    2.091643] ufshcd-spacemit c0e00000.ufshc: ufshcd_scsi_add_wlus: BOOT WLUN not found
+[    2.092287] scsi 0:0:0:0: Direct-Access     KINGSTON TY7B-128         0004 PQ: 0 ANSI: 6
+[    2.097455] sd 0:0:0:0: [sda] 31266816 4096-byte logical blocks: (128 GB/119 GiB)
+[    2.097599] sd 0:0:0:0: [sda] Write Protect is off
+[    2.097605] sd 0:0:0:0: [sda] Mode Sense: 00 32 00 10
+[    2.097694] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+[    2.097736] sd 0:0:0:0: [sda] Preferred minimum I/O size 524288 bytes
+[    2.097742] sd 0:0:0:0: [sda] Optimal transfer size 524288 bytes
+[    2.099121] spacemit,k3-pcie-phy 81d00000.phy-pcie: PHY PLL Locked.
+[    2.176023] spacemit-k1-pcie 81000000.pcie: iATU: unroll T, 16 ob, 16 ib, align 64K, limit 4G
+[    2.180376] spacemit,k3-pcie-phy 81e00000.phy-pcie: waiting PLL lock...
+[    2.187314] spacemit-k1-pcie 81000000.pcie: PCI host bridge to bus 0004:00
+[    2.195383] spacemit,k3-pcie-phy 81e00000.phy-pcie: PHY PLL Locked.
+[    2.207828] spacemit-k1-pcie 80c00000.pcie: iATU: unroll T, 16 ob, 16 ib, align 64K, limit 4G
+[    2.209453] pci_bus 0004:00: root bus resource [bus 00-ff]
+[    2.295438] spacemit-k1-pcie 80000000.pcie: iATU: unroll T, 31 ob, 31 ib, align 64K, limit 4G
+[    2.298687] pci_bus 0004:00: root bus resource [io  0x0000-0xfffff]
+[    2.318913] pci_bus 0004:00: root bus resource [mem 0x12c0110000-0x12ffffffff] (bus address [0xc0110000-0xffffffff])
+[    2.318918] pci_bus 0004:00: root bus resource [mem 0x1300000000-0x13ffffffff pref]
+[    2.318945] pci 0004:00:00.0: [201f:0002] type 01 class 0x060400 PCIe Root Port
+[    2.329419] d4017000.serial: ttyS0 at MMIO 0xd4017000 (irq = 45, base_baud = 921600) is a XScale
+[    2.336799]  sda: sda1 sda2 sda3
+[    2.337065] pci 0004:00:00.0: PCI bridge to [bus 01-ff]
+[    2.337097] sd 0:0:0:0: [sda] Attached SCSI disk
+[    2.366136] pci 0004:00:00.0:   bridge window [io  0x0000-0x0fff]
+[    2.366142] pci 0004:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
+[    2.378984] pci 0004:00:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+[    2.379047] pci 0004:00:00.0: supports D1
+[    2.390700] pci 0004:00:00.0: PME# supported from D0 D1 D3hot D3cold
+[    2.395186] pci 0004:01:00.0: [10ec:b852] type 00 class 0x028000 PCIe Endpoint
+[    2.404254] printk: legacy console [ttyS0] enabled
+[    2.404428] pci 0004:01:00.0: BAR 0 [io  0x0000-0x00ff]
+[    2.409223] printk: legacy bootconsole [sbi0] disabled
+[    2.414445] pci 0004:01:00.0: BAR 2 [mem 0x00000000-0x000fffff 64bit]
+[    2.447630] pci 0004:01:00.0: PME# supported from D0 D3hot D3cold
+[    2.447669] [drm] spacemit_dpu_probe()
+[    2.457347] [drm] dpu_parse_dt, read bitclk failed from dts!
+[    2.459037] pci 0004:01:00.0: ASPM: default states L0s
+[    2.462966] [drm] can not get lcd lpm commit qos value
+[    2.468169] pci_bus 0004:01: busn_res: [bus 01-ff] end is updated to 01
+[    2.473196] [drm] can not get lcd bl lpm qos value
+[    2.479812] pci 0004:00:00.0: bridge window [mem 0x12c0200000-0x12c02fffff]: assigned
+[    2.479889] spacemit-k1-pcie 80c00000.pcie: PCI host bridge to bus 0003:00
+[    2.479898] pci_bus 0003:00: root bus resource [bus 00-ff]
+[    2.479904] pci_bus 0003:00: root bus resource [io  0x100000-0x1fffff] (bus address [0x10000-0x10ffff])
+[    2.479909] pci_bus 0003:00: root bus resource [mem 0x1280110000-0x12bfffffff] (bus address [0x80110000-0xbfffffff])
+[    2.479913] pci_bus 0003:00: root bus resource [mem 0x1400000000-0x14ffffffff pref]
+[    2.479939] pci 0003:00:00.0: [201f:0002] type 01 class 0x060400 PCIe Root Port
+[    2.479955] pci 0003:00:00.0: PCI bridge to [bus 01-ff]
+[    2.479962] pci 0003:00:00.0:   bridge window [io  0x0000-0x0fff]
+[    2.479967] pci 0003:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
+[    2.479974] pci 0003:00:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+[    2.480017] pci 0003:00:00.0: supports D1
+[    2.480020] pci 0003:00:00.0: PME# supported from D0 D1 D3hot D3cold
+[    2.484680] [drm] can not get lcd lpm period value
+[    2.487083] pci_bus 0003:01: busn_res: [bus 01-ff] end is updated to 01
+[    2.487100] pci 0003:00:00.0: PCI bridge to [bus 01]
+[    2.487109] pci_bus 0003:00: resource 4 [io  0x100000-0x1fffff]
+[    2.487113] pci_bus 0003:00: resource 5 [mem 0x1280110000-0x12bfffffff]
+[    2.487117] pci_bus 0003:00: resource 6 [mem 0x1400000000-0x14ffffffff pref]
+[    2.487199] spacemit-k1-pcie 80000000.pcie: PCI host bridge to bus 0000:00
+[    2.487207] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    2.487212] pci_bus 0000:00: root bus resource [io  0x200000-0x2fffff] (bus address [0x10000-0x10ffff])
+[    2.487216] pci_bus 0000:00: root bus resource [mem 0x1100110000-0x117fffffff] (bus address [0x00110000-0x7fffffff])
+[    2.487220] pci_bus 0000:00: root bus resource [mem 0x1800000000-0x18ffffffff pref]
+[    2.487243] pci 0000:00:00.0: [201f:0002] type 01 class 0x060400 PCIe Root Port
+[    2.487258] pci 0000:00:00.0: BAR 0 [mem 0x00000000-0x07ffffff]
+[    2.487263] pci 0000:00:00.0: BAR 1 [mem 0x00000000-0x07ffffff]
+[    2.487268] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+[    2.487274] pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
+[    2.487278] pci 0000:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
+[    2.487286] pci 0000:00:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+[    2.487335] pci 0000:00:00.0: supports D1
+[    2.487337] pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+[    2.492326] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+[    2.492339] pci 0000:00:00.0: BAR 0 [mem 0x1108000000-0x110fffffff]: assigned
+[    2.492346] pci 0000:00:00.0: BAR 1 [mem 0x1110000000-0x1117ffffff]: assigned
+[    2.492351] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    2.492359] pci_bus 0000:00: resource 4 [io  0x200000-0x2fffff]
+[    2.492363] pci_bus 0000:00: resource 5 [mem 0x1100110000-0x117fffffff]
+[    2.492367] pci_bus 0000:00: resource 6 [mem 0x1800000000-0x18ffffffff pref]
+[    2.492380] pci 0004:00:00.0: bridge window [io  0x1000-0x1fff]: assigned
+[    2.492425] pcieport 0003:00:00.0: of_irq_parse_pci: failed with rc=-22
+[    2.492548] pcieport 0000:00:00.0: of_irq_parse_pci: failed with rc=-22
+[    2.492617] spacemit-k1-pcie 80c00000.pcie: spacemit-pcie: link is down after host_init
+[    2.493764] pcieport 0000:00:00.0: PME: Signaling with IRQ 46
+[    2.493998] spacemit-k1-pcie 80000000.pcie: spacemit-pcie: link is down after host_init
+[    2.499291] OF: /soc/dsi0@d421a800/panel0@0: Read of boolean property 'compatible' with a value.
+[    2.504709] pci 0004:01:00.0: BAR 2 [mem 0x12c0200000-0x12c02fffff 64bit]: assigned
+[    2.514095] [drm] is_oled: 0
+[    2.524621] pci 0004:01:00.0: BAR 0 [io  0x1000-0x10ff]: assigned
+[    2.532424] Reserved memory: detected framebuffer at 0x00000003fe000000, size 32 MB
+[    2.539527] pci 0004:00:00.0: PCI bridge to [bus 01]
+[    2.544955] [drm] spacemit_dpu_probe()
+[    2.550800] pci 0004:00:00.0:   bridge window [io  0x1000-0x1fff]
+[    2.550805] pci 0004:00:00.0:   bridge window [mem 0x12c0200000-0x12c02fffff]
+[    2.557632] dpu_parse_dt, read hclk failed from dts!
+[    2.565300] pci_bus 0004:00: resource 4 [io  0x0000-0xfffff]
+[    2.569303] [drm] can not get lcd lpm commit qos value
+[    2.575625] pci_bus 0004:00: resource 5 [mem 0x12c0110000-0x12ffffffff]
+[    2.580400] [drm] can not get lcd bl lpm qos value
+[    2.580403] [drm] can not get lcd lpm period value
+[    2.586997] pci_bus 0004:00: resource 6 [mem 0x1300000000-0x13ffffffff pref]
+[    2.592740] spi-nor spi4.0: supply vcc not found, using dummy regulator
+[    2.597849] pci_bus 0004:01: resource 0 [io  0x1000-0x1fff]
+[    2.597854] pci_bus 0004:01: resource 1 [mem 0x12c0200000-0x12c02fffff]
+[    2.605725] 6 cmdlinepart partitions found on MTD device d420c000.spi
+[    2.611544] pcieport 0004:00:00.0: of_irq_parse_pci: failed with rc=-22
+[    2.618336] Creating 6 MTD partitions on "d420c000.spi":
+[    2.623973] spacemit-k1-pcie 81000000.pcie: spacemit-pcie: link is up after host_init
+[    2.633181] 0x000000000000-0x000000020000 : "bootinfo"
+[    2.737523] pci_bus 0004:01: busn_res: [bus 01] end is updated to 01
+[    2.739087] 0x000000020000-0x0000000a0000 : "fsbl"
+[    2.744821] pci 0004:00:00.0: PCI bridge to [bus 01]
+[    2.752713] 0x0000000a0000-0x0000000b0000 : "env"
+[    2.758614] pci 0004:00:00.0:   bridge window [io  0x1000-0x1fff]
+[    2.766039] 0x0000000b0000-0x0000001b0000 : "esos"
+[    2.771814] pci 0004:00:00.0:   bridge window [mem 0x12c0200000-0x12c02fffff]
+[    2.780645] 0x0000001b0000-0x000000210000 : "opensbi"
+[    2.981862] 0x000000210000-0x000000800000 : "uboot"
+[    2.987157] dwmac-spacemit-ethqos cac82000.ethernet: IRQ eth_lpi not found
+[    2.992747] dwmac-spacemit-ethqos cac82000.ethernet: IRQ sfty not found
+[    2.999599] dwmac-spacemit-ethqos cac82000.ethernet: rgmii tx clk is derived from the rx clk
+[    3.007755] dwmac-spacemit-ethqos cac82000.ethernet: phy clk is provided by a external crystal oscillator
+[    3.017328] dwmac-spacemit-ethqos cac82000.ethernet: phy-mode=rgmii val=0x00000008
+[    3.024981] dwmac-spacemit-ethqos cac82000.ethernet: User ID: 0x10, Synopsys ID: 0x54
+[    3.032666] dwmac-spacemit-ethqos cac82000.ethernet: 	DWMAC4/5
+[    3.038477] dwmac-spacemit-ethqos cac82000.ethernet: DMA HW capability register supported
+[    3.046634] dwmac-spacemit-ethqos cac82000.ethernet: RX Checksum Offload Engine supported
+[    3.054807] dwmac-spacemit-ethqos cac82000.ethernet: TX Checksum insertion supported
+[    3.062522] dwmac-spacemit-ethqos cac82000.ethernet: TSO supported
+[    3.068683] dwmac-spacemit-ethqos cac82000.ethernet: Enable RX Mitigation via HW Watchdog Timer
+[    3.077367] dwmac-spacemit-ethqos cac82000.ethernet: Enabled L3L4 Flow TC (entries=4)
+[    3.085178] dwmac-spacemit-ethqos cac82000.ethernet: Enabled RFS Flow TC (entries=10)
+[    3.092996] dwmac-spacemit-ethqos cac82000.ethernet: Enabling HW TC (entries=256, max_off=256)
+[    3.101594] dwmac-spacemit-ethqos cac82000.ethernet: TSO feature enabled
+[    3.108267] dwmac-spacemit-ethqos cac82000.ethernet: SPH feature enabled
+[    3.114950] dwmac-spacemit-ethqos cac82000.ethernet: Using 40/40 bits DMA host/device width
+[    3.258428] xhci-hcd xhci-hcd.1.auto: xHCI Host Controller
+[    3.261189] xhci-hcd xhci-hcd.1.auto: new USB bus registered, assigned bus number 1
+[    3.268991] xhci-hcd xhci-hcd.1.auto: USB3 root hub has no ports
+[    3.274809] xhci-hcd xhci-hcd.1.auto: hcc params 0x0220fe6d hci version 0x110 quirks 0x0000808000000010
+[    3.284198] xhci-hcd xhci-hcd.1.auto: irq 51, io mem 0xc0a00000
+[    3.290262] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18
+[    3.298332] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.305534] usb usb1: Product: xHCI Host Controller
+[    3.310394] usb usb1: Manufacturer: Linux 6.18.3-generic xhci-hcd
+[    3.316475] usb usb1: SerialNumber: xhci-hcd.1.auto
+[    3.321616] hub 1-0:1.0: USB hub found
+[    3.325086] hub 1-0:1.0: 1 port detected
+[    3.330728] phy phy-cad30000.phy.7: PUPHY Rx Reg Configured, lfps-iset: 3, amp-lvl: 3
+[    3.337301] phy phy-cad30000.phy.7: PHY version: 0x302 init as USB3 mode
+[    3.343482] phy phy-cad30000.phy.7: PUPHY Rx Reg Configured, lfps-iset: 3, amp-lvl: 3
+[    3.351823] phy phy-cad30000.phy.7: PHY version: 0x302 init as USB3 mode
+[    3.358131] gadget (null): enable vbus monitoring
+[    3.363324] spacemit,k3-usb3-phy 81f00000.phy: Update Combo Mode 20 to USB Mode
+[    3.369955] phy phy-81f00000.phy.8: PUPHY Rx Reg Configured, lfps-iset: 0, amp-lvl: 3
+[    3.378261] phy phy-81f00000.phy.8: PHY version: 0x302 init as USB3 mode
+[    3.384662] xhci-hcd xhci-hcd.2.auto: xHCI Host Controller
+[    3.389922] xhci-hcd xhci-hcd.2.auto: new USB bus registered, assigned bus number 2
+[    3.397759] xhci-hcd xhci-hcd.2.auto: hcc params 0x0220fe6d hci version 0x110 quirks 0x0000808000000090
+[    3.406940] xhci-hcd xhci-hcd.2.auto: irq 53, io mem 0x81400000
+[    3.412941] xhci-hcd xhci-hcd.2.auto: xHCI Host Controller
+[    3.418299] xhci-hcd xhci-hcd.2.auto: new USB bus registered, assigned bus number 3
+[    3.425937] xhci-hcd xhci-hcd.2.auto: Host supports USB 3.0 SuperSpeed
+[    3.432526] usb usb2: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18
+[    3.440691] usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.447892] usb usb2: Product: xHCI Host Controller
+[    3.452752] usb usb2: Manufacturer: Linux 6.18.3-generic xhci-hcd
+[    3.458839] usb usb2: SerialNumber: xhci-hcd.2.auto
+[    3.463938] hub 2-0:1.0: USB hub found
+[    3.467445] hub 2-0:1.0: 1 port detected
+[    3.471824] usb usb3: We don't know the algorithms for LPM for this host, disabling LPM.
+[    3.479455] usb usb3: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.18
+[    3.487652] usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.494855] usb usb3: Product: xHCI Host Controller
+[    3.499733] usb usb3: Manufacturer: Linux 6.18.3-generic xhci-hcd
+[    3.505792] usb usb3: SerialNumber: xhci-hcd.2.auto
+[    3.510914] hub 3-0:1.0: USB hub found
+[    3.514403] hub 3-0:1.0: 1 port detected
+[    3.536359] riscv-rpmi-rtc soc:rpmi_rtc@0: registered as rtc0
+[    3.545880] riscv-rpmi-rtc soc:rpmi_rtc@0: setting system clock to 2000-01-01T00:00:06 UTC (946684806)
+[    3.554797] at24 2-0050: supply vcc not found, using dummy regulator
+[    3.559160] at24 2-0050: 256 byte 24c02 EEPROM, read-only
+[    3.564930] [drm] rpi_touchscreen_probe
+[    3.768063] [drm:rpi_touchscreen_probe] *ERROR* rpi_touchscreen_probe: I2C read failed: -6
+[    3.770995] usb 1-1: new full-speed USB device number 2 using xhci-hcd
+[    3.773730] raspits-ft5426: raspits_ft5426_probe: address = 0x38
+[    3.786188] input: fts_ts as /devices/platform/soc/f0614000.i2c/i2c-3/3-0038/input/input1
+[    3.795053] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    3.795287] imx219-simple 5-0010: imx219: probe enter, client addr=0x10
+[    3.803124] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 8
+[    3.856692] imx219-simple 5-0010: imx219: I2C read failed, reg=0x0, ret=-6
+[    3.860837] imx219-simple 5-0010: imx219: sensor detect failed: -6
+[    3.869338] ov5647-simple 5-0036: ov5647-test: probe enter, client addr=0x36
+[    3.874059] ov5647-simple 5-0036: ov5647-test: get PWDN gpio
+[    3.879722] ov5647-simple 5-0036: ov5647-test: power_on enter
+[    3.885396] ov5647-simple 5-0036: ov5647-test: set i2c-mux high
+[    3.891318] ov5647-simple 5-0036: ov5647-test: get vdd regulator
+[    3.894987] usb 2-1: new high-speed USB device number 2 using xhci-hcd
+[    3.899431] ov5647-simple 5-0036: ov5647-test: enable vdd
+[    3.912423] ov5647-simple 5-0036: ov5647-test: vdd set to 3.3V
+[    3.915520] ov5647-simple 5-0036: ov5647-test: drive PWDN low
+[    3.916253] usb 1-1: New USB device found, idVendor=0bda, idProduct=b85b, bcdDevice= 0.00
+[    3.929406] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    3.936521] usb 1-1: Product: Bluetooth Radio
+[    3.940869] usb 1-1: Manufacturer: Realtek
+[    3.942255] ov5647-simple 5-0036: ov5647-test: drive PWDN high
+[    3.944941] usb 1-1: SerialNumber: 00e04c000001
+[    3.971766] ov5647-simple 5-0036: ov5647-test: power_on done
+[    3.974677] ov5647-simple 5-0036: ov5647-test: detect start
+[    3.980287] ov5647-simple 5-0036: ov5647-test: I2C read failed, reg=0x300a, ret=-6
+[    3.987804] ov5647-simple 5-0036: ov5647-test: sensor detect failed: -6
+[    3.994393] ov5647-simple 5-0036: ov5647-test: power_off enter
+[    4.000201] ov5647-simple 5-0036: ov5647-test: drive PWDN low
+[    4.005931] ov5647-simple 5-0036: ov5647-test: disable vdd
+[    4.012865] ov5647-simple 5-0036: ov5647-test: set i2c-mux low
+[    4.017219] ov5647-simple 5-0036: ov5647-test: power_off done
+[    4.023447] ov5640-max96724-max9295 5-003c: ov5640-gmsl: i2c read failed slave=0x27 reg=0x0000 ret=-6
+[    4.037628] MVX dev: Linlon v5276 identified. cores=4, nlsid=4, id=0, fuse=00000000, hw_id=00005276, hw_rev=00000050
+[    4.044867] usb 2-1: New USB device found, idVendor=2109, idProduct=2817, bcdDevice= 7.00
+[    4.046048] k3_thermal d4018000.thermal: Read soc_rtemp_trim from bank7: 0x00
+[    4.053574] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[    4.053579] usb 2-1: Product: USB2.0 Hub             
+[    4.053582] usb 2-1: Manufacturer: VIA Labs, Inc.         
+[    4.078366] k3_thermal d4018000.thermal: Read soc_rtemp_trim1 from bank0: 0x00
+[    4.085528] k3_thermal d4018000.thermal: Using default vref: 0xd8
+[    4.104661] hub 2-1:1.0: USB hub found
+[    4.105762] hub 2-1:1.0: 5 ports detected
+[    4.147720] sdhci-spacemit d4280000.mmc: Got CD GPIO
+[    4.147928] rfkill_gpio rfkill-pcie-wlan: rfkill-pcie-wlan device registered.
+[    4.157417] pvrsrvkm cac00000.imggpu: Using default thermal zone: thermal_gpu with default power model parameters
+[    4.167372] PVR_K:  95: Read BVNC 36.56.104.183 from HW device registers
+[    4.168575] usb 3-1: new SuperSpeed USB device number 2 using xhci-hcd
+[    4.174008] PVR_K:  95: RGX Device registered BVNC 36.56.104.183 with 1 core in the system
+[    4.188447] mmc0: SDHCI controller on d4280000.mmc [d4280000.mmc] using ADMA 64-bit
+[    4.189221] pvrsrvkm cac00000.imggpu: Found 6 OPP points.
+[    4.201774] pvrsrvkm cac00000.imggpu: opp[1/6]: (409000000 Hz, 800000 uV)
+[    4.208548] pvrsrvkm cac00000.imggpu: opp[2/6]: (491000000 Hz, 800000 uV)
+[    4.215324] pvrsrvkm cac00000.imggpu: opp[3/6]: (614000000 Hz, 900000 uV)
+[    4.222078] pvrsrvkm cac00000.imggpu: opp[4/6]: (819000000 Hz, 900000 uV)
+[    4.228854] pvrsrvkm cac00000.imggpu: opp[5/6]: (1000000000 Hz, 950000 uV)
+[    4.235716] pvrsrvkm cac00000.imggpu: opp[6/6]: (1228000000 Hz, 950000 uV)
+[    4.253178] [drm] Initialized pvr 24.2.6603887 for cac00000.imggpu on minor 0
+[    4.257776] [drm] inno_dp_probe()
+[    4.260924] [drm] spacemit_dpu_bind()
+[    4.264517] [drm] spacemit_dpu_irqs_init()
+[    4.268724] spacemit-dpu-drv soc:dpu1_crtc0: assigned reserved memory node dpu_reserved1@101d80000
+[    4.277898] [drm] dpu plane init ok
+[    4.281036] [drm] spacemit_crtc_bind_init() ok
+[    4.285441] [drm] create device file enable_dump_reg
+[    4.290387] [drm] create device file enable_dump_fps
+[    4.295334] [drm] create device file enable_auto_fc
+[    4.300193] [drm] create device file dpu_set_lpm_period
+[    4.305402] [drm] dpu driver probe success
+[    4.309483] spacemit-drm-drv c0440000.display-subsystem-dp1: bound soc:dpu1_crtc0 (ops dpu_component_ops)
+[    4.319032] [drm] soc_dp_bind()
+[    4.322225] [drm] soc_dp_aux_init() 
+[    4.329422] usb 3-1: New USB device found, idVendor=2109, idProduct=0817, bcdDevice= 7.00
+[    4.334872] usb 3-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[    4.338882] spacemit-inno-dp-drv cac88000.dp1: Setting PLL to Rate 2700000 kHz, Pclk 148500 kHz
+[    4.341982] usb 3-1: Product: USB3.0 Hub             
+[    4.355701] usb 3-1: Manufacturer: VIA Labs, Inc.         
+[    4.392684] hub 3-1:1.0: USB hub found
+[    4.393840] hub 3-1:1.0: 4 ports detected
+[    4.466998] spacemit-inno-dp-drv cac88000.dp1: init audio
+[    4.482474] spacemit-inno-dp-drv cac88000.dp1: DPCD: Rev 1.2, MaxRate 5400000 kHz, MaxLanes 4, EnhFrame 128
+[    4.489484] spacemit-inno-dp-drv cac88000.dp1: Starting HPD Polling Thread...
+[    4.496598] spacemit-drm-drv c0440000.display-subsystem-dp1: bound cac88000.dp1 (ops soc_dp_ops)
+[    4.505643] [drm] Initialized spacemit 1.0.0 for c0440000.display-subsystem-dp1 on minor 1
+[    4.528854] [drm] spacemit_crtc_mode_set_nofb()
+[    4.528860] [drm] spacemit_crtc_atomic_enable(power on)
+[    4.528900] [drm] Current aclk rate: 409600000, Target: 409000000
+[    4.543004] [drm] Current aclk rate: 409600000, Target: 409000000
+[    4.543047] [drm] soc_dp_encoder_enable()
+[    4.543052] spacemit-inno-dp-drv cac88000.dp1: DP: Attempting Config: R=2700000, L=2 (Cap: 4320000 > Req: 3564000)
+[    4.554061] spacemit-inno-dp-drv cac88000.dp1: Setting PLL to Rate 2700000 kHz, Pclk 148500 kHz
+[    4.595885] spacemit-inno-dp-drv cac88000.dp1: Link Training: Using TPS3
+[    4.605272] spacemit-inno-dp-drv cac88000.dp1: DP: Training successful for R:2700000 L:2.
+[    4.605277] spacemit-inno-dp-drv cac88000.dp1: MSA: 1920x1080, Rate:2700000 kHz, Lanes:2, BPP:24, TU:52.6
+[    4.605442] [drm] DPU 1 Start!
+[    4.640353] Console: switching to colour frame buffer device 240x67
+[    4.749505] spacemit-drm-drv c0440000.display-subsystem-dp1: [drm] fb0: spacemitdrmfb frame buffer device
+[    4.847049] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    4.853183] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 7
+[    4.859765] hub 2-1:1.0: USB hub found
+[    4.864373] hub 2-1:1.0: 5 ports detected
+[    5.160625] hub 3-1:1.0: USB hub found
+[    5.160651] hub 2-1:1.0: USB hub found
+[    5.161738] hub 3-1:1.0: 4 ports detected
+[    5.165462] hub 2-1:1.0: 5 ports detected
+[    5.410442] Spacemit K3: pmic-compatible="tda38740", using X100 OPP table0
+[    5.435323] clk: Disabling unused clocks
+[    5.436846] PM: genpd: Disabling unused power domains
+[    5.442078] ALSA device list:
+[    5.444492]   #0: snd-dp1
+[    5.447598] Freeing unused kernel image (initmem) memory: 2444K
+[    5.452606] Checked W+X mappings: passed, no W+X pages found
+[    5.456518] Run /init as init process
+[    5.460150]   with arguments:
+[    5.463106]     /init
+[    5.465353]     splash
+[    5.467701]   with environment:
+[    5.470821]     HOME=/
+[    5.473168]     TERM=linux
+[    5.475859]     bootfs=PARTUUID=4e356a9e-cfbc-40c0-bbdc-0f321fc793f8
+[    5.482196]     boot_mode=nor
+[    5.875046] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    5.881272] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 6
+[    6.010995] usb 2-1.2: new full-speed USB device number 3 using xhci-hcd
+[    6.157475] usb 2-1.2: New USB device found, idVendor=1d57, idProduct=fa60, bcdDevice= 1.13
+[    6.163183] usb 2-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[    6.170473] usb 2-1.2: Product: Inphic 2.4G Receiver
+[    6.175429] usb 2-1.2: Manufacturer: Inphic
+[    6.247386] dwmac-spacemit-ethqos cac82000.ethernet end1: renamed from eth0
+[    6.315718] input: Inphic Inphic 2.4G Receiver as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.2/2-1.2:1.0/0003:1D57:FA60.0001/input/input2
+[    6.435252] hid-generic 0003:1D57:FA60.0001: input,hidraw0: USB HID v1.00 Keyboard [Inphic Inphic 2.4G Receiver] on usb-xhci-hcd.2.auto-1.2/input0
+[    6.448054] input: Inphic Inphic 2.4G Receiver as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.2/2-1.2:1.1/0003:1D57:FA60.0002/input/input3
+[    6.460138] hid-generic 0003:1D57:FA60.0002: input,hidraw1: USB HID v1.00 Mouse [Inphic Inphic 2.4G Receiver] on usb-xhci-hcd.2.auto-1.2/input1
+[    6.474792] input: Inphic Inphic 2.4G Receiver System Control as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.2/2-1.2:1.2/0003:1D57:FA60.0003/input/input4
+[    6.543167] input: Inphic Inphic 2.4G Receiver Consumer Control as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.2/2-1.2:1.2/0003:1D57:FA60.0003/input/input5
+[    6.556514] hid-generic 0003:1D57:FA60.0003: input,hiddev96,hidraw2: USB HID v1.00 Device [Inphic Inphic 2.4G Receiver] on usb-xhci-hcd.2.auto-1.2/input2
+[    6.570946] input: Inphic Inphic 2.4G Receiver as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.2/2-1.2:1.3/0003:1D57:FA60.0004/input/input7
+[    6.639147] hid-generic 0003:1D57:FA60.0004: input,hidraw3: USB HID v1.00 Keyboard [Inphic Inphic 2.4G Receiver] on usb-xhci-hcd.2.auto-1.2/input3
+[    6.718987] usb 2-1.5: new high-speed USB device number 4 using xhci-hcd
+[    6.811840] usb 2-1.5: New USB device found, idVendor=2109, idProduct=8817, bcdDevice= 0.01
+[    6.817540] usb 2-1.5: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    6.824834] usb 2-1.5: Product: USB Billboard Device   
+[    6.830036] usb 2-1.5: Manufacturer: VIA Labs, Inc.         
+[    6.835681] usb 2-1.5: SerialNumber: 0000000000000001
+[    6.895053] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    6.901281] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 5
+[    7.507762] EXT4-fs (sda3): orphan cleanup on readonly fs
+[    7.511308] EXT4-fs (sda3): mounted filesystem cae8f2aa-a0cc-4078-8b86-ed7af8b42292 ro with ordered data mode. Quota mode: none.
+[    7.615630] EXT4-fs (sda3): re-mounted cae8f2aa-a0cc-4078-8b86-ed7af8b42292 r/w.
+[    7.631486] EXT4-fs (sda3): re-mounted cae8f2aa-a0cc-4078-8b86-ed7af8b42292 ro.
+[    7.723281] systemd[1]: System time advanced to timestamp on /var/lib/systemd/timesync/clock: Tue 2026-11-10 22:19:33 CST
+[    7.919050] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    7.925281] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 4
+[    8.084764] systemd[1]: Inserted module 'autofs4'
+[    8.458712] systemd[1]: systemd 259-1ubuntu3bb9 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)
+[    8.489792] systemd[1]: Detected architecture riscv64.
+[    8.503633] systemd[1]: Hostname set to <epoch-spacemitk3com260ifx>.
+[    8.747114] systemd[1]: Configuration file /usr/lib/systemd/system/multimedia.service is marked executable. Please remove executable permission bits. Proceeding anyway.
+[    8.913981] systemd[1]: Queued start job for default target graphical.target.
+[    8.943049] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    8.945798] systemd[1]: Created slice system-cups.slice - CUPS Slice.
+[    8.949294] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 3
+[    8.971885] systemd[1]: Created slice system-modprobe.slice - Slice /system/modprobe.
+[    8.983820] systemd[1]: Created slice system-serial\x2dgetty.slice - Slice /system/serial-getty.
+[    8.995826] systemd[1]: Created slice system-systemd\x2dfsck.slice - Slice /system/systemd-fsck.
+[    9.007610] systemd[1]: Created slice user.slice - User and Session Slice.
+[    9.019142] systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch.
+[    9.035444] systemd[1]: Set up automount proc-sys-fs-binfmt_misc.automount - Arbitrary Executable File Formats File System Automount Point.
+[    9.051055] systemd[1]: Expecting device dev-disk-by\x2dpartuuid-4e356a9e\x2dcfbc\x2d40c0\x2dbbdc\x2d0f321fc793f8.device - /dev/disk/by-partuuid/4e356a9e-cfbc-40c0-bbdc-0f321fc793f8...
+[    9.071033] systemd[1]: Expecting device dev-ttyS0.device - /dev/ttyS0...
+[    9.083062] systemd[1]: Reached target imports.target - Image Downloads.
+[    9.095034] systemd[1]: Reached target integritysetup.target - Local Integrity Protected Volumes.
+[    9.107083] systemd[1]: Reached target remote-fs.target - Remote File Systems.
+[    9.119036] systemd[1]: Reached target slices.target - Slice Units.
+[    9.127057] systemd[1]: Reached target swap.target - Swaps.
+[    9.135063] systemd[1]: Reached target veritysetup.target - Local Verity Protected Volumes.
+[    9.147278] systemd[1]: Listening on syslog.socket - Syslog Socket.
+[    9.158590] systemd[1]: Listening on systemd-ask-password.socket - Query the User Interactively for a Password.
+[    9.173292] systemd[1]: Listening on systemd-creds.socket - Credential Encryption/Decryption.
+[    9.190505] systemd[1]: Listening on systemd-factory-reset.socket - Factory Reset Management.
+[    9.203200] systemd[1]: Listening on systemd-journald-dev-log.socket - Journal Socket (/dev/log).
+[    9.215231] systemd[1]: Listening on systemd-journald.socket - Journal Sockets.
+[    9.230680] systemd[1]: Listening on systemd-mute-console.socket - Console Output Muting Service Socket.
+[    9.243058] systemd[1]: systemd-pcrextend.socket - TPM PCR Measurements was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[    9.254189] systemd[1]: systemd-pcrlock.socket - Make TPM PCR Policy was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[    9.267814] systemd[1]: Listening on systemd-resolved-monitor.socket - Resolve Monitor Varlink Socket.
+[    9.283202] systemd[1]: Listening on systemd-resolved-varlink.socket - Resolve Service Varlink Socket.
+[    9.295197] systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket.
+[    9.307173] systemd[1]: Listening on systemd-udevd-kernel.socket - udev Kernel Socket.
+[    9.319172] systemd[1]: Listening on systemd-udevd-varlink.socket - udev Varlink Socket.
+[    9.333151] systemd[1]: Mounting dev-hugepages.mount - Huge Pages File System...
+[    9.344500] systemd[1]: Mounting dev-mqueue.mount - POSIX Message Queue File System...
+[    9.372379] systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System...
+[    9.379297] systemd[1]: Mounting sys-kernel-tracing.mount - Kernel Trace File System...
+[    9.401224] systemd[1]: Mounting tmp.mount - Temporary Directory /tmp...
+[    9.415148] systemd[1]: Starting systemd-journald.service - Journal Service...
+[    9.422287] systemd[1]: Starting keyboard-setup.service - Set the console keyboard layout...
+[    9.432837] systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes...
+[    9.439435] systemd[1]: modprobe@configfs.service - Load Kernel Module configfs was skipped because of an unmet condition check (ConditionKernelModuleLoaded=!configfs).
+[    9.456009] systemd[1]: Mounting sys-kernel-config.mount - Kernel Configuration File System...
+[    9.467192] systemd[1]: modprobe@drm.service - Load Kernel Module drm was skipped because of an unmet condition check (ConditionKernelModuleLoaded=!drm).
+[    9.478495] systemd[1]: modprobe@efi_pstore.service - Load Kernel Module efi_pstore was skipped because of an unmet condition check (ConditionKernelModuleLoaded=!efi_pstore).
+[    9.493939] systemd[1]: modprobe@fuse.service - Load Kernel Module fuse was skipped because of an unmet condition check (ConditionKernelModuleLoaded=!fuse).
+[    9.509866] systemd[1]: Mounting sys-fs-fuse-connections.mount - FUSE Control File System...
+[    9.513412] systemd-journald[396]: Collecting audit messages is disabled.
+[    9.523421] systemd[1]: systemd-fsck-root.service - File System Check on Root Device was skipped because of an unmet condition check (ConditionPathExists=!/run/initramfs/fsck-root).
+[    9.539222] systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info was skipped because of an unmet condition check (ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67).
+[    9.563670] systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules...
+[    9.575183] systemd[1]: systemd-pcrmachine.service - TPM PCR Machine ID Measurement was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[    9.587407] systemd[1]: systemd-pcrproduct.service - TPM NvPCR Product ID Measurement was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[    9.604494] systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems...
+[    9.611722] systemd[1]: systemd-tpm2-setup-early.service - Early TPM SRK Setup was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[    9.627846] systemd[1]: Starting systemd-udev-load-credentials.service - Load udev Rules from Credentials...
+[    9.649294] systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices...
+[    9.660616] systemd[1]: Mounted dev-hugepages.mount - Huge Pages File System.
+[    9.671639] systemd[1]: Mounted dev-mqueue.mount - POSIX Message Queue File System.
+[    9.683556] systemd[1]: Mounted sys-kernel-debug.mount - Kernel Debug File System.
+[    9.695602] EXT4-fs (sda3): re-mounted cae8f2aa-a0cc-4078-8b86-ed7af8b42292 r/w.
+[    9.709107] systemd[1]: Started systemd-journald.service - Journal Service.
+[    9.791723] systemd-journald[396]: Received client request to flush runtime journal.
+[    9.799408] systemd-journald[396]: File /var/log/journal/0f5a39f0718140f5acb591d8ffc718f2/system.journal corrupted or uncleanly shut down, renaming and replacing.
+[    9.971106] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[    9.971118] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 2
+[   10.867855] CAN device driver interface
+[   10.991092] raspits-ft5426: fts_i2c_read: i2c read issue, please check touchscreen connection, -6
+[   10.991103] raspits-ft5426: raspits_ft5426_work: checking touch ic, countdown: 1
+[   10.997939] fusb301 0-0025: Device ID = 0x12
+[   11.016889] EXT4-fs (sda2): mounted filesystem 93fb27f7-f393-4029-be13-22ac1cf21bfc r/w with ordered data mode. Quota mode: none.
+[   11.017014] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[   11.019319] fusb301 0-0025: fusb301 set pwr_mode: 1.5A
+[   11.019585] fusb301 0-0025: fusb301 set toggle time: Toggle_35ms
+[   11.024273] fusb301 0-0025: fusb301 set mode: Drp_Acc
+[   11.024549] fusb301 0-0025: fusb301 set state: Error_Recovery
+[   11.024558] fusb301 0-0025: fusb301_detach: Error_Recovery
+[   11.025099] fusb301 0-0025: mode[0x20]=Drp_Acc, host_cur[0x02], dttime[0x00]
+[   11.031360] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[   11.031685] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[   11.154889] audit: type=1400 audit(1794320376.473:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="Discord" pid=586 comm="apparmor_parser"
+[   11.155055] audit: type=1400 audit(1794320376.473:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="1password" pid=585 comm="apparmor_parser"
+[   11.155189] audit: type=1400 audit(1794320376.477:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="buildah" pid=599 comm="apparmor_parser"
+[   11.155467] audit: type=1400 audit(1794320376.477:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="QtWebEngineProcess" pid=588 comm="apparmor_parser"
+[   11.157166] audit: type=1400 audit(1794320376.477:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name=4D6F6E676F444220436F6D70617373 pid=587 comm="apparmor_parser"
+[   11.157656] audit: type=1400 audit(1794320376.477:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="brave" pid=598 comm="apparmor_parser"
+[   11.157803] audit: type=1400 audit(1794320376.477:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="balena-etcher" pid=592 comm="apparmor_parser"
+[   11.158790] audit: type=1400 audit(1794320376.477:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="cam" pid=601 comm="apparmor_parser"
+[   11.161546] audit: type=1400 audit(1794320376.481:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ch-checkns" pid=604 comm="apparmor_parser"
+[   11.162549] audit: type=1400 audit(1794320376.481:11): apparmor="STATUS" operation="profile_load" profile="unconfined" name="chrome" pid=606 comm="apparmor_parser"
+[   11.215390] Bluetooth: Core ver 2.22
+[   11.217032] NET: Registered PF_BLUETOOTH protocol family
+[   11.217043] Bluetooth: HCI device and connection manager initialized
+[   11.217058] Bluetooth: HCI socket layer initialized
+[   11.217065] Bluetooth: L2CAP socket layer initialized
+[   11.217086] Bluetooth: SCO socket layer initialized
+[   11.255280] usbcore: registered new interface driver btusb
+[   11.261291] Bluetooth: hci0: RTL: examining hci_ver=0b hci_rev=000b lmp_ver=0b lmp_subver=8852
+[   11.264560] Bluetooth: hci0: RTL: rom_version status=0 version=1
+[   11.266253] Bluetooth: hci0: RTL: btrtl_initialize: key id 0
+[   11.266268] Bluetooth: hci0: RTL: loading rtl_bt/rtl8852bu_fw.bin
+[   11.267455] Bluetooth: hci0: RTL: loading rtl_bt/rtl8852bu_config.bin
+[   11.267721] Bluetooth: hci0: RTL: cfg_sz 6, total sz 58003
+[   11.580397] pci 0004:00:00.0: of_irq_parse_pci: failed with rc=-22
+[   11.590780] rtw89_8852be 0004:01:00.0: loaded firmware rtw89/rtw8852b_fw-1.bin
+[   11.590963] rtw89_8852be 0004:01:00.0: enabling device (0000 -> 0003)
+[   11.631413] rtw89_8852be 0004:01:00.0: Firmware version 0.29.29.15 (6fb3ec41), cmd version 0, type 5
+[   11.631428] rtw89_8852be 0004:01:00.0: Firmware version 0.29.29.15 (6fb3ec41), cmd version 0, type 3
+[   11.676318] PVR_K:  807: RGX Firmware image 'rgx.fw.36.56.104.183' loaded
+[   11.680673] PVR_K:  807: Shader binary image 'rgx.sh.36.56.104.183' loaded
+[   11.832237] Bluetooth: hci0: RTL: fw version 0xdbc6b20f
+[   11.955592] rtw89_8852be 0004:01:00.0: chip rfe_type is 1
+[   11.957695] Bluetooth: MGMT ver 1.23
+[   11.966323] NET: Registered PF_ALG protocol family
+[   11.986692] rtw89_8852be 0004:01:00.0: rfkill hardware state changed to enable
+[   12.008544] rtw89_8852be 0004:01:00.0 wlP4p1s0: renamed from wlan0
+[   12.015262] raspits-ft5426: raspits_ft5426_work: checking touch ic timeout, -6
+[   12.131111] NET: Registered PF_QIPCRTR protocol family
+[   12.144815] file system registered
+[   12.180711] dwmac-spacemit-ethqos cac82000.ethernet end1: Register MEM_TYPE_PAGE_POOL RxQ-0
+[   12.182145] dwmac-spacemit-ethqos cac82000.ethernet end1: Register MEM_TYPE_PAGE_POOL RxQ-1
+[   12.232929] read descriptors
+[   12.232946] bcdVersion must be 0x0100, stored in Little Endian order. Userspace driver should be fixed, accepting 0x0001 for compatibility.
+[   12.232951] bcdVersion must be 0x0100, stored in Little Endian order. Userspace driver should be fixed, accepting 0x0001 for compatibility.
+[   12.232959] read strings
+[   12.271053] dwmac-spacemit-ethqos cac82000.ethernet end1: PHY [stmmac-1:01] driver [RTL8211F Gigabit Ethernet] (irq=POLL)
+[   12.282992] dwmac4: Master AXI performs any burst length
+[   12.283024] dwmac-spacemit-ethqos cac82000.ethernet end1: No Safety Features support found
+[   12.283699] dwmac-spacemit-ethqos cac82000.ethernet end1: IEEE 1588-2008 Advanced Timestamp supported
+[   12.285193] dwmac-spacemit-ethqos cac82000.ethernet end1: registered PTP clock
+[   12.285208] dwmac-spacemit-ethqos cac82000.ethernet end1: configuring for phy/rgmii link mode
+[   13.666144] Bluetooth: RFCOMM TTY layer initialized
+[   13.666173] Bluetooth: RFCOMM socket layer initialized
+[   13.666186] Bluetooth: RFCOMM ver 1.11
+[   16.512288] wlP4p1s0: authenticate with 06:69:6c:78:10:89 (local address=0c:cd:d0:8d:4d:fe)
+[   16.512302] wlP4p1s0: send auth to 06:69:6c:78:10:89 (try 1/3)
+[   16.513580] wlP4p1s0: authenticated
+[   16.515003] wlP4p1s0: associate with 06:69:6c:78:10:89 (try 1/3)
+[   16.522875] wlP4p1s0: RX AssocResp from 06:69:6c:78:10:89 (capab=0x1 status=0 aid=87)
+[   16.631120] wlP4p1s0: associated
+[   16.631183] wlP4p1s0: Limiting TX power to 27 (30 - 3) dBm as advertised by 06:69:6c:78:10:89
+[   16.848811] RTW: module init start
+[   16.848823] RTW: rtl8852bs v1.19.17-248-g19f2c2a389.20250825
+[   16.848828] RTW: build time: Oct 16 2026 03:44:20
+[   16.849178] RTW: ERROR platform_wifi_get_oob_irq: no wifi node in devicetree
+[   16.849182] RTW: 
+[   16.849184] RTW: =======================================================
+[   16.849187] RTW: ==== Launching Wi-Fi driver! (Powered by Spacemit) ====
+[   16.849189] RTW: =======================================================
+[   16.849191] RTW: Realtek rtl8852bs WiFi driver (Powered by Spacemit,Ver v1.19.17-248-g19f2c2a389.20250825) init.
+[   16.849311] RTW: module init ret=0
+[   35.920209] dldo5: disabling
+[  454.758998] usb 2-1.4: new full-speed USB device number 5 using xhci-hcd
+[  454.897818] usb 2-1.4: New USB device found, idVendor=24ae, idProduct=4026, bcdDevice= 0.01
+[  454.897833] usb 2-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[  454.897837] usb 2-1.4: Product: Rapoo Gaming Keyboard
+[  454.897842] usb 2-1.4: Manufacturer: RAPOO
+[  454.986252] input: RAPOO Rapoo Gaming Keyboard as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.4/2-1.4:1.0/0003:24AE:4026.0005/input/input8
+[  455.147254] hid-generic 0003:24AE:4026.0005: input,hidraw4: USB HID v1.11 Keyboard [RAPOO Rapoo Gaming Keyboard] on usb-xhci-hcd.2.auto-1.4/input0
+[  455.150536] input: RAPOO Rapoo Gaming Keyboard System Control as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.4/2-1.4:1.1/0003:24AE:4026.0006/input/input9
+[  455.203229] input: RAPOO Rapoo Gaming Keyboard Consumer Control as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.4/2-1.4:1.1/0003:24AE:4026.0006/input/input10
+[  455.203427] input: RAPOO Rapoo Gaming Keyboard as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.4/2-1.4:1.1/0003:24AE:4026.0006/input/input12
+[  455.203573] input: RAPOO Rapoo Gaming Keyboard Mouse as /devices/platform/soc/81400000.usb3/xhci-hcd.2.auto/usb2/2-1/2-1.4/2-1.4:1.1/0003:24AE:4026.0006/input/input13
+[  455.203862] hid-generic 0003:24AE:4026.0006: input,hiddev97,hidraw5: USB HID v1.11 Keyboard [RAPOO Rapoo Gaming Keyboard] on usb-xhci-hcd.2.auto-1.4/input1
+[  463.308284] kauditd_printk_skb: 163 callbacks suppressed
+[  463.308295] audit: type=1400 audit(1794320828.629:175): apparmor="DENIED" operation="capable" class="cap" profile="fusermount3" pid=3794 comm="fusermount3" capability=1  capname="dac_override"
+[  463.308310] audit: type=1400 audit(1794320828.629:176): apparmor="DENIED" operation="capable" class="cap" profile="fusermount3" pid=3794 comm="fusermount3" capability=7  capname="setuid"
+[  463.579595] audit: type=1400 audit(1794320828.901:177): apparmor="DENIED" operation="capable" class="cap" profile="fusermount3" pid=3865 comm="fusermount3" capability=1  capname="dac_override"
+[  463.579617] audit: type=1400 audit(1794320828.901:178): apparmor="DENIED" operation="capable" class="cap" profile="fusermount3" pid=3865 comm="fusermount3" capability=7  capname="setuid"
+[  470.800456] wlP4p1s0: deauthenticating from 06:69:6c:78:10:89 by local choice (Reason: 3=DEAUTH_LEAVING)
+[  471.333390] wlP4p1s0: authenticate with ca:37:fb:21:4e:95 (local address=0c:cd:d0:8d:4d:fe)
+[  471.333406] wlP4p1s0: send auth to ca:37:fb:21:4e:95 (try 1/3)
+[  471.349156] wlP4p1s0: authenticate with ca:37:fb:21:4e:95 (local address=0c:cd:d0:8d:4d:fe)
+[  471.349171] wlP4p1s0: send auth to ca:37:fb:21:4e:95 (try 1/3)
+[  471.354212] wlP4p1s0: authenticated
+[  471.354997] wlP4p1s0: associate with ca:37:fb:21:4e:95 (try 1/3)
+[  471.376819] wlP4p1s0: RX AssocResp from ca:37:fb:21:4e:95 (capab=0x1131 status=0 aid=2)
+[  471.487131] wlP4p1s0: associated
+[  471.487220] wlP4p1s0: Limiting TX power to 20 (20 - 0) dBm as advertised by ca:37:fb:21:4e:95
+[  479.337209] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
+[  733.033032] usb 2-1.4: USB disconnect, device number 5
+[ 2394.920125] hmp_set_ai_thread: pid:22809(bench-system), vector has been enabled already!!!
+[ 2394.920169] hmp_set_ai_thread: pid:22812(bench-system), vector has been enabled already!!!
+[ 2394.921138] hmp_set_ai_thread: pid:22813(bench-system), vector has been enabled already!!!
+[ 2394.921192] hmp_set_ai_thread: pid:22814(bench-system), vector has been enabled already!!!
+[ 2394.921335] hmp_set_ai_thread: pid:22810(bench-system), vector has been enabled already!!!
+[ 2394.921682] hmp_set_ai_thread: pid:22811(bench-system), vector has been enabled already!!!
+[ 2394.921695] hmp_set_ai_thread: pid:22808(bench-system), vector has been enabled already!!!
+[ 2394.921855] hmp_set_ai_thread: pid:22807(bench-system), vector has been enabled already!!!
+[ 2395.760342] hmp_set_ai_thread: pid:22855(bench-system), vector has been enabled already!!!
+[ 2395.760400] hmp_set_ai_thread: pid:22861(bench-system), vector has been enabled already!!!
+[ 2395.760443] hmp_set_ai_thread: pid:22862(bench-system), vector has been enabled already!!!
+[ 2395.761249] hmp_set_ai_thread: pid:22860(bench-system), vector has been enabled already!!!
+[ 2395.761669] hmp_set_ai_thread: pid:22858(bench-system), vector has been enabled already!!!
+[ 2395.761676] hmp_set_ai_thread: pid:22856(bench-system), vector has been enabled already!!!
+[ 2395.761760] hmp_set_ai_thread: pid:22857(bench-system), vector has been enabled already!!!
+[ 2395.762241] hmp_set_ai_thread: pid:22859(bench-system), vector has been enabled already!!!
+[ 2396.035796] bench-system[22857]: unhandled signal 11 code 0x1 at 0x0000003f685f8000 in libspacemit_ep.so.2.0.7[3fb78e,3f92800000+5ae000]
+[ 2396.035836] CPU: 10 UID: 1000 PID: 22857 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2396.035845] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2396.035850] epc : 0000003f92bfb78e ra : 0000003f92a82b0e sp : 0000003f6c833ca0
+[ 2396.035860]  gp : 0000002abc1db800 tp : 0000003f670a48c0 t0 : 0000000000000040
+[ 2396.035865]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2396.035869]  s1 : 0000003f68598c00 a0 : 0000000000000040 a1 : 0000003f685f4100
+[ 2396.035874]  a2 : 0000003f685f4080 a3 : 0000003f685f8000 a4 : 0000000000004000
+[ 2396.035879]  a5 : 0000003f68598c00 a6 : 0000003f5f9f8100 a7 : 0000000000048000
+[ 2396.035883]  s2 : 0000003f68598c80 s3 : 0000003f68598d00 s4 : 0000003f68598d80
+[ 2396.035888]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f605f40c0
+[ 2396.035892]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2396.035896]  s11: 0000003f685fc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2396.035901]  t5 : 0000003f605f40c0 t6 : 0000000000000000
+[ 2396.035905] status: 8000000200004620 badaddr: 0000003f685f8000 cause: 000000000000000d
+[ 2396.035915] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2396.353676] hmp_set_ai_thread: pid:22889(bench-system), vector has been enabled already!!!
+[ 2396.353926] hmp_set_ai_thread: pid:22891(bench-system), vector has been enabled already!!!
+[ 2396.354140] hmp_set_ai_thread: pid:22893(bench-system), vector has been enabled already!!!
+[ 2396.354328] hmp_set_ai_thread: pid:22895(bench-system), vector has been enabled already!!!
+[ 2396.354755] hmp_set_ai_thread: pid:22896(bench-system), vector has been enabled already!!!
+[ 2396.357672] hmp_set_ai_thread: pid:22894(bench-system), vector has been enabled already!!!
+[ 2396.357679] hmp_set_ai_thread: pid:22892(bench-system), vector has been enabled already!!!
+[ 2396.357808] hmp_set_ai_thread: pid:22890(bench-system), vector has been enabled already!!!
+[ 2396.628518] bench-system[22891]: unhandled signal 11 code 0x1 at 0x0000003f681f8000 in libspacemit_ep.so.2.0.7[3fb78e,3f92400000+5ae000]
+[ 2396.628558] CPU: 10 UID: 1000 PID: 22891 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2396.628567] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2396.628572] epc : 0000003f927fb78e ra : 0000003f92682b0e sp : 0000003f6373aca0
+[ 2396.628577]  gp : 0000002aadd44800 tp : 0000003f66ca48c0 t0 : 0000000000000040
+[ 2396.628582]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2396.628586]  s1 : 0000003f68198c00 a0 : 0000000000000040 a1 : 0000003f681f4100
+[ 2396.628591]  a2 : 0000003f681f4080 a3 : 0000003f681f8000 a4 : 0000000000004000
+[ 2396.628599]  a5 : 0000003f68198c00 a6 : 0000003f5f9f8100 a7 : 0000000000048000
+[ 2396.628604]  s2 : 0000003f68198c80 s3 : 0000003f68198d00 s4 : 0000003f68198d80
+[ 2396.628609]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f605f40c0
+[ 2396.628613]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2396.628618]  s11: 0000003f681fc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2396.628622]  t5 : 0000003f605f40c0 t6 : 0000000000000000
+[ 2396.628626] status: 8000000200004620 badaddr: 0000003f681f8000 cause: 000000000000000d
+[ 2396.628637] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2396.952106] hmp_set_ai_thread: pid:22913(bench-system), vector has been enabled already!!!
+[ 2396.952152] hmp_set_ai_thread: pid:22918(bench-system), vector has been enabled already!!!
+[ 2396.953649] hmp_set_ai_thread: pid:22919(bench-system), vector has been enabled already!!!
+[ 2396.953649] hmp_set_ai_thread: pid:22917(bench-system), vector has been enabled already!!!
+[ 2396.953697] hmp_set_ai_thread: pid:22920(bench-system), vector has been enabled already!!!
+[ 2396.953773] hmp_set_ai_thread: pid:22916(bench-system), vector has been enabled already!!!
+[ 2396.953893] hmp_set_ai_thread: pid:22915(bench-system), vector has been enabled already!!!
+[ 2396.954199] hmp_set_ai_thread: pid:22914(bench-system), vector has been enabled already!!!
+[ 2397.717663] hmp_set_ai_thread: pid:22962(bench-system), vector has been enabled already!!!
+[ 2397.717663] hmp_set_ai_thread: pid:22964(bench-system), vector has been enabled already!!!
+[ 2397.717667] hmp_set_ai_thread: pid:22965(bench-system), vector has been enabled already!!!
+[ 2397.717666] hmp_set_ai_thread: pid:22961(bench-system), vector has been enabled already!!!
+[ 2397.717671] hmp_set_ai_thread: pid:22967(bench-system), vector has been enabled already!!!
+[ 2397.717785] hmp_set_ai_thread: pid:22968(bench-system), vector has been enabled already!!!
+[ 2397.717789] hmp_set_ai_thread: pid:22966(bench-system), vector has been enabled already!!!
+[ 2397.717805] hmp_set_ai_thread: pid:22963(bench-system), vector has been enabled already!!!
+[ 2397.991101] bench-system[22962]: unhandled signal 11 code 0x1 at 0x0000003f707f8000 in libspacemit_ep.so.2.0.7[3fb78e,3f9aa00000+5ae000]
+[ 2397.991139] CPU: 9 UID: 1000 PID: 22962 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2397.991148] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2397.991153] epc : 0000003f9adfb78e ra : 0000003f9ac82b0e sp : 0000003f6bcfcca0
+[ 2397.991158]  gp : 0000002ab4223800 tp : 0000003f6fa458c0 t0 : 0000000000000040
+[ 2397.991167]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2397.991172]  s1 : 0000003f70798c00 a0 : 0000000000000040 a1 : 0000003f707f4100
+[ 2397.991176]  a2 : 0000003f707f4080 a3 : 0000003f707f8000 a4 : 0000000000004000
+[ 2397.991181]  a5 : 0000003f70798c00 a6 : 0000003f679f8100 a7 : 0000000000048000
+[ 2397.991186]  s2 : 0000003f70798c80 s3 : 0000003f70798d00 s4 : 0000003f70798d80
+[ 2397.991190]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f685f31c0
+[ 2397.991195]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2397.991199]  s11: 0000003f707fc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2397.991204]  t5 : 0000003f685f31c0 t6 : 0000000000000000
+[ 2397.991207] status: 8000000200004620 badaddr: 0000003f707f8000 cause: 000000000000000d
+[ 2397.991219] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2398.305000] hmp_set_ai_thread: pid:22985(bench-system), vector has been enabled already!!!
+[ 2398.305298] hmp_set_ai_thread: pid:22987(bench-system), vector has been enabled already!!!
+[ 2398.305599] hmp_set_ai_thread: pid:22990(bench-system), vector has been enabled already!!!
+[ 2398.305746] hmp_set_ai_thread: pid:22989(bench-system), vector has been enabled already!!!
+[ 2398.305931] hmp_set_ai_thread: pid:22988(bench-system), vector has been enabled already!!!
+[ 2398.309660] hmp_set_ai_thread: pid:22992(bench-system), vector has been enabled already!!!
+[ 2398.309664] hmp_set_ai_thread: pid:22986(bench-system), vector has been enabled already!!!
+[ 2398.309790] hmp_set_ai_thread: pid:22991(bench-system), vector has been enabled already!!!
+[ 2399.083995] hmp_set_ai_thread: pid:23038(bench-system), vector has been enabled already!!!
+[ 2399.084046] hmp_set_ai_thread: pid:23040(bench-system), vector has been enabled already!!!
+[ 2399.085618] hmp_set_ai_thread: pid:23034(bench-system), vector has been enabled already!!!
+[ 2399.085620] hmp_set_ai_thread: pid:23039(bench-system), vector has been enabled already!!!
+[ 2399.085628] hmp_set_ai_thread: pid:23033(bench-system), vector has been enabled already!!!
+[ 2399.085629] hmp_set_ai_thread: pid:23037(bench-system), vector has been enabled already!!!
+[ 2399.085700] hmp_set_ai_thread: pid:23036(bench-system), vector has been enabled already!!!
+[ 2399.085742] hmp_set_ai_thread: pid:23035(bench-system), vector has been enabled already!!!
+[ 2399.361047] bench-system[23034]: unhandled signal 11 code 0x1 at 0x0000003f6d3f8000 in libspacemit_ep.so.2.0.7[3fb78e,3f97600000+5ae000]
+[ 2399.361087] CPU: 9 UID: 1000 PID: 23034 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2399.361097] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2399.361101] epc : 0000003f979fb78e ra : 0000003f97882b0e sp : 0000003f85010ca0
+[ 2399.361110]  gp : 0000002ad6472800 tp : 0000003f6c6458c0 t0 : 0000000000000040
+[ 2399.361115]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2399.361120]  s1 : 0000003f6d398c00 a0 : 0000000000000040 a1 : 0000003f6d3f4100
+[ 2399.361125]  a2 : 0000003f6d3f4080 a3 : 0000003f6d3f8000 a4 : 0000000000004000
+[ 2399.361129]  a5 : 0000003f6d398c00 a6 : 0000003f659f8100 a7 : 0000000000048000
+[ 2399.361134]  s2 : 0000003f6d398c80 s3 : 0000003f6d398d00 s4 : 0000003f6d398d80
+[ 2399.361138]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f665f31c0
+[ 2399.361142]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2399.361147]  s11: 0000003f6d3fc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2399.361151]  t5 : 0000003f665f31c0 t6 : 0000000000000000
+[ 2399.361155] status: 8000000200004620 badaddr: 0000003f6d3f8000 cause: 000000000000000d
+[ 2399.361166] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2399.682254] hmp_set_ai_thread: pid:23067(bench-system), vector has been enabled already!!!
+[ 2399.682546] hmp_set_ai_thread: pid:23069(bench-system), vector has been enabled already!!!
+[ 2399.682744] hmp_set_ai_thread: pid:23071(bench-system), vector has been enabled already!!!
+[ 2399.682903] hmp_set_ai_thread: pid:23068(bench-system), vector has been enabled already!!!
+[ 2399.685598] hmp_set_ai_thread: pid:23070(bench-system), vector has been enabled already!!!
+[ 2399.685601] hmp_set_ai_thread: pid:23073(bench-system), vector has been enabled already!!!
+[ 2399.685604] hmp_set_ai_thread: pid:23072(bench-system), vector has been enabled already!!!
+[ 2399.689641] hmp_set_ai_thread: pid:23074(bench-system), vector has been enabled already!!!
+[ 2399.961585] bench-system[23067]: unhandled signal 11 code 0x1 at 0x0000003f5eff8000 in libspacemit_ep.so.2.0.7[3fb78e,3f89200000+5ae000]
+[ 2399.961625] CPU: 8 UID: 1000 PID: 23067 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2399.961634] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2399.961642] epc : 0000003f895fb78e ra : 0000003f89482b0e sp : 0000003f76c32ca0
+[ 2399.961648]  gp : 0000002ae44e4800 tp : 0000003f5e9e68c0 t0 : 0000000000000040
+[ 2399.961653]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2399.961657]  s1 : 0000003f5ef98c00 a0 : 0000000000000040 a1 : 0000003f5eff4100
+[ 2399.961662]  a2 : 0000003f5eff4080 a3 : 0000003f5eff8000 a4 : 0000000000004000
+[ 2399.961666]  a5 : 0000003f5ef98c00 a6 : 0000003f579f8100 a7 : 0000000000048000
+[ 2399.961671]  s2 : 0000003f5ef98c80 s3 : 0000003f5ef98d00 s4 : 0000003f5ef98d80
+[ 2399.961676]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f585f22c0
+[ 2399.961680]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2399.961684]  s11: 0000003f5effc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2399.961689]  t5 : 0000003f585f22c0 t6 : 0000000000000000
+[ 2399.961692] status: 8000000200004620 badaddr: 0000003f5eff8000 cause: 000000000000000d
+[ 2399.961704] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2400.280315] hmp_set_ai_thread: pid:23095(bench-system), vector has been enabled already!!!
+[ 2400.280471] hmp_set_ai_thread: pid:23091(bench-system), vector has been enabled already!!!
+[ 2400.280511] hmp_set_ai_thread: pid:23097(bench-system), vector has been enabled already!!!
+[ 2400.281597] hmp_set_ai_thread: pid:23094(bench-system), vector has been enabled already!!!
+[ 2400.281605] hmp_set_ai_thread: pid:23092(bench-system), vector has been enabled already!!!
+[ 2400.281740] hmp_set_ai_thread: pid:23093(bench-system), vector has been enabled already!!!
+[ 2400.282019] hmp_set_ai_thread: pid:23096(bench-system), vector has been enabled already!!!
+[ 2400.285629] hmp_set_ai_thread: pid:23098(bench-system), vector has been enabled already!!!
+[ 2401.048702] hmp_set_ai_thread: pid:23140(bench-system), vector has been enabled already!!!
+[ 2401.049607] hmp_set_ai_thread: pid:23139(bench-system), vector has been enabled already!!!
+[ 2401.049986] hmp_set_ai_thread: pid:23143(bench-system), vector has been enabled already!!!
+[ 2401.053601] hmp_set_ai_thread: pid:23144(bench-system), vector has been enabled already!!!
+[ 2401.053612] hmp_set_ai_thread: pid:23141(bench-system), vector has been enabled already!!!
+[ 2401.053612] hmp_set_ai_thread: pid:23145(bench-system), vector has been enabled already!!!
+[ 2401.053648] hmp_set_ai_thread: pid:23146(bench-system), vector has been enabled already!!!
+[ 2401.053953] hmp_set_ai_thread: pid:23142(bench-system), vector has been enabled already!!!
+[ 2401.330379] bench-system[23141]: unhandled signal 11 code 0x1 at 0x0000003f647f8000 in libspacemit_ep.so.2.0.7[3fb78e,3f8ea00000+5ae000]
+[ 2401.330418] CPU: 10 UID: 1000 PID: 23141 Comm: bench-system Not tainted 6.18.3-generic #1.0.10.4 PREEMPT(voluntary) 
+[ 2401.330427] Hardware name: SpacemiT K3 CoM260 IFX (DT)
+[ 2401.330431] epc : 0000003f8edfb78e ra : 0000003f8ec82b0e sp : 0000003f68a22ca0
+[ 2401.330437]  gp : 0000002ad7c00800 tp : 0000003f632a48c0 t0 : 0000000000000040
+[ 2401.330442]  t1 : 0000000000000020 t2 : 0000000000000010 s0 : 0000000000000004
+[ 2401.330450]  s1 : 0000003f64798c00 a0 : 0000000000000040 a1 : 0000003f647f4100
+[ 2401.330455]  a2 : 0000003f647f4080 a3 : 0000003f647f8000 a4 : 0000000000004000
+[ 2401.330460]  a5 : 0000003f64798c00 a6 : 0000003f5b9f8100 a7 : 0000000000048000
+[ 2401.330464]  s2 : 0000003f64798c80 s3 : 0000003f64798d00 s4 : 0000003f64798d80
+[ 2401.330469]  s5 : 0000000000000001 s6 : 0000000000000040 s7 : 0000003f5c5f40c0
+[ 2401.330473]  s8 : 0000000000008000 s9 : 0000000000000020 s10: 0000000000000004
+[ 2401.330477]  s11: 0000003f647fc000 t3 : 0000000000000001 t4 : 0000000000000e00
+[ 2401.330482]  t5 : 0000003f5c5f40c0 t6 : 0000000000000000
+[ 2401.330485] status: 8000000200004620 badaddr: 0000003f647f8000 cause: 000000000000000d
+[ 2401.330496] Code: 5393 002b 5863 6a70 d007 0205 8593 1005 5087 0206 (d187) 0206 
+[ 2401.690589] hmp_set_ai_thread: pid:23173(bench-system), vector has been enabled already!!!
+[ 2401.690721] hmp_set_ai_thread: pid:23174(bench-system), vector has been enabled already!!!
+[ 2401.690819] hmp_set_ai_thread: pid:23175(bench-system), vector has been enabled already!!!
+[ 2401.690926] hmp_set_ai_thread: pid:23176(bench-system), vector has been enabled already!!!
+[ 2401.691014] hmp_set_ai_thread: pid:23177(bench-system), vector has been enabled already!!!
+[ 2401.691115] hmp_set_ai_thread: pid:23178(bench-system), vector has been enabled already!!!
+[ 2401.691206] hmp_set_ai_thread: pid:23179(bench-system), vector has been enabled already!!!
+[ 2401.691292] hmp_set_ai_thread: pid:23180(bench-system), vector has been enabled already!!!
+[ 2402.447452] hmp_set_ai_thread: pid:23204(bench-system), vector has been enabled already!!!
+[ 2402.447524] hmp_set_ai_thread: pid:23205(bench-system), vector has been enabled already!!!
+[ 2402.447604] hmp_set_ai_thread: pid:23206(bench-system), vector has been enabled already!!!
+[ 2402.447815] hmp_set_ai_thread: pid:23208(bench-system), vector has been enabled already!!!
+[ 2402.447830] hmp_set_ai_thread: pid:23207(bench-system), vector has been enabled already!!!
+[ 2402.448016] hmp_set_ai_thread: pid:23210(bench-system), vector has been enabled already!!!
+[ 2402.448107] hmp_set_ai_thread: pid:23209(bench-system), vector has been enabled already!!!
+[ 2402.448135] hmp_set_ai_thread: pid:23211(bench-system), vector has been enabled already!!!
+[ 2403.208791] hmp_set_ai_thread: pid:23245(bench-system), vector has been enabled already!!!
+[ 2403.208880] hmp_set_ai_thread: pid:23246(bench-system), vector has been enabled already!!!
+[ 2403.208952] hmp_set_ai_thread: pid:23247(bench-system), vector has been enabled already!!!
+[ 2403.209051] hmp_set_ai_thread: pid:23248(bench-system), vector has been enabled already!!!
+[ 2403.209225] hmp_set_ai_thread: pid:23249(bench-system), vector has been enabled already!!!
+[ 2403.209254] hmp_set_ai_thread: pid:23250(bench-system), vector has been enabled already!!!
+[ 2403.209350] hmp_set_ai_thread: pid:23251(bench-system), vector has been enabled already!!!
+[ 2403.209513] hmp_set_ai_thread: pid:23252(bench-system), vector has been enabled already!!!
+[ 2403.965675] hmp_set_ai_thread: pid:23286(bench-system), vector has been enabled already!!!
+[ 2403.965746] hmp_set_ai_thread: pid:23287(bench-system), vector has been enabled already!!!
+[ 2403.965923] hmp_set_ai_thread: pid:23289(bench-system), vector has been enabled already!!!
+[ 2403.966027] hmp_set_ai_thread: pid:23288(bench-system), vector has been enabled already!!!
+[ 2403.966058] hmp_set_ai_thread: pid:23290(bench-system), vector has been enabled already!!!
+[ 2403.966140] hmp_set_ai_thread: pid:23291(bench-system), vector has been enabled already!!!
+[ 2403.966236] hmp_set_ai_thread: pid:23292(bench-system), vector has been enabled already!!!
+[ 2403.966523] hmp_set_ai_thread: pid:23293(bench-system), vector has been enabled already!!!
+[ 2404.714796] hmp_set_ai_thread: pid:23317(bench-system), vector has been enabled already!!!
+[ 2404.714879] hmp_set_ai_thread: pid:23318(bench-system), vector has been enabled already!!!
+[ 2404.714961] hmp_set_ai_thread: pid:23319(bench-system), vector has been enabled already!!!
+[ 2404.715054] hmp_set_ai_thread: pid:23320(bench-system), vector has been enabled already!!!
+[ 2404.715161] hmp_set_ai_thread: pid:23321(bench-system), vector has been enabled already!!!
+[ 2404.715259] hmp_set_ai_thread: pid:23322(bench-system), vector has been enabled already!!!
+[ 2404.715350] hmp_set_ai_thread: pid:23323(bench-system), vector has been enabled already!!!
+[ 2404.715443] hmp_set_ai_thread: pid:23324(bench-system), vector has been enabled already!!!
+[ 2405.478181] hmp_set_ai_thread: pid:23358(bench-system), vector has been enabled already!!!
+[ 2405.478267] hmp_set_ai_thread: pid:23359(bench-system), vector has been enabled already!!!
+[ 2405.478378] hmp_set_ai_thread: pid:23360(bench-system), vector has been enabled already!!!
+[ 2405.478502] hmp_set_ai_thread: pid:23361(bench-system), vector has been enabled already!!!
+[ 2405.478544] hmp_set_ai_thread: pid:23362(bench-system), vector has been enabled already!!!
+[ 2405.478645] hmp_set_ai_thread: pid:23363(bench-system), vector has been enabled already!!!
+[ 2405.478739] hmp_set_ai_thread: pid:23364(bench-system), vector has been enabled already!!!
+[ 2405.478836] hmp_set_ai_thread: pid:23365(bench-system), vector has been enabled already!!!
+[ 2406.240045] hmp_set_ai_thread: pid:23399(bench-system), vector has been enabled already!!!
+[ 2406.240126] hmp_set_ai_thread: pid:23400(bench-system), vector has been enabled already!!!
+[ 2406.240203] hmp_set_ai_thread: pid:23401(bench-system), vector has been enabled already!!!
+[ 2406.240315] hmp_set_ai_thread: pid:23402(bench-system), vector has been enabled already!!!
+[ 2406.240428] hmp_set_ai_thread: pid:23403(bench-system), vector has been enabled already!!!
+[ 2406.240526] hmp_set_ai_thread: pid:23404(bench-system), vector has been enabled already!!!
+[ 2406.240599] hmp_set_ai_thread: pid:23405(bench-system), vector has been enabled already!!!
+[ 2406.240692] hmp_set_ai_thread: pid:23406(bench-system), vector has been enabled already!!!
+[ 2406.996859] hmp_set_ai_thread: pid:23432(bench-system), vector has been enabled already!!!
+[ 2406.996859] hmp_set_ai_thread: pid:23433(bench-system), vector has been enabled already!!!
+[ 2406.996942] hmp_set_ai_thread: pid:23434(bench-system), vector has been enabled already!!!
+[ 2406.997218] hmp_set_ai_thread: pid:23435(bench-system), vector has been enabled already!!!
+[ 2406.997247] hmp_set_ai_thread: pid:23436(bench-system), vector has been enabled already!!!
+[ 2406.997266] hmp_set_ai_thread: pid:23437(bench-system), vector has been enabled already!!!
+[ 2406.997453] hmp_set_ai_thread: pid:23438(bench-system), vector has been enabled already!!!
+[ 2406.997491] hmp_set_ai_thread: pid:23439(bench-system), vector has been enabled already!!!
+[ 2407.756724] hmp_set_ai_thread: pid:23471(bench-system), vector has been enabled already!!!
+[ 2407.756794] hmp_set_ai_thread: pid:23472(bench-system), vector has been enabled already!!!
+[ 2407.756869] hmp_set_ai_thread: pid:23473(bench-system), vector has been enabled already!!!
+[ 2407.757058] hmp_set_ai_thread: pid:23475(bench-system), vector has been enabled already!!!
+[ 2407.757150] hmp_set_ai_thread: pid:23474(bench-system), vector has been enabled already!!!
+[ 2407.757338] hmp_set_ai_thread: pid:23477(bench-system), vector has been enabled already!!!
+[ 2407.757349] hmp_set_ai_thread: pid:23476(bench-system), vector has been enabled already!!!
+[ 2407.757633] hmp_set_ai_thread: pid:23478(bench-system), vector has been enabled already!!!
+[ 2408.516514] hmp_set_ai_thread: pid:23512(bench-system), vector has been enabled already!!!
+[ 2408.516602] hmp_set_ai_thread: pid:23513(bench-system), vector has been enabled already!!!
+[ 2408.516695] hmp_set_ai_thread: pid:23514(bench-system), vector has been enabled already!!!
+[ 2408.516785] hmp_set_ai_thread: pid:23515(bench-system), vector has been enabled already!!!
+[ 2408.516887] hmp_set_ai_thread: pid:23516(bench-system), vector has been enabled already!!!
+[ 2408.516980] hmp_set_ai_thread: pid:23517(bench-system), vector has been enabled already!!!
+[ 2408.517089] hmp_set_ai_thread: pid:23518(bench-system), vector has been enabled already!!!
+[ 2408.517185] hmp_set_ai_thread: pid:23519(bench-system), vector has been enabled already!!!
+[ 2409.157560] hmp_set_ai_thread: pid:23550(bench_pipeline), vector has been enabled already!!!
+[ 2409.157617] hmp_set_ai_thread: pid:23551(bench_pipeline), vector has been enabled already!!!
+[ 2409.157656] hmp_set_ai_thread: pid:23552(bench_pipeline), vector has been enabled already!!!
+[ 2409.157709] hmp_set_ai_thread: pid:23553(bench_pipeline), vector has been enabled already!!!
+[ 2409.157933] hmp_set_ai_thread: pid:23554(bench_pipeline), vector has been enabled already!!!
+[ 2409.157964] hmp_set_ai_thread: pid:23557(bench_pipeline), vector has been enabled already!!!
+[ 2409.157979] hmp_set_ai_thread: pid:23556(bench_pipeline), vector has been enabled already!!!
+[ 2409.157984] hmp_set_ai_thread: pid:23555(bench_pipeline), vector has been enabled already!!!
+[ 2409.755633] hmp_set_ai_thread: pid:23598(bench_pipeline), vector has been enabled already!!!
+[ 2409.755675] hmp_set_ai_thread: pid:23599(bench_pipeline), vector has been enabled already!!!
+[ 2409.755771] hmp_set_ai_thread: pid:23601(bench_pipeline), vector has been enabled already!!!
+[ 2409.755862] hmp_set_ai_thread: pid:23602(bench_pipeline), vector has been enabled already!!!
+[ 2409.755940] hmp_set_ai_thread: pid:23600(bench_pipeline), vector has been enabled already!!!
+[ 2409.756008] hmp_set_ai_thread: pid:23603(bench_pipeline), vector has been enabled already!!!
+[ 2409.756052] hmp_set_ai_thread: pid:23604(bench_pipeline), vector has been enabled already!!!
+[ 2409.756148] hmp_set_ai_thread: pid:23605(bench_pipeline), vector has been enabled already!!!
+[ 2410.350568] hmp_set_ai_thread: pid:23646(bench_pipeline), vector has been enabled already!!!
+[ 2410.350604] hmp_set_ai_thread: pid:23647(bench_pipeline), vector has been enabled already!!!
+[ 2410.350658] hmp_set_ai_thread: pid:23648(bench_pipeline), vector has been enabled already!!!
+[ 2410.350881] hmp_set_ai_thread: pid:23649(bench_pipeline), vector has been enabled already!!!
+[ 2410.350924] hmp_set_ai_thread: pid:23650(bench_pipeline), vector has been enabled already!!!
+[ 2410.350987] hmp_set_ai_thread: pid:23651(bench_pipeline), vector has been enabled already!!!
+[ 2410.351118] hmp_set_ai_thread: pid:23653(bench_pipeline), vector has been enabled already!!!
+[ 2410.351218] hmp_set_ai_thread: pid:23652(bench_pipeline), vector has been enabled already!!!
+[ 2410.937438] hmp_set_ai_thread: pid:23684(bench_pipeline), vector has been enabled already!!!
+[ 2410.937438] hmp_set_ai_thread: pid:23685(bench_pipeline), vector has been enabled already!!!
+[ 2410.937538] hmp_set_ai_thread: pid:23687(bench_pipeline), vector has been enabled already!!!
+[ 2410.937555] hmp_set_ai_thread: pid:23686(bench_pipeline), vector has been enabled already!!!
+[ 2410.937641] hmp_set_ai_thread: pid:23688(bench_pipeline), vector has been enabled already!!!
+[ 2410.937654] hmp_set_ai_thread: pid:23689(bench_pipeline), vector has been enabled already!!!
+[ 2410.937763] hmp_set_ai_thread: pid:23690(bench_pipeline), vector has been enabled already!!!
+[ 2410.937866] hmp_set_ai_thread: pid:23691(bench_pipeline), vector has been enabled already!!!
+[ 2411.529952] hmp_set_ai_thread: pid:23732(bench_pipeline), vector has been enabled already!!!
+[ 2411.529987] hmp_set_ai_thread: pid:23733(bench_pipeline), vector has been enabled already!!!
+[ 2411.530032] hmp_set_ai_thread: pid:23734(bench_pipeline), vector has been enabled already!!!
+[ 2411.530133] hmp_set_ai_thread: pid:23736(bench_pipeline), vector has been enabled already!!!
+[ 2411.530137] hmp_set_ai_thread: pid:23735(bench_pipeline), vector has been enabled already!!!
+[ 2411.530331] hmp_set_ai_thread: pid:23738(bench_pipeline), vector has been enabled already!!!
+[ 2411.530351] hmp_set_ai_thread: pid:23737(bench_pipeline), vector has been enabled already!!!
+[ 2411.530410] hmp_set_ai_thread: pid:23739(bench_pipeline), vector has been enabled already!!!
+[ 2412.113773] hmp_set_ai_thread: pid:23770(bench_pipeline), vector has been enabled already!!!
+[ 2412.113808] hmp_set_ai_thread: pid:23771(bench_pipeline), vector has been enabled already!!!
+[ 2412.113901] hmp_set_ai_thread: pid:23773(bench_pipeline), vector has been enabled already!!!
+[ 2412.113988] hmp_set_ai_thread: pid:23774(bench_pipeline), vector has been enabled already!!!
+[ 2412.114067] hmp_set_ai_thread: pid:23775(bench_pipeline), vector has been enabled already!!!
+[ 2412.114130] hmp_set_ai_thread: pid:23772(bench_pipeline), vector has been enabled already!!!
+[ 2412.114141] hmp_set_ai_thread: pid:23776(bench_pipeline), vector has been enabled already!!!
+[ 2412.114220] hmp_set_ai_thread: pid:23777(bench_pipeline), vector has been enabled already!!!
+[ 2412.707750] hmp_set_ai_thread: pid:23819(bench_pipeline), vector has been enabled already!!!
+[ 2412.707792] hmp_set_ai_thread: pid:23820(bench_pipeline), vector has been enabled already!!!
+[ 2412.707835] hmp_set_ai_thread: pid:23821(bench_pipeline), vector has been enabled already!!!
+[ 2412.707953] hmp_set_ai_thread: pid:23823(bench_pipeline), vector has been enabled already!!!
+[ 2412.708139] hmp_set_ai_thread: pid:23822(bench_pipeline), vector has been enabled already!!!
+[ 2412.708182] hmp_set_ai_thread: pid:23824(bench_pipeline), vector has been enabled already!!!
+[ 2412.708183] hmp_set_ai_thread: pid:23826(bench_pipeline), vector has been enabled already!!!
+[ 2412.708225] hmp_set_ai_thread: pid:23825(bench_pipeline), vector has been enabled already!!!
+[ 2413.297331] hmp_set_ai_thread: pid:23857(bench_pipeline), vector has been enabled already!!!
+[ 2413.297360] hmp_set_ai_thread: pid:23858(bench_pipeline), vector has been enabled already!!!
+[ 2413.297445] hmp_set_ai_thread: pid:23859(bench_pipeline), vector has been enabled already!!!
+[ 2413.297546] hmp_set_ai_thread: pid:23861(bench_pipeline), vector has been enabled already!!!
+[ 2413.297548] hmp_set_ai_thread: pid:23860(bench_pipeline), vector has been enabled already!!!
+[ 2413.297632] hmp_set_ai_thread: pid:23862(bench_pipeline), vector has been enabled already!!!
+[ 2413.297696] hmp_set_ai_thread: pid:23863(bench_pipeline), vector has been enabled already!!!
+[ 2413.297747] hmp_set_ai_thread: pid:23864(bench_pipeline), vector has been enabled already!!!
+[ 2413.889777] hmp_set_ai_thread: pid:23905(bench_pipeline), vector has been enabled already!!!
+[ 2413.889828] hmp_set_ai_thread: pid:23906(bench_pipeline), vector has been enabled already!!!
+[ 2413.889870] hmp_set_ai_thread: pid:23907(bench_pipeline), vector has been enabled already!!!
+[ 2413.889928] hmp_set_ai_thread: pid:23908(bench_pipeline), vector has been enabled already!!!
+[ 2413.889980] hmp_set_ai_thread: pid:23909(bench_pipeline), vector has been enabled already!!!
+[ 2413.890041] hmp_set_ai_thread: pid:23910(bench_pipeline), vector has been enabled already!!!
+[ 2413.890170] hmp_set_ai_thread: pid:23912(bench_pipeline), vector has been enabled already!!!
+[ 2413.890194] hmp_set_ai_thread: pid:23911(bench_pipeline), vector has been enabled already!!!
+[ 2414.482820] hmp_set_ai_thread: pid:23943(bench_pipeline), vector has been enabled already!!!
+[ 2414.482833] hmp_set_ai_thread: pid:23944(bench_pipeline), vector has been enabled already!!!
+[ 2414.482882] hmp_set_ai_thread: pid:23945(bench_pipeline), vector has been enabled already!!!
+[ 2414.482925] hmp_set_ai_thread: pid:23946(bench_pipeline), vector has been enabled already!!!
+[ 2414.483027] hmp_set_ai_thread: pid:23947(bench_pipeline), vector has been enabled already!!!
+[ 2414.483032] hmp_set_ai_thread: pid:23948(bench_pipeline), vector has been enabled already!!!
+[ 2414.483113] hmp_set_ai_thread: pid:23949(bench_pipeline), vector has been enabled already!!!
+[ 2414.483157] hmp_set_ai_thread: pid:23950(bench_pipeline), vector has been enabled already!!!
+[ 2415.143450] hmp_set_ai_thread: pid:24020(bench_pipeline), vector has been enabled already!!!
+[ 2415.143498] hmp_set_ai_thread: pid:24023(bench_pipeline), vector has been enabled already!!!
+[ 2415.145365] hmp_set_ai_thread: pid:24019(bench_pipeline), vector has been enabled already!!!
+[ 2415.145365] hmp_set_ai_thread: pid:24024(bench_pipeline), vector has been enabled already!!!
+[ 2415.145413] hmp_set_ai_thread: pid:24022(bench_pipeline), vector has been enabled already!!!
+[ 2415.145418] hmp_set_ai_thread: pid:24025(bench_pipeline), vector has been enabled already!!!
+[ 2415.145460] hmp_set_ai_thread: pid:24026(bench_pipeline), vector has been enabled already!!!
+[ 2415.145486] hmp_set_ai_thread: pid:24021(bench_pipeline), vector has been enabled already!!!
+[ 2415.755027] hmp_set_ai_thread: pid:24081(bench_pipeline), vector has been enabled already!!!
+[ 2415.755081] hmp_set_ai_thread: pid:24083(bench_pipeline), vector has been enabled already!!!
+[ 2415.755129] hmp_set_ai_thread: pid:24084(bench_pipeline), vector has been enabled already!!!
+[ 2415.755175] hmp_set_ai_thread: pid:24085(bench_pipeline), vector has been enabled already!!!
+[ 2415.755445] hmp_set_ai_thread: pid:24082(bench_pipeline), vector has been enabled already!!!
+[ 2415.757482] hmp_set_ai_thread: pid:24086(bench_pipeline), vector has been enabled already!!!
+[ 2415.757789] hmp_set_ai_thread: pid:24087(bench_pipeline), vector has been enabled already!!!
+[ 2415.757822] hmp_set_ai_thread: pid:24088(bench_pipeline), vector has been enabled already!!!
+[ 2416.360384] hmp_set_ai_thread: pid:24137(bench_pipeline), vector has been enabled already!!!
+[ 2416.360536] hmp_set_ai_thread: pid:24133(bench_pipeline), vector has been enabled already!!!
+[ 2416.360590] hmp_set_ai_thread: pid:24139(bench_pipeline), vector has been enabled already!!!
+[ 2416.361351] hmp_set_ai_thread: pid:24136(bench_pipeline), vector has been enabled already!!!
+[ 2416.361356] hmp_set_ai_thread: pid:24135(bench_pipeline), vector has been enabled already!!!
+[ 2416.361387] hmp_set_ai_thread: pid:24134(bench_pipeline), vector has been enabled already!!!
+[ 2416.365367] hmp_set_ai_thread: pid:24140(bench_pipeline), vector has been enabled already!!!
+[ 2416.365367] hmp_set_ai_thread: pid:24138(bench_pipeline), vector has been enabled already!!!
+[ 2416.967469] hmp_set_ai_thread: pid:24197(bench_pipeline), vector has been enabled already!!!
+[ 2416.967513] hmp_set_ai_thread: pid:24200(bench_pipeline), vector has been enabled already!!!
+[ 2416.967532] hmp_set_ai_thread: pid:24201(bench_pipeline), vector has been enabled already!!!
+[ 2416.967572] hmp_set_ai_thread: pid:24198(bench_pipeline), vector has been enabled already!!!
+[ 2416.969340] hmp_set_ai_thread: pid:24199(bench_pipeline), vector has been enabled already!!!
+[ 2416.969343] hmp_set_ai_thread: pid:24195(bench_pipeline), vector has been enabled already!!!
+[ 2416.969349] hmp_set_ai_thread: pid:24196(bench_pipeline), vector has been enabled already!!!
+[ 2416.969464] hmp_set_ai_thread: pid:24202(bench_pipeline), vector has been enabled already!!!
+[ 2417.564963] hmp_set_ai_thread: pid:24247(bench_pipeline), vector has been enabled already!!!
+[ 2417.565263] hmp_set_ai_thread: pid:24249(bench_pipeline), vector has been enabled already!!!
+[ 2417.565458] hmp_set_ai_thread: pid:24251(bench_pipeline), vector has been enabled already!!!
+[ 2417.569339] hmp_set_ai_thread: pid:24248(bench_pipeline), vector has been enabled already!!!
+[ 2417.569339] hmp_set_ai_thread: pid:24250(bench_pipeline), vector has been enabled already!!!
+[ 2417.569360] hmp_set_ai_thread: pid:24254(bench_pipeline), vector has been enabled already!!!
+[ 2417.569389] hmp_set_ai_thread: pid:24253(bench_pipeline), vector has been enabled already!!!
+[ 2417.569421] hmp_set_ai_thread: pid:24252(bench_pipeline), vector has been enabled already!!!
+[ 2418.173457] hmp_set_ai_thread: pid:24309(bench_pipeline), vector has been enabled already!!!
+[ 2418.173730] hmp_set_ai_thread: pid:24311(bench_pipeline), vector has been enabled already!!!
+[ 2418.173925] hmp_set_ai_thread: pid:24313(bench_pipeline), vector has been enabled already!!!
+[ 2418.174145] hmp_set_ai_thread: pid:24315(bench_pipeline), vector has been enabled already!!!
+[ 2418.177349] hmp_set_ai_thread: pid:24314(bench_pipeline), vector has been enabled already!!!
+[ 2418.177422] hmp_set_ai_thread: pid:24312(bench_pipeline), vector has been enabled already!!!
+[ 2418.177807] hmp_set_ai_thread: pid:24310(bench_pipeline), vector has been enabled already!!!
+[ 2418.177854] hmp_set_ai_thread: pid:24316(bench_pipeline), vector has been enabled already!!!
+[ 2418.776175] hmp_set_ai_thread: pid:24361(bench_pipeline), vector has been enabled already!!!
+[ 2418.776472] hmp_set_ai_thread: pid:24363(bench_pipeline), vector has been enabled already!!!
+[ 2418.776675] hmp_set_ai_thread: pid:24365(bench_pipeline), vector has been enabled already!!!
+[ 2418.776843] hmp_set_ai_thread: pid:24367(bench_pipeline), vector has been enabled already!!!
+[ 2418.777313] hmp_set_ai_thread: pid:24362(bench_pipeline), vector has been enabled already!!!
+[ 2418.777426] hmp_set_ai_thread: pid:24364(bench_pipeline), vector has been enabled already!!!
+[ 2418.781323] hmp_set_ai_thread: pid:24368(bench_pipeline), vector has been enabled already!!!
+[ 2418.781348] hmp_set_ai_thread: pid:24366(bench_pipeline), vector has been enabled already!!!
+[ 2419.404136] hmp_set_ai_thread: pid:24423(bench_pipeline), vector has been enabled already!!!
+[ 2419.404176] hmp_set_ai_thread: pid:24428(bench_pipeline), vector has been enabled already!!!
+[ 2419.405303] hmp_set_ai_thread: pid:24425(bench_pipeline), vector has been enabled already!!!
+[ 2419.405306] hmp_set_ai_thread: pid:24426(bench_pipeline), vector has been enabled already!!!
+[ 2419.405312] hmp_set_ai_thread: pid:24424(bench_pipeline), vector has been enabled already!!!
+[ 2419.405708] hmp_set_ai_thread: pid:24427(bench_pipeline), vector has been enabled already!!!
+[ 2419.409333] hmp_set_ai_thread: pid:24429(bench_pipeline), vector has been enabled already!!!
+[ 2419.409389] hmp_set_ai_thread: pid:24430(bench_pipeline), vector has been enabled already!!!
+[ 2420.079531] hmp_set_ai_thread: pid:24487(bench_pipeline), vector has been enabled already!!!
+[ 2420.079576] hmp_set_ai_thread: pid:24490(bench_pipeline), vector has been enabled already!!!
+[ 2420.079589] hmp_set_ai_thread: pid:24488(bench_pipeline), vector has been enabled already!!!
+[ 2420.079600] hmp_set_ai_thread: pid:24489(bench_pipeline), vector has been enabled already!!!
+[ 2420.079631] hmp_set_ai_thread: pid:24491(bench_pipeline), vector has been enabled already!!!
+[ 2420.081316] hmp_set_ai_thread: pid:24485(bench_pipeline), vector has been enabled already!!!
+[ 2420.081317] hmp_set_ai_thread: pid:24486(bench_pipeline), vector has been enabled already!!!
+[ 2420.081427] hmp_set_ai_thread: pid:24492(bench_pipeline), vector has been enabled already!!!
+[ 2420.690093] hmp_set_ai_thread: pid:24537(bench_pipeline), vector has been enabled already!!!
+[ 2420.690391] hmp_set_ai_thread: pid:24539(bench_pipeline), vector has been enabled already!!!
+[ 2420.690615] hmp_set_ai_thread: pid:24541(bench_pipeline), vector has been enabled already!!!
+[ 2420.693279] hmp_set_ai_thread: pid:24542(bench_pipeline), vector has been enabled already!!!
+[ 2420.693280] hmp_set_ai_thread: pid:24538(bench_pipeline), vector has been enabled already!!!
+[ 2420.693281] hmp_set_ai_thread: pid:24544(bench_pipeline), vector has been enabled already!!!
+[ 2420.693281] hmp_set_ai_thread: pid:24543(bench_pipeline), vector has been enabled already!!!
+[ 2420.693315] hmp_set_ai_thread: pid:24540(bench_pipeline), vector has been enabled already!!!
+[ 2421.367508] hmp_set_ai_thread: pid:24615(bench_pipeline), vector has been enabled already!!!
+[ 2421.367831] hmp_set_ai_thread: pid:24619(bench_pipeline), vector has been enabled already!!!
+[ 2421.367872] hmp_set_ai_thread: pid:24620(bench_pipeline), vector has been enabled already!!!
+[ 2421.369266] hmp_set_ai_thread: pid:24613(bench_pipeline), vector has been enabled already!!!
+[ 2421.369267] hmp_set_ai_thread: pid:24616(bench_pipeline), vector has been enabled already!!!
+[ 2421.369271] hmp_set_ai_thread: pid:24617(bench_pipeline), vector has been enabled already!!!
+[ 2421.369275] hmp_set_ai_thread: pid:24614(bench_pipeline), vector has been enabled already!!!
+[ 2421.370196] hmp_set_ai_thread: pid:24618(bench_pipeline), vector has been enabled already!!!
+[ 2421.969023] hmp_set_ai_thread: pid:24665(bench_pipeline), vector has been enabled already!!!
+[ 2421.969314] hmp_set_ai_thread: pid:24667(bench_pipeline), vector has been enabled already!!!
+[ 2421.969581] hmp_set_ai_thread: pid:24669(bench_pipeline), vector has been enabled already!!!
+[ 2421.973280] hmp_set_ai_thread: pid:24668(bench_pipeline), vector has been enabled already!!!
+[ 2421.973286] hmp_set_ai_thread: pid:24666(bench_pipeline), vector has been enabled already!!!
+[ 2421.973511] hmp_set_ai_thread: pid:24671(bench_pipeline), vector has been enabled already!!!
+[ 2421.973516] hmp_set_ai_thread: pid:24670(bench_pipeline), vector has been enabled already!!!
+[ 2421.973561] hmp_set_ai_thread: pid:24672(bench_pipeline), vector has been enabled already!!!
+[ 2422.580454] hmp_set_ai_thread: pid:24727(bench_pipeline), vector has been enabled already!!!
+[ 2422.580738] hmp_set_ai_thread: pid:24729(bench_pipeline), vector has been enabled already!!!
+[ 2422.581132] hmp_set_ai_thread: pid:24728(bench_pipeline), vector has been enabled already!!!
+[ 2422.581222] hmp_set_ai_thread: pid:24732(bench_pipeline), vector has been enabled already!!!
+[ 2422.581251] hmp_set_ai_thread: pid:24730(bench_pipeline), vector has been enabled already!!!
+[ 2422.581584] hmp_set_ai_thread: pid:24731(bench_pipeline), vector has been enabled already!!!
+[ 2422.585249] hmp_set_ai_thread: pid:24734(bench_pipeline), vector has been enabled already!!!
+[ 2422.585310] hmp_set_ai_thread: pid:24733(bench_pipeline), vector has been enabled already!!!
+[ 2423.186682] hmp_set_ai_thread: pid:24779(bench_pipeline), vector has been enabled already!!!
+[ 2423.189247] hmp_set_ai_thread: pid:24780(bench_pipeline), vector has been enabled already!!!
+[ 2423.189252] hmp_set_ai_thread: pid:24781(bench_pipeline), vector has been enabled already!!!
+[ 2423.189252] hmp_set_ai_thread: pid:24782(bench_pipeline), vector has been enabled already!!!
+[ 2423.189252] hmp_set_ai_thread: pid:24784(bench_pipeline), vector has been enabled already!!!
+[ 2423.189294] hmp_set_ai_thread: pid:24785(bench_pipeline), vector has been enabled already!!!
+[ 2423.189341] hmp_set_ai_thread: pid:24783(bench_pipeline), vector has been enabled already!!!
+[ 2423.189512] hmp_set_ai_thread: pid:24786(bench_pipeline), vector has been enabled already!!!
+[ 2423.820826] hmp_set_ai_thread: pid:24842(bench_pipeline), vector has been enabled already!!!
+[ 2423.820895] hmp_set_ai_thread: pid:24843(bench_pipeline), vector has been enabled already!!!
+[ 2423.820955] hmp_set_ai_thread: pid:24841(bench_pipeline), vector has been enabled already!!!
+[ 2423.821317] hmp_set_ai_thread: pid:24844(bench_pipeline), vector has been enabled already!!!
+[ 2423.821607] hmp_set_ai_thread: pid:24845(bench_pipeline), vector has been enabled already!!!
+[ 2423.821904] hmp_set_ai_thread: pid:24846(bench_pipeline), vector has been enabled already!!!
+[ 2423.822731] hmp_set_ai_thread: pid:24848(bench_pipeline), vector has been enabled already!!!
+[ 2423.822782] hmp_set_ai_thread: pid:24847(bench_pipeline), vector has been enabled already!!!
+[ 2424.438346] hmp_set_ai_thread: pid:24903(bench_pipeline), vector has been enabled already!!!
+[ 2424.438538] hmp_set_ai_thread: pid:24905(bench_pipeline), vector has been enabled already!!!
+[ 2424.439092] hmp_set_ai_thread: pid:24908(bench_pipeline), vector has been enabled already!!!
+[ 2424.439145] hmp_set_ai_thread: pid:24910(bench_pipeline), vector has been enabled already!!!
+[ 2424.439734] hmp_set_ai_thread: pid:24907(bench_pipeline), vector has been enabled already!!!
+[ 2424.441215] hmp_set_ai_thread: pid:24906(bench_pipeline), vector has been enabled already!!!
+[ 2424.441219] hmp_set_ai_thread: pid:24909(bench_pipeline), vector has been enabled already!!!
+[ 2424.441761] hmp_set_ai_thread: pid:24904(bench_pipeline), vector has been enabled already!!!
+[ 2425.040101] hmp_set_ai_thread: pid:24959(bench_pipeline), vector has been enabled already!!!
+[ 2425.040163] hmp_set_ai_thread: pid:24960(bench_pipeline), vector has been enabled already!!!
+[ 2425.041213] hmp_set_ai_thread: pid:24957(bench_pipeline), vector has been enabled already!!!
+[ 2425.041219] hmp_set_ai_thread: pid:24958(bench_pipeline), vector has been enabled already!!!
+[ 2425.041217] hmp_set_ai_thread: pid:24955(bench_pipeline), vector has been enabled already!!!
+[ 2425.041226] hmp_set_ai_thread: pid:24956(bench_pipeline), vector has been enabled already!!!
+[ 2425.041346] hmp_set_ai_thread: pid:24961(bench_pipeline), vector has been enabled already!!!
+[ 2425.041616] hmp_set_ai_thread: pid:24962(bench_pipeline), vector has been enabled already!!!
+[ 2425.648046] hmp_set_ai_thread: pid:25022(bench_pipeline), vector has been enabled already!!!
+[ 2425.648108] hmp_set_ai_thread: pid:25023(bench_pipeline), vector has been enabled already!!!
+[ 2425.648131] hmp_set_ai_thread: pid:25018(bench_pipeline), vector has been enabled already!!!
+[ 2425.649205] hmp_set_ai_thread: pid:25020(bench_pipeline), vector has been enabled already!!!
+[ 2425.649214] hmp_set_ai_thread: pid:25021(bench_pipeline), vector has been enabled already!!!
+[ 2425.649219] hmp_set_ai_thread: pid:25017(bench_pipeline), vector has been enabled already!!!
+[ 2425.649600] hmp_set_ai_thread: pid:25019(bench_pipeline), vector has been enabled already!!!
+[ 2425.653271] hmp_set_ai_thread: pid:25024(bench_pipeline), vector has been enabled already!!!
+[ 2426.246498] hmp_set_ai_thread: pid:25071(bench_pipeline), vector has been enabled already!!!
+[ 2426.247018] hmp_set_ai_thread: pid:25073(bench_pipeline), vector has been enabled already!!!
+[ 2426.247021] hmp_set_ai_thread: pid:25070(bench_pipeline), vector has been enabled already!!!
+[ 2426.247067] hmp_set_ai_thread: pid:25076(bench_pipeline), vector has been enabled already!!!
+[ 2426.249190] hmp_set_ai_thread: pid:25072(bench_pipeline), vector has been enabled already!!!
+[ 2426.249205] hmp_set_ai_thread: pid:25077(bench_pipeline), vector has been enabled already!!!
+[ 2426.249207] hmp_set_ai_thread: pid:25074(bench_pipeline), vector has been enabled already!!!
+[ 2426.249329] hmp_set_ai_thread: pid:25075(bench_pipeline), vector has been enabled already!!!
+[ 2426.851406] hmp_set_ai_thread: pid:25132(bench_pipeline), vector has been enabled already!!!
+[ 2426.851449] hmp_set_ai_thread: pid:25137(bench_pipeline), vector has been enabled already!!!
+[ 2426.853182] hmp_set_ai_thread: pid:25135(bench_pipeline), vector has been enabled already!!!
+[ 2426.853187] hmp_set_ai_thread: pid:25136(bench_pipeline), vector has been enabled already!!!
+[ 2426.853187] hmp_set_ai_thread: pid:25134(bench_pipeline), vector has been enabled already!!!
+[ 2426.853189] hmp_set_ai_thread: pid:25133(bench_pipeline), vector has been enabled already!!!
+[ 2426.853231] hmp_set_ai_thread: pid:25139(bench_pipeline), vector has been enabled already!!!
+[ 2426.853473] hmp_set_ai_thread: pid:25138(bench_pipeline), vector has been enabled already!!!
+[ 2427.484802] hmp_set_ai_thread: pid:25177(bench_pipeline), vector has been enabled already!!!
+[ 2427.484884] hmp_set_ai_thread: pid:25178(bench_pipeline), vector has been enabled already!!!
+[ 2427.484969] hmp_set_ai_thread: pid:25179(bench_pipeline), vector has been enabled already!!!
+[ 2427.485055] hmp_set_ai_thread: pid:25180(bench_pipeline), vector has been enabled already!!!
+[ 2427.485202] hmp_set_ai_thread: pid:25181(bench_pipeline), vector has been enabled already!!!
+[ 2427.485301] hmp_set_ai_thread: pid:25182(bench_pipeline), vector has been enabled already!!!
+[ 2427.485406] hmp_set_ai_thread: pid:25183(bench_pipeline), vector has been enabled already!!!
+[ 2427.485501] hmp_set_ai_thread: pid:25184(bench_pipeline), vector has been enabled already!!!
+[ 2428.085398] hmp_set_ai_thread: pid:25225(bench_pipeline), vector has been enabled already!!!
+[ 2428.085489] hmp_set_ai_thread: pid:25226(bench_pipeline), vector has been enabled already!!!
+[ 2428.085562] hmp_set_ai_thread: pid:25227(bench_pipeline), vector has been enabled already!!!
+[ 2428.085660] hmp_set_ai_thread: pid:25228(bench_pipeline), vector has been enabled already!!!
+[ 2428.085793] hmp_set_ai_thread: pid:25229(bench_pipeline), vector has been enabled already!!!
+[ 2428.085846] hmp_set_ai_thread: pid:25230(bench_pipeline), vector has been enabled already!!!
+[ 2428.086055] hmp_set_ai_thread: pid:25232(bench_pipeline), vector has been enabled already!!!
+[ 2428.086070] hmp_set_ai_thread: pid:25231(bench_pipeline), vector has been enabled already!!!
+[ 2428.686521] hmp_set_ai_thread: pid:25271(bench_pipeline), vector has been enabled already!!!
+[ 2428.686663] hmp_set_ai_thread: pid:25272(bench_pipeline), vector has been enabled already!!!
+[ 2428.686689] hmp_set_ai_thread: pid:25273(bench_pipeline), vector has been enabled already!!!
+[ 2428.686779] hmp_set_ai_thread: pid:25274(bench_pipeline), vector has been enabled already!!!
+[ 2428.686884] hmp_set_ai_thread: pid:25275(bench_pipeline), vector has been enabled already!!!
+[ 2428.686996] hmp_set_ai_thread: pid:25276(bench_pipeline), vector has been enabled already!!!
+[ 2428.687078] hmp_set_ai_thread: pid:25277(bench_pipeline), vector has been enabled already!!!
+[ 2428.687164] hmp_set_ai_thread: pid:25278(bench_pipeline), vector has been enabled already!!!
+[ 2429.287683] hmp_set_ai_thread: pid:25311(bench_pipeline), vector has been enabled already!!!
+[ 2429.287734] hmp_set_ai_thread: pid:25312(bench_pipeline), vector has been enabled already!!!
+[ 2429.287806] hmp_set_ai_thread: pid:25313(bench_pipeline), vector has been enabled already!!!
+[ 2429.287913] hmp_set_ai_thread: pid:25314(bench_pipeline), vector has been enabled already!!!
+[ 2429.288119] hmp_set_ai_thread: pid:25315(bench_pipeline), vector has been enabled already!!!
+[ 2429.288200] hmp_set_ai_thread: pid:25317(bench_pipeline), vector has been enabled already!!!
+[ 2429.288202] hmp_set_ai_thread: pid:25316(bench_pipeline), vector has been enabled already!!!
+[ 2429.288286] hmp_set_ai_thread: pid:25318(bench_pipeline), vector has been enabled already!!!
+[ 2429.886364] hmp_set_ai_thread: pid:25359(bench_pipeline), vector has been enabled already!!!
+[ 2429.886464] hmp_set_ai_thread: pid:25360(bench_pipeline), vector has been enabled already!!!
+[ 2429.886720] hmp_set_ai_thread: pid:25363(bench_pipeline), vector has been enabled already!!!
+[ 2429.886775] hmp_set_ai_thread: pid:25362(bench_pipeline), vector has been enabled already!!!
+[ 2429.886797] hmp_set_ai_thread: pid:25361(bench_pipeline), vector has been enabled already!!!
+[ 2429.886816] hmp_set_ai_thread: pid:25364(bench_pipeline), vector has been enabled already!!!
+[ 2429.887018] hmp_set_ai_thread: pid:25366(bench_pipeline), vector has been enabled already!!!
+[ 2429.887021] hmp_set_ai_thread: pid:25365(bench_pipeline), vector has been enabled already!!!
+[ 2430.482626] hmp_set_ai_thread: pid:25397(bench_pipeline), vector has been enabled already!!!
+[ 2430.482724] hmp_set_ai_thread: pid:25398(bench_pipeline), vector has been enabled already!!!
+[ 2430.482805] hmp_set_ai_thread: pid:25399(bench_pipeline), vector has been enabled already!!!
+[ 2430.482891] hmp_set_ai_thread: pid:25400(bench_pipeline), vector has been enabled already!!!
+[ 2430.483022] hmp_set_ai_thread: pid:25401(bench_pipeline), vector has been enabled already!!!
+[ 2430.483082] hmp_set_ai_thread: pid:25402(bench_pipeline), vector has been enabled already!!!
+[ 2430.483188] hmp_set_ai_thread: pid:25403(bench_pipeline), vector has been enabled already!!!
+[ 2430.483262] hmp_set_ai_thread: pid:25404(bench_pipeline), vector has been enabled already!!!
+[ 2431.091514] hmp_set_ai_thread: pid:25445(bench_pipeline), vector has been enabled already!!!
+[ 2431.091584] hmp_set_ai_thread: pid:25446(bench_pipeline), vector has been enabled already!!!
+[ 2431.091674] hmp_set_ai_thread: pid:25447(bench_pipeline), vector has been enabled already!!!
+[ 2431.091755] hmp_set_ai_thread: pid:25448(bench_pipeline), vector has been enabled already!!!
+[ 2431.091858] hmp_set_ai_thread: pid:25449(bench_pipeline), vector has been enabled already!!!
+[ 2431.091949] hmp_set_ai_thread: pid:25450(bench_pipeline), vector has been enabled already!!!
+[ 2431.092044] hmp_set_ai_thread: pid:25451(bench_pipeline), vector has been enabled already!!!
+[ 2431.092140] hmp_set_ai_thread: pid:25452(bench_pipeline), vector has been enabled already!!!
+[ 2431.692183] hmp_set_ai_thread: pid:25483(bench_pipeline), vector has been enabled already!!!
+[ 2431.692281] hmp_set_ai_thread: pid:25484(bench_pipeline), vector has been enabled already!!!
+[ 2431.692352] hmp_set_ai_thread: pid:25485(bench_pipeline), vector has been enabled already!!!
+[ 2431.692448] hmp_set_ai_thread: pid:25486(bench_pipeline), vector has been enabled already!!!
+[ 2431.692565] hmp_set_ai_thread: pid:25487(bench_pipeline), vector has been enabled already!!!
+[ 2431.692664] hmp_set_ai_thread: pid:25488(bench_pipeline), vector has been enabled already!!!
+[ 2431.692761] hmp_set_ai_thread: pid:25489(bench_pipeline), vector has been enabled already!!!
+[ 2431.692853] hmp_set_ai_thread: pid:25490(bench_pipeline), vector has been enabled already!!!
+[ 2432.303786] hmp_set_ai_thread: pid:25531(bench_pipeline), vector has been enabled already!!!
+[ 2432.303869] hmp_set_ai_thread: pid:25532(bench_pipeline), vector has been enabled already!!!
+[ 2432.303959] hmp_set_ai_thread: pid:25533(bench_pipeline), vector has been enabled already!!!
+[ 2432.304049] hmp_set_ai_thread: pid:25534(bench_pipeline), vector has been enabled already!!!
+[ 2432.304161] hmp_set_ai_thread: pid:25535(bench_pipeline), vector has been enabled already!!!
+[ 2432.304252] hmp_set_ai_thread: pid:25536(bench_pipeline), vector has been enabled already!!!
+[ 2432.304376] hmp_set_ai_thread: pid:25537(bench_pipeline), vector has been enabled already!!!
+[ 2432.304457] hmp_set_ai_thread: pid:25538(bench_pipeline), vector has been enabled already!!!
+[ 2432.913323] hmp_set_ai_thread: pid:25569(bench_pipeline), vector has been enabled already!!!
+[ 2432.913401] hmp_set_ai_thread: pid:25570(bench_pipeline), vector has been enabled already!!!
+[ 2432.913487] hmp_set_ai_thread: pid:25571(bench_pipeline), vector has been enabled already!!!
+[ 2432.913568] hmp_set_ai_thread: pid:25572(bench_pipeline), vector has been enabled already!!!
+[ 2432.913705] hmp_set_ai_thread: pid:25573(bench_pipeline), vector has been enabled already!!!
+[ 2432.913745] hmp_set_ai_thread: pid:25574(bench_pipeline), vector has been enabled already!!!
+[ 2432.913867] hmp_set_ai_thread: pid:25575(bench_pipeline), vector has been enabled already!!!
+[ 2432.913962] hmp_set_ai_thread: pid:25576(bench_pipeline), vector has been enabled already!!!
+[ 2468.438915] hmp_set_ai_thread: pid:25960(bench-system), vector has been enabled already!!!
+[ 2468.439653] hmp_set_ai_thread: pid:25962(bench-system), vector has been enabled already!!!
+[ 2468.440422] hmp_set_ai_thread: pid:25963(bench-system), vector has been enabled already!!!
+[ 2468.440534] hmp_set_ai_thread: pid:25961(bench-system), vector has been enabled already!!!
+[ 2468.444516] hmp_set_ai_thread: pid:25964(bench-system), vector has been enabled already!!!
+[ 2468.449254] hmp_set_ai_thread: pid:25965(bench-system), vector has been enabled already!!!
+[ 2468.452520] hmp_set_ai_thread: pid:25966(bench-system), vector has been enabled already!!!
+[ 2468.453293] hmp_set_ai_thread: pid:25967(bench-system), vector has been enabled already!!!

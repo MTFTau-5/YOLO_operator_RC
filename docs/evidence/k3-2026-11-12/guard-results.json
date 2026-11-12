@@ -1,0 +1,14 @@
+{
+  "description": "Recorded exit codes from the six guard runs on 2026-11-12; each process mapped eight 0x60000 TCM regions with guard pages.",
+  "vendor_opencv_openblas_threads_1": [
+    -11,
+    -11,
+    -11
+  ],
+  "system_opencv_openblas_threads_1": [
+    -11,
+    -11,
+    -11
+  ],
+  "gdb": "guard-vendor-gdb.txt"
+}

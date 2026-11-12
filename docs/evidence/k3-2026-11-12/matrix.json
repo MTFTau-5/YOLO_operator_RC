@@ -1,0 +1,392 @@
+{
+  "base_args": [
+    "--backend",
+    "spacemit",
+    "--model",
+    "/home/epoch/work/k3/data/best.spacemit.fp16.onnx",
+    "--in0",
+    "images",
+    "--heads",
+    "output0",
+    "--model-type",
+    "v8-pose",
+    "--num-classes",
+    "1",
+    "--num-kpts",
+    "4",
+    "--video",
+    "/home/epoch/work/k3/data/Screencast from 2026-10-13 20-00-08.webm",
+    "--frames",
+    "1",
+    "--serial",
+    "--gpu",
+    "-1",
+    "--threads",
+    "8",
+    "--cores-a",
+    "0-7",
+    "--video-first"
+  ],
+  "results": [
+    {
+      "case": "system_blas8",
+      "exe": "/tmp/k3-rootcause-20261112/bench-system",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "8",
+        "LD_PRELOAD": null
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 1.102
+        },
+        {
+          "i": 2,
+          "rc": -11,
+          "seconds": 0.592
+        },
+        {
+          "i": 3,
+          "rc": -11,
+          "seconds": 0.591
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.774
+        },
+        {
+          "i": 5,
+          "rc": -11,
+          "seconds": 0.588
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.774
+        },
+        {
+          "i": 7,
+          "rc": -11,
+          "seconds": 0.597
+        },
+        {
+          "i": 8,
+          "rc": -11,
+          "seconds": 0.6
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.768
+        },
+        {
+          "i": 10,
+          "rc": -11,
+          "seconds": 0.601
+        }
+      ]
+    },
+    {
+      "case": "system_blas1",
+      "exe": "/tmp/k3-rootcause-20261112/bench-system",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "LD_PRELOAD": null
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 0.757
+        },
+        {
+          "i": 2,
+          "rc": 0,
+          "seconds": 0.76
+        },
+        {
+          "i": 3,
+          "rc": 0,
+          "seconds": 0.753
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.753
+        },
+        {
+          "i": 5,
+          "rc": 0,
+          "seconds": 0.76
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.762
+        },
+        {
+          "i": 7,
+          "rc": 0,
+          "seconds": 0.759
+        },
+        {
+          "i": 8,
+          "rc": 0,
+          "seconds": 0.754
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.767
+        },
+        {
+          "i": 10,
+          "rc": 0,
+          "seconds": 0.747
+        }
+      ]
+    },
+    {
+      "case": "vendor_no_blas",
+      "exe": "/home/epoch/work/k3/YOLO_operator_RC/build-k3/app/bench_pipeline",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "8",
+        "LD_PRELOAD": null
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 0.605
+        },
+        {
+          "i": 2,
+          "rc": 0,
+          "seconds": 0.589
+        },
+        {
+          "i": 3,
+          "rc": 0,
+          "seconds": 0.592
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.593
+        },
+        {
+          "i": 5,
+          "rc": 0,
+          "seconds": 0.584
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.594
+        },
+        {
+          "i": 7,
+          "rc": 0,
+          "seconds": 0.585
+        },
+        {
+          "i": 8,
+          "rc": 0,
+          "seconds": 0.597
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.59
+        },
+        {
+          "i": 10,
+          "rc": 0,
+          "seconds": 0.6
+        }
+      ]
+    },
+    {
+      "case": "vendor_system_blas8",
+      "exe": "/home/epoch/work/k3/YOLO_operator_RC/build-k3/app/bench_pipeline",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "8",
+        "LD_PRELOAD": "/usr/lib/riscv64-linux-gnu/libopenblas.so.0"
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 2,
+          "rc": 0,
+          "seconds": 0.611
+        },
+        {
+          "i": 3,
+          "rc": 0,
+          "seconds": 0.603
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.603
+        },
+        {
+          "i": 5,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 7,
+          "rc": 0,
+          "seconds": 0.626
+        },
+        {
+          "i": 8,
+          "rc": 0,
+          "seconds": 0.607
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.68
+        },
+        {
+          "i": 10,
+          "rc": 0,
+          "seconds": 0.608
+        }
+      ]
+    },
+    {
+      "case": "vendor_vendor_blas8",
+      "exe": "/home/epoch/work/k3/YOLO_operator_RC/build-k3/app/bench_pipeline",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "8",
+        "LD_PRELOAD": "/opt/openblas-spacemit/lib/libopenblas.so.0"
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 0.6
+        },
+        {
+          "i": 2,
+          "rc": 0,
+          "seconds": 0.611
+        },
+        {
+          "i": 3,
+          "rc": 0,
+          "seconds": 0.607
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.626
+        },
+        {
+          "i": 5,
+          "rc": 0,
+          "seconds": 0.622
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 7,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 8,
+          "rc": 0,
+          "seconds": 0.599
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.604
+        },
+        {
+          "i": 10,
+          "rc": 0,
+          "seconds": 0.601
+        }
+      ]
+    },
+    {
+      "case": "vendor_vendor_blas1",
+      "exe": "/home/epoch/work/k3/YOLO_operator_RC/build-k3/app/bench_pipeline",
+      "env": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "LD_PRELOAD": "/opt/openblas-spacemit/lib/libopenblas.so.0"
+      },
+      "runs": [
+        {
+          "i": 1,
+          "rc": 0,
+          "seconds": 0.601
+        },
+        {
+          "i": 2,
+          "rc": 0,
+          "seconds": 0.601
+        },
+        {
+          "i": 3,
+          "rc": 0,
+          "seconds": 0.601
+        },
+        {
+          "i": 4,
+          "rc": 0,
+          "seconds": 0.596
+        },
+        {
+          "i": 5,
+          "rc": 0,
+          "seconds": 0.598
+        },
+        {
+          "i": 6,
+          "rc": 0,
+          "seconds": 0.608
+        },
+        {
+          "i": 7,
+          "rc": 0,
+          "seconds": 0.598
+        },
+        {
+          "i": 8,
+          "rc": 0,
+          "seconds": 0.606
+        },
+        {
+          "i": 9,
+          "rc": 0,
+          "seconds": 0.62
+        },
+        {
+          "i": 10,
+          "rc": 0,
+          "seconds": 0.601
+        }
+      ]
+    }
+  ]
+}
