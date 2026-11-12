@@ -52,6 +52,18 @@ cmake --build build -j
 
 ### K3 / RISC-V RVV 构建
 
+先安装并检查依赖（需要 root 或 sudo）：
+
+```bash
+./install_k3_dependencies.sh
+```
+
+脚本会安装 `build-essential`、`ca-certificates`、`cmake`、`git`、`pkg-config`、
+`spacemit-onnxruntime`、`openblas-spacemit` 和 `opencv-spacemit`，并检查 ORT、
+OpenCV RVV、OpenBLAS RVV 的实际文件路径。默认 RVV 配置和调试结论见
+[K3 调试摘要](./docs/K3_DEBUG_SUMMARY.md)，部署包移交与 SSH/SCP 方法见
+[K3 SSH/SCP 移交指南](./docs/K3_HANDOVER_SSH.md)。
+
 在 K3 的 Bianbu/Linux 环境中原生构建（需要支持 RVV 1.0 intrinsic 的编译器）。
 完整迁移仓库后，直接运行：
 
@@ -64,6 +76,8 @@ JOBS=16 ./build_k3.sh         # 指定 16 线程构建
 脚本使用 `build-k3/`，自动关闭 x86、CUDA 和 Vulkan，并探测 SpaceMIT ONNX Runtime。
 使用官方 EP 前，在 Bianbu 安装 `spacemit-onnxruntime`；SDK 不在系统目录时，用
 `SPACEMIT_ORT_ROOT=/path/to/sdk ./build_k3.sh` 指定根目录。
+构建脚本会优先选择 `/opt/opencv-spacemit`；视频脚本默认同时使用该 RVV OpenCV 和
+`/opt/openblas-spacemit/lib/libopenblas.so.0`，可通过 `ldd` 检查实际加载路径。
 
 随包模型（1 类、4 关键点）已同时配置 ncnn 和官方 EP 两条路径：
 

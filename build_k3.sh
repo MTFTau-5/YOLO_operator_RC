@@ -20,6 +20,7 @@ usage() {
   YOLOOP_RISCV_ARCH      RISC-V ISA，默认 rv64gcv
   YOLOOP_RISCV_ABI       RISC-V ABI，默认 lp64d
   SPACEMIT_ORT_ROOT      可选的 SpaceMIT ONNX Runtime SDK 根目录
+  OpenCV_DIR             可选的 OpenCV CMake 配置目录，默认优先使用 /opt/opencv-spacemit
 EOF
 }
 
@@ -49,14 +50,24 @@ if [[ ! -d "${ROOT_DIR}/test_data" ]]; then
     exit 1
 fi
 
+if [[ -z "${OpenCV_DIR:-}" && -f /opt/opencv-spacemit/lib/cmake/opencv5/OpenCVConfig.cmake ]]; then
+    OpenCV_DIR=/opt/opencv-spacemit/lib/cmake/opencv5
+fi
+OPENCV_CMAKE_ARGS=()
+if [[ -n "${OpenCV_DIR:-}" ]]; then
+    OPENCV_CMAKE_ARGS=(-DOpenCV_DIR="$OpenCV_DIR")
+fi
+
 printf 'K3 构建目录: %s\n' "$BUILD_DIR"
 printf '编译并行度: %s\n' "$JOBS"
 printf 'RISC-V 目标: %s / %s\n' \
     "${YOLOOP_RISCV_ARCH:-rv64gcv}" "${YOLOOP_RISCV_ABI:-lp64d}"
 printf 'SpaceMIT ORT: %s\n' "${SPACEMIT_ORT_ROOT:-自动探测系统安装}"
+printf 'OpenCV: %s\n' "${OpenCV_DIR:-系统默认}"
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
     -DCMAKE_BUILD_TYPE=Release \
+    "${OPENCV_CMAKE_ARGS[@]}" \
     -DYOLOOP_BUILD_RISCV=ON \
     -DYOLOOP_BUILD_X86=OFF \
     -DYOLOOP_BUILD_CUDA=OFF \

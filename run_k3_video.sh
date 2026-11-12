@@ -34,6 +34,11 @@ for path in "$MODEL" "$VIDEO"; do
     fi
 done
 
+if [[ ! -d /opt/opencv-spacemit/lib || ! -f /opt/openblas-spacemit/lib/libopenblas.so.0 ]]; then
+    printf '错误: 默认 RVV 配置需要 openblas-spacemit 和 /opt/opencv-spacemit。\n' >&2
+    exit 1
+fi
+
 "$ROOT_DIR/build_k3.sh" --no-test
 if [[ ! -x "${BUILD_DIR}/app/bench_pipeline" ]]; then
     printf '错误: 未生成 bench_pipeline。请安装 OpenCV 开发包后重新运行。\n' >&2
@@ -41,6 +46,8 @@ if [[ ! -x "${BUILD_DIR}/app/bench_pipeline" ]]; then
     exit 1
 fi
 
+export LD_LIBRARY_PATH="/opt/opencv-spacemit/lib:/opt/openblas-spacemit/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+export LD_PRELOAD="/opt/openblas-spacemit/lib/libopenblas.so.0${LD_PRELOAD:+:${LD_PRELOAD}}"
 export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-1}"
 exec taskset -c 0-7 "$BUILD_DIR/app/bench_pipeline" \
     --backend "$BACKEND" \
