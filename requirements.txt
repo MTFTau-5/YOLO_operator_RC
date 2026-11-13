@@ -1,20 +1,18 @@
-# golden 生成与数值测试（tools/gen_*.py、nvidia/tests）
-numpy
-pybind11>=2.10                          # nvidia Python 绑定（yolo_ops_cuda）构建
-tensorrt>=10; python_version >= "3.10"  # TRT 插件测试（可选，无则对应目标跳过）
+# 主机端模型导出、golden 生成与真实模型验收。
+# K3 C++ 部署依赖由 install_k3_dependencies.sh 安装，不要求在 K3 pip 安装本文件。
+# 保留项目原有导出工具链版本；升级后重新做模型数值/动态尺寸验收。
+numpy>=1.26,<3
+onnx==1.23.2
+onnxruntime>=1.24,<2                 # onnxsim 的执行后端 / ONNX CPU 数值对照
+onnxsim==0.8.1
+onnxscript==0.7.2                    # torch ONNX dynamo 导出前端
+opencv-python>=4.10,<5              # 读图与 letterbox；C++ OpenCV 使用系统库
 
-# ncnn 部署工具链（tools/export_ncnn_sppf.py / export_af_raw.py /
-# accept_raw_dynamic.py，见 README §5 与 app/README「验收环境」）。
-# 以下版本已随真实模型验收固定：本组合下实测——未过 onnxsim 的图会让 pnnx
-# 段错误（yolo11 复现）；命名符号维让 pnnx inputshape2 路径 stoi 崩溃。
-# 偏离这些版本时，导出脚本行为与 app/README 的验收结论需重新验证。
-torch==2.14.1                           # 验收机为 2.14.1+cu130
-ultralytics==8.4.178                    # fused 导出 format='ncnn' 与 Detect 头 patch 的口径来源
-onnx==1.23.2                            # torch.onnx 前置
-onnxsim==0.8.1                          # pnnx 前置化简（必需，非可选）
-pnnx==20260526                          # 提供 pnnx CLI（ONNX → ncnn）
-ncnn==1.0.20260526                      # AMD CPU/核显（7840HS/780M）部署：ncnn python
-                                        #   运行时（format='ncnn' 附带的 model_ncnn.py 依赖）
-onnxscript==0.7.2                       # torch.onnx dynamo 导出前端（AMD 侧动态 shape
-                                        #   导出路径备用；v11 attention 动态化尝试需要）
-opencv-python                           # accept_raw_dynamic 的读图/letterbox
+torch==2.14.1                       # CUDA wheel 按本机驱动单独选择对应官方源
+ultralytics==8.4.178
+pnnx==20260526                      # ONNX -> ncnn CLI
+ncnn==1.0.20260526                   # 导出产物的 Python 验收；C++ ncnn 由 CMake 获取
+
+# NVIDIA 绑定/TRT 为可选依赖，见 requirements-cuda.txt。
+# C++ 构建另需编译器、CMake>=3.24；可选 CUDA SDK、Vulkan SDK/glslang-tools。
+# gen_tracker_golden.py 还需同级 RK3588-AntiUAV-Tracker 的参考源码。

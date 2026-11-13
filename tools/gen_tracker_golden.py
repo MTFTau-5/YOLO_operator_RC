@@ -1,13 +1,3 @@
-#!/usr/bin/env python3
-"""生成 Tracker golden —— 直接调用 RK3588-AntiUAV-Tracker 的 BoxKalman/门控逻辑。
-
-合成 4 段检测序列（静止 / 匀速 / 丢失-恢复 / 出界滑行），逐帧记录
-predict 输出框、update 后输出框、KF 内部状态，写 test_data/case6_tracker/。
-C++ 侧 test_tracker 回放比对（坐标误差 < 1e-3）。
-
-用法: python3 tools/gen_tracker_golden.py [RK3588_tracker_dir] [out_dir]
-run.py 顶层 import cv2（本机无），BoxKalman 路径实际不用，stub 掉即可。
-"""
 from __future__ import annotations
 
 import csv

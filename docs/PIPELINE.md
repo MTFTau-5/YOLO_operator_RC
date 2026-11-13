@@ -1,144 +1,49 @@
-# 流水线设计规格 — 两线程 + 三槽位 + 丢旧帧
+# 两线程、三槽位流水线
 
-本文档是视觉系统流水线的实现规范。前置阅读：`README.md`（项目总览）。
+实现入口：`app/main.cpp`、`app/pipeline.h`、`app/block_queue.h`。应用配置及设备基准见 [app/README.md](../app/README.md)。
 
 ## 1. 拓扑
 
-```
-线程A（CPU, 绑核 0-3）:  采集 → letterbox → [推给GPU] → 取回结果 → decode → NMS → 卡尔曼 → 发控制
-线程B（GPU 提交, 绑核 4-7）:  从队列取 → ncnn extract() → 推回
-                                  │
-                              780M 核显实际计算在这里异步进行
-```
+线程 A 完成采集、letterbox、Decode/NMS、坐标还原、Tracker 和 UDP；线程 B 提交推理并回传结果。K3 开启 A100 后处理时，A 同步提交 Decode/NMS 到独立 A100 worker，再在宿主继续 Tracker/UDP。串行模式在同一线程按相同阶段执行，便于数值和耗时对照。
 
-**为什么是 2 线程而不是 3**：CPU 全部工作合计 ~2.4 ms，GPU 段 ~10 ms，瓶颈唯一。
-CPU 内部再拆线程只省 ~0.2 ms 量级，却多两套队列与同步成本；把 CPU 压成一个线程，
-卡尔曼/轨迹/时序等全部 CPU 侧状态**天然无锁**。
+## 2. 槽位与队列
 
-## 2. 槽位状态机
+固定 3 个槽位，状态由队列/当前所有者表示：
 
-```
-                 线程A                    线程B
-                   │                       │
-   FREE ──采集成──▶ IMG_READY ──push──────▶│
-   ▲                                       ▶ ncnn 推理
-   │                                       │
-   └───归还──── PRED_READY ◀──push─────────┘
-        ◀─ decode / KF / 消费
-```
-
-槽位状态由其所在队列表示，无独立状态字段：
-
-| 队列 | 含义 | 写者 | 读者 |
+| 队列 | 写入 | 取出 | 含义 |
 |---|---|---|---|
-| `q_free` | 可复用 | A（归还） | A（取去采集） |
-| `q_gpu` | 等待 GPU | A | B |
-| `q_back` | 推理完成 | B | A |
+| `q_free` | A | A | 可复用 |
+| `q_gpu` | A | B（A 可偷最旧） | 待推理 |
+| `q_back` | B | A | 推理结束 |
 
-**不变式（实现时用于自查）**
+不变式：一个槽位只属于一个队列或一个执行阶段；只有 A 写图像/blob，只有 B 写 pred；总槽位数始终为 3。队列有锁，槽位数据靠所有权避免竞争。
 
-1. 一个槽任意时刻只在一个队列里
-2. 图像内存只有 A 写、blob 只有 A 写、pred 只有 B 写——数据面零锁，锁只保护队列
-3. 槽总数恒为 3，系统内在途帧 ≤ 3
+## 3. 丢帧
 
-## 3. 队列语义与丢旧帧
+`acquire_slot()` 优先取 `q_free`；无空槽时偷取 `q_gpu` 最旧帧并计 dropped；两者皆空返回 nullptr。不能偷取正在推理的槽位。槽位上限约束积压数量，但不保证固定毫秒延迟；采集阻塞、调度、推理抖动都会影响 P99。
 
-`q_gpu` / `q_back` 为普通阻塞队列；`q_free` 特殊——空时不阻塞，从 `q_gpu`
-偷最老槽位（其帧已过气），保证**处理最新帧**：
+## 4. 主循环
 
-```cpp
-Slot* acquire_slot() {
-    Slot* s = nullptr;
-    if (q_free.pop_oldest(s)) return s;   // 有空槽, 直接用
-    if (q_gpu.pop_oldest(s)) { g_dropped++; return s; }  // 丢 GPU 队列里最老的帧
-    return nullptr;                        // GPU 也空, 本轮放弃
-}
-```
+A 获取槽位、采集、记录时间、预处理后推给 B，再消费已返回的 `done` 槽位。无可用槽位时阻塞等 `q_back`。消费结果必须读取 `done`，不能读取刚提交的新槽位。
 
-由此得到实时性核心性质：**在途帧数恒 ≤ 3，端到端延迟上界 = 3 × 帧周期 ≈ 30 ms，
-任何情况下不恶化。**
+成功帧完成后处理及坐标还原；错误帧交给 Tracker 空检测更新。控制包只在轨迹 `hits>=2 && misses==0` 时发送，pose 附带对应关键点。最后统计延迟并归还槽位。
 
-## 4. 线程A完整循环
+## 5. 性能
 
-```cpp
-void thread_cpu() {
-    while (g_run) {
-        Slot* s = acquire_slot();
-        if (!s) continue;
+串行耗时约为各阶段之和；两线程吞吐取决于推理与 A 工作量中的瓶颈，并受争用/同步影响。CPU 推理与 A 抢核时流水线可能更慢。报告吞吐、P50/P99 和 dropped，不将目标指标写成保证。
 
-        if (!camera_grab(s->img.data(), s->img_w, s->img_h)) {  // 无新帧则跳过
-            q_free.push(s);
-            continue;
-        }
-        s->t_capture = now_us();               // 延迟统计时间戳
+## 6. 异常与关闭
 
-        x86::letterbox_normalize(s->img.data(), s->img_w, s->img_h,
-                                 s->blob.data(), IN_W, IN_H);
-        q_gpu.push(s);                          // 交给 GPU, 不等待
+采集失败归还槽位，处理已返回结果并尝试重连；重连失败等待 1 秒。B 将推理失败写入 error，A 消费时空更新 Tracker。停止时关闭队列、等待 B 退出并排空返回队列。
 
-        Slot* done = q_back.try_pop();          // 取上一帧结果（通常已完成）
-        if (done) {
-            s->dets = x86::decode(s->pred.data(), g_tab, 2, CONF_THR);
-            s->kept = x86::nms(std::move(s->dets), NMS_THR, TOPK);
-            auto trks = g_tracker.predict();
-            g_tracker.update(to_dets(s->kept));
-            for (auto& t : trks)
-                if (t.hits >= 2 && t.misses == 0) send_to_control(t);
-            g_latency_us = now_us() - s->t_capture;
-            q_free.push(s);
-        }
-    }
-}
-```
+## 7. 配置
 
-要点：A 把帧 N 推给 GPU 后**立即**处理帧 N-1 的结果，CPU 的 2.4 ms 工作塞进
-GPU 10 ms 的空隙。若取回时帧 N-1 未完成，A 短暂阻塞——此机制吸收 GPU 抖动，
-卡尔曼 predict 步外推兜底。
+纯 CPU 和 GPU 提交需要不同的 `cores-a/cores-b`、推理线程数配置。K3 在加载模型前绑核，先完成 EP 首次推理再创建视频解码线程。
 
-## 5. 稳态时间线
+## 8. 开发顺序
 
-```
-时刻(ms)   0      2.2    2.3        12.3      12.4   14.6   ...
-线程A:  采集N 预处理N 推q_gpu   取回N-1   解码N-1 采集N+1 ...
-线程B/GPU:              [==== 推理帧N-1 ====]
-                         [====== 推理帧N ======]
-```
+M1 串行跑通 → M2 数值对齐 → M3 跟踪 → M4 两线程 → M5 丢帧和统计 → M6 目标机调优。已有测试为 `test_queue`、`test_tracker`、`test_head_layouts` 和各平台算子 golden。
 
-- 单帧延迟（采集→出框）≈ 12 ms，与串行相同
-- 吞吐由瓶颈段决定 = GPU 段 ≈ 10.3 ms/帧 ≈ 97 FPS
+## 9. 验收
 
-## 6. 边界与异常处理
-
-| 情况 | 行为 |
-|---|---|
-| 相机无新帧 | 归还槽位，`continue`，不空转 |
-| GPU 推理出错 | B 标记 error，A 丢弃该帧，卡尔曼纯 predict 外推一帧 |
-| `q_back` 积压 | 取最老处理，丢新的（正常情况不该发生） |
-| 关机 | `g_run=false` → B 退出 → A 排空 `q_back` → 干净退出，不杀线程 |
-| 相机掉线 | A 进入 1 s 重连循环；轨迹 `misses` 递增，控制端可判视觉失效 |
-
-## 7. 槽位数 = 3 的理由
-
-延迟上界 = `NUM_SLOTS × GPU段耗时`。2 槽上界 ~20 ms 但无抖动余量；
-3 槽上界 ~31 ms 且能吸收采集/GPU 正常抖动；再多每槽 +10 ms 延迟纯亏。
-**写死为 3，不做配置项。**
-
-## 8. 落地里程碑
-
-```
-M1  串行版        单线程跑通全链路, 打印延迟
-M2  数值对齐      test_x86 golden 对齐全 PASS
-M3  接入卡尔曼    串行版内接 Tracker, 验证跟踪连续性
-M4  拆两线程      引入槽位/队列, 只改调度不改算法
-M5  丢旧帧+统计  压测 P50/P99、吞吐、丢帧率
-M6  实机调优      taskset / governor / UMA, 数字写回 README
-```
-
-M1→M4 每步仅将已验证代码换调度方式，出错易二分定位。
-
-## 9. 验收指标（M5）
-
-- 端到端延迟 P50 ≈ 12 ms，P99 < 25 ms
-- 稳态吞吐 ≥ 95 FPS（120 fps 相机下丢帧率 < 20%）
-- 静止场景 `g_dropped` ≈ 0（GPU 跟得上就不该丢）
-- CPU 单线程占用 < 50%
+检查槽位无丢失/重复、顺序和错误帧处理、关闭与相机重连；随后比较串行/流水线吞吐和延迟。具体性能目标应按设备与采集帧率设置。

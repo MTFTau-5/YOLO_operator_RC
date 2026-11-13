@@ -1,13 +1,14 @@
 # yolo_rt —— 实时检测跟踪流水线应用
 
 实现 [PIPELNE](../docs/PIPELINE.md)：两线程 + 三槽位 + 丢旧帧。本目录是对算子库的**集成层**，
-不改动 `common/ x86/ nvidia/ vulkan/` 任何代码。
+通过 `common/cpu_ops.h` 选择 `x86/` 或 `riscv/` 后端，模型推理由 ncnn 或
+SpaceMIT ONNX Runtime（`backend: spacemit`）完成。
 
 ## 拓扑（PIPELINE.md §1/§2）
 
 ```
 线程A（CPU, 默认绑核 0-3）:  采集 → letterbox → [推 q_gpu] → 取回上帧 → decode → NMS → Tracker(Kalman) → UDP 控制
-线程B（GPU 提交, 默认绑核 4-7）:  q_gpu.pop → ncnn extract()（Vulkan fp16）→ q_back.push
+线程B（推理, 默认绑核 4-7）:  q_gpu.pop → ncnn/SpaceMIT ORT → q_back.push
 ```
 
 - 槽位写死 3 个（`slot.h: NUM_SLOTS`），状态由所在队列表示，在途帧 ≤ 3；
@@ -16,13 +17,28 @@
 
 ## 构建
 
-根目录 CMake 用 FetchContent 拉 ncnn（Vulkan ON，`-DNCNN_GIT_TAG=` 可换版本）：
+根目录 CMake 用 FetchContent 拉 ncnn（`YOLOOP_NCNN_VULKAN` 控制 Vulkan，
+`-DNCNN_GIT_TAG=` 可换版本）：
 
 ```bash
 cmake -S . -B build -DYOLOOP_BUILD_CUDA=OFF -DYOLOOP_BUILD_TRT_PLUGIN=OFF \
       -DYOLOOP_BUILD_PYTHON=OFF -DYOLOOP_X86_ARCH=znver4   # 目标机 7840HS；本机开发用 native
 cmake --build build -j$(nproc)          # 产物: build/app/yolo_rt
 ```
+
+K3 原生构建直接使用 `./build_k3.sh`。安装 `spacemit-onnxruntime` 后会自动启用
+官方 SpaceMIT EP；否则只保留 ncnn CPU 后端。也可通过 `SPACEMIT_ORT_ROOT` 指定
+解压后的 SDK 根目录。
+
+随包 pose 模型无需改配置：
+
+```bash
+./run_k3_video.sh                     # SpaceMIT EP + 修复版 FP16 ONNX
+BACKEND=ncnn ./run_k3_video.sh        # ncnn + best.ncnn.param/.bin
+./build-k3/app/yolo_rt --config app/pipeline_k3_ort.yaml
+```
+
+ONNX 模型名称为 `images/output0`，ncnn 模型名称为 `in0/out0`，两套 YAML 已分别配置。
 
 ## 运行
 
@@ -41,20 +57,20 @@ cp app/pipeline.example.yaml app/pipeline.yaml    # 按你的模型改
 跟踪（`gate-px/gate-scale/size-ratio/size-memory/coast/max-misses`）、运行
 （`serial/cores-a/cores-b/max-w/max-h`）、控制（`udp`）。
 
-**模型类型（`model-type`）**：五种 head 契约（`common/head_types.h`）。
+**模型类型（`model-type`）**：六种 head 契约（`common/head_types.h`）。
 
 | 值 | 输出契约 | decode 算子 |
 |---|---|---|
-| `v5` | 切头导出，逐层 `[na*(5+nc), h, w]`（通道 anchor-major），`ncnn_infer` 重排为 `[4+1+nc, N]`（README §3），需 anchor 表 | `x86::decode`（logit 快筛） |
-| `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `x86::decode_v8` |
-| `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `x86::decode_v8_pose` |
-| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（改输入尺寸只改 `in-size` 重新加载、免重新导出；前提是导出图内无固定空间尺寸的 reshape / 常量 grid 等静态 shape 算子） | `x86::decode_af_raw`（DFL+dist2bbox） |
-| `v8-dist` / `v9-dist` / `v11-dist` | DFL 期望留图内，逐层 `[4+nc, h, w]`（4 条边投影距离 + cls logit），网格表推导同 raw；grid+dist2bbox 在 C++（实验路径，见「DFL 切分点三路径对比」） | `x86::decode_af_dist` |
-| `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `x86::decode_e2e` |
+| `v5` | 切头导出，逐层 `[na*(5+nc), h, w]`（通道 anchor-major），`ncnn_infer` 重排为 `[4+1+nc, N]`（README §3），需 anchor 表 | `cpu::decode`（logit 快筛） |
+| `v8` / `v9` / `v11` | Detect 头烘在图内，单输出 `[4+nc, N]`（xywh 像素 + 类别概率）；v9/v11 检测头与 v8 同构 | `cpu::decode_v8` |
+| `v8-pose` | 同上 + `3×num-kpts` 关键点通道（x,y,conf 像素），点数任意 | `cpu::decode_v8_pose` |
+| `v8-raw` / `v9-raw` / `v11-raw` | Detect 切在 DFL 前，逐层 `[4*reg_max+nc, h, w]`，网格表加载时推导（改输入尺寸只改 `in-size` 重新加载、免重新导出；前提是导出图内无固定空间尺寸的 reshape / 常量 grid 等静态 shape 算子） | `cpu::decode_af_raw`（DFL+dist2bbox） |
+| `v8-dist` / `v9-dist` / `v11-dist` | DFL 期望留图内，逐层 `[4+nc, h, w]`（4 条边投影距离 + cls logit），网格表推导同 raw；grid+dist2bbox 在 C++（实验路径，见「DFL 切分点三路径对比」） | `cpu::decode_af_dist` |
+| `v10` | 端到端 NMS-free `[N, 6]`（x1,y1,x2,y2,score,cls），box-major 自动转置，**不做 NMS** | `cpu::decode_e2e` |
 
 `v8-raw` 系的 `reg-max`（默认 16）与 `num-classes` 决定校验通道数 `4*reg_max+nc`。
 
-pose 模式下关键点随框过 NMS（`x86::nms_indices` 索引重载），UDP 包附带被跟踪框
+pose 模式下关键点随框过 NMS（`cpu::nms_indices` 索引重载），UDP 包附带被跟踪框
 命中时的关键点（≤32 点；coast/丢失帧 `kpt_count=0`）。
 
 **防大小不匹配**：v5 由 `in-size`/`num-classes`/anchor 表推导 N（另校验 blob 通道为

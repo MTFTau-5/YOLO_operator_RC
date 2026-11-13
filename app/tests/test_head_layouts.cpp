@@ -15,9 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "decode_af_raw.h"
-#include "decode_avx2.h"
-#include "decode_e2e.h"
+#include "cpu_ops.h"
 #include "head_types.h"
 #include "ncnn_infer.h"
 
@@ -92,7 +90,7 @@ void test_e2e(const std::string& dir) {
             if (pred[(size_t)c * n + j] != data[j * 6 + c]) { layout_ok = false; break; }
     CHECK(layout_ok, "e2e: box-major 转置布局错误");
 
-    auto dets = x86::decode_e2e(pred.data(), n, 0.25f);
+    auto dets = cpu::decode_e2e(pred.data(), n, 0.25f);
     CHECK(dets.size() == 30, "e2e: decode 数量 != 30");
     bool det_ok = dets.size() == 30;
     for (size_t k = 0; k < dets.size() && det_ok; ++k) {
@@ -166,7 +164,7 @@ void test_afraw(const std::string& dir) {
     CHECK(layout_ok, "afraw: 逐层拼接布局错误");
 
     // decode 冒烟：网格表 + 数据自洽（数值 golden 由 case9 覆盖）
-    auto dets = x86::decode_af_raw(pred.data(), g, nc, rm, 0.25f);
+    auto dets = cpu::decode_af_raw(pred.data(), g, nc, rm, 0.25f);
     CHECK(!dets.empty(), "afraw: decode 无输出（预期高 logit 占 7/16）");
     std::printf("[test_head_layouts] afraw 逐层探测 %s\n", g_fail ? "FAIL" : "PASS");
 }
@@ -291,7 +289,7 @@ void test_anchorraw_decode(const std::string& dir) {
     CHECK(infer.infer(blob.data(), pred.data()), "v5d: infer 失败");
 
     AnchorTable tab = build_anchor_table(default_levels(640, 640));
-    auto dets = x86::decode(pred.data(), tab, nc, 0.25f);
+    auto dets = cpu::decode(pred.data(), tab, nc, 0.25f);
     CHECK(dets.size() == 3, "v5d: decode 数量 != 3");
     // 列 col = base + (y*gw+x)*na + a；σ(0)=0.5 → cx=(0.5+gx)*s，w=(0.5*2)²*aw=aw
     bool det_ok = dets.size() == 3;

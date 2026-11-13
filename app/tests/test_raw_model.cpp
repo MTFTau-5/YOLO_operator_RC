@@ -15,10 +15,9 @@
 #include <string>
 #include <vector>
 
-#include "decode_af_raw.h"
+#include "cpu_ops.h"
 #include "head_types.h"
 #include "ncnn_infer.h"
-#include "nms_simd.h"
 #include "testio.h"
 
 namespace {
@@ -123,8 +122,8 @@ void run_size(const std::string& dir, const std::string& param, const std::strin
                 infer.pred_n(), max_d, tol_raw);
     CHECK(max_d <= tol_raw, "raw 张量与 torch 不一致");
 
-    auto dets = x86::decode_af_raw(pred.data(), g, nc, rm, conf);
-    auto kept = x86::nms(std::move(dets), nms_thr, 300);
+    auto dets = cpu::decode_af_raw(pred.data(), g, nc, rm, conf);
+    auto kept = cpu::nms(std::move(dets), nms_thr, 300);
     // fp16/图融合会让贴阈值的边缘框抖动出没（score ∈ [conf, conf+margin)），
     // 硬性要求只对 score ≥ conf+margin 的框：双向都必须匹配；带内差异只报告。
     auto is_strict = [&](float s) { return s >= conf + margin; };

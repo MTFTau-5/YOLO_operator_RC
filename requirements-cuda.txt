@@ -1,0 +1,4 @@
+# 在已安装 requirements.txt 的主机 Python 环境中使用。
+pybind11>=2.10,<4
+# 原项目验证版本；需 NVIDIA TensorRT 对应头文件和 CUDA SDK 配套。
+tensorrt==11.3.0.99; python_version >= "3.10" and platform_machine == "x86_64" and sys_platform == "linux"

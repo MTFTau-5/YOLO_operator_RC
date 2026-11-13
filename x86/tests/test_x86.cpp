@@ -7,16 +7,11 @@
 #include <string>
 #include <vector>
 
+#include "../common/cpu_ops.h"
 #include "../common/head_types.h"
 #include "../common/testio.h"
 #include "../common/yolo_ref.h"
-#include "../decode_af_dist.h"
-#include "../decode_af_raw.h"
-#include "../decode_avx2.h"
-#include "../decode_e2e.h"
-#include "../decode_v8.h"
-#include "../nms_simd.h"
-#include "../preprocess_avx2.h"
+
 
 namespace {
 
@@ -84,6 +79,11 @@ int main(int argc, char** argv) {
         return 2;
     }
     const std::string root = argv[1];
+#ifdef YOLOOP_CPU_BACKEND_RISCV
+    std::printf("CPU backend: riscv (RVV when compiled with __riscv_vector)\n");
+#else
+    std::printf("CPU backend: x86\n");
+#endif
     bool all_ok = true;
     double bench_decode = 0.0, bench_nms = 0.0, bench_pre = 0.0;
 
@@ -112,35 +112,35 @@ int main(int argc, char** argv) {
         }
 
         auto rdec = yoloop::ref::decode(pred.data(), tab, nc, conf);
-        auto xdec = yoloop::x86::decode(pred.data(), tab, nc, conf);
+        auto xdec = yoloop::cpu::decode(pred.data(), tab, nc, conf);
         auto m_ref = match_sets(rdec, gdec, 1e-2, 1e-3);
-        auto m_x86 = match_sets(xdec, gdec, 1e-2, 1e-3);
-        bool ok = m_ref.ok && m_x86.ok;
+        auto m_cpu = match_sets(xdec, gdec, 1e-2, 1e-3);
+        bool ok = m_ref.ok && m_cpu.ok;
         all_ok = all_ok && ok;
-        std::printf("[%s] decode %s | golden=%zu ref=%zu x86=%zu | ref_err coord=%.3g score=%.3g"
-                    " | x86_err coord=%.3g score=%.3g%s\n",
+        std::printf("[%s] decode %s | golden=%zu ref=%zu cpu=%zu | ref_err coord=%.3g score=%.3g"
+                    " | cpu_err coord=%.3g score=%.3g%s\n",
                     name, ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
                     m_ref.max_coord_err, m_ref.max_score_err,
-                    m_x86.max_coord_err, m_x86.max_score_err,
-                    m_x86.unmatched ? " (unmatched!)" : "");
+                    m_cpu.max_coord_err, m_cpu.max_score_err,
+                    m_cpu.unmatched ? " (unmatched!)" : "");
 
         auto rnms = yoloop::ref::nms(gdec, nth);
-        auto xnms = yoloop::x86::nms(gdec, nth, /*topk=*/0);
+        auto xnms = yoloop::cpu::nms(gdec, nth, /*topk=*/0);
         auto n_ref = match_sets(rnms, gnms, 1e-2, 1e-3);
-        auto n_x86 = match_sets(xnms, gnms, 1e-2, 1e-3);
-        bool nok = n_ref.ok && n_x86.ok;
+        auto n_cpu = match_sets(xnms, gnms, 1e-2, 1e-3);
+        bool nok = n_ref.ok && n_cpu.ok;
         all_ok = all_ok && nok;
-        std::printf("[%s] nms    %s | golden=%zu ref=%zu x86=%zu%s\n",
+        std::printf("[%s] nms    %s | golden=%zu ref=%zu cpu=%zu%s\n",
                     name, nok ? "PASS" : "FAIL", gnms.size(), rnms.size(), xnms.size(),
-                    n_x86.unmatched ? " (unmatched!)" : "");
+                    n_cpu.unmatched ? " (unmatched!)" : "");
 
         if (std::string(name) == "case2_dense") {
             bench_decode = bench_us([&] {
-                auto v = yoloop::x86::decode(pred.data(), tab, nc, conf);
+                auto v = yoloop::cpu::decode(pred.data(), tab, nc, conf);
                 g_sink = v.size();
             }, 1000);
             bench_nms = bench_us([&] {
-                auto v = yoloop::x86::nms(gdec, nth, /*topk=*/300);
+                auto v = yoloop::cpu::nms(gdec, nth, /*topk=*/300);
                 g_sink = v.size();
             }, 1000);
         }
@@ -164,10 +164,10 @@ int main(int argc, char** argv) {
         }
 
         std::vector<float> out(golden.size());
-        yoloop::x86::letterbox_normalize(img.data(), iw, ih, out.data(), dw, dh);
-        double err_x86 = 0.0;
+        yoloop::cpu::letterbox_normalize(img.data(), iw, ih, out.data(), dw, dh);
+        double err_cpu = 0.0;
         for (size_t i = 0; i < out.size(); ++i)
-            err_x86 = std::max(err_x86, (double)std::fabs(out[i] - golden[i]));
+            err_cpu = std::max(err_cpu, (double)std::fabs(out[i] - golden[i]));
 
         std::vector<float> rout(golden.size());
         yoloop::ref::letterbox_normalize(img.data(), iw, ih, rout.data(), dw, dh);
@@ -175,14 +175,14 @@ int main(int argc, char** argv) {
         for (size_t i = 0; i < rout.size(); ++i)
             err_ref = std::max(err_ref, (double)std::fabs(rout[i] - golden[i]));
 
-        bool ok = err_x86 < 1e-3 && err_ref < 1e-3;
+        bool ok = err_cpu < 1e-3 && err_ref < 1e-3;
         all_ok = all_ok && ok;
-        std::printf("[%s] preprocess %s | x86 max_abs_err=%.3g | ref max_abs_err=%.3g\n",
-                    name, ok ? "PASS" : "FAIL", err_x86, err_ref);
+        std::printf("[%s] preprocess %s | cpu max_abs_err=%.3g | ref max_abs_err=%.3g\n",
+                    name, ok ? "PASS" : "FAIL", err_cpu, err_ref);
 
         if (std::string(name) == "case4_preprocess") {
             bench_pre = bench_us([&] {
-                yoloop::x86::letterbox_normalize(img.data(), iw, ih, out.data(), dw, dh);
+                yoloop::cpu::letterbox_normalize(img.data(), iw, ih, out.data(), dw, dh);
                 g_sink = (size_t)out[0];
             }, 100);
         }
@@ -203,16 +203,16 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "[case7] pred.bin 尺寸不符: %zu != %d\n", pred.size(), (4 + nc) * n);
             return 1;
         }
-        auto dets = yoloop::x86::decode_v8(pred.data(), nc, n, conf);
+        auto dets = yoloop::cpu::decode_v8(pred.data(), nc, n, conf);
         auto m = match_sets(dets, gdec, 1e-3, 1e-5);
         all_ok = all_ok && m.ok;
-        std::printf("[case7_v8_detect] decode %s | golden=%zu x86=%zu | err coord=%.3g score=%.3g\n",
+        std::printf("[case7_v8_detect] decode %s | golden=%zu cpu=%zu | err coord=%.3g score=%.3g\n",
                     m.ok ? "PASS" : "FAIL", gdec.size(), dets.size(), m.max_coord_err,
                     m.max_score_err);
 
         // nms_indices 与 nms 逐位等价（同实现路径，仅返回形式不同）
-        auto gi = yoloop::x86::nms_indices(dets, nth, 300);
-        auto gn = yoloop::x86::nms(dets, nth, 300);
+        auto gi = yoloop::cpu::nms_indices(dets, nth, 300);
+        auto gn = yoloop::cpu::nms(dets, nth, 300);
         bool eq = gi.size() == gn.size();
         for (size_t i = 0; eq && i < gi.size(); ++i)
             eq = std::memcmp(&dets[(size_t)gi[i]], &gn[i], sizeof(Detection)) == 0;
@@ -240,14 +240,14 @@ int main(int argc, char** argv) {
         }
         std::vector<Detection> dets;
         std::vector<float> kpts;
-        yoloop::x86::decode_v8_pose(pred.data(), nc, nk, n, conf, dets, kpts);
+        yoloop::cpu::decode_v8_pose(pred.data(), nc, nk, n, conf, dets, kpts);
         bool shape_ok = kpts.size() == dets.size() * (size_t)kstride;
 
         // golden_pose.bin: int32 count，随后每框 6 float det + 3K float kpts（nms 后顺序）
         std::ifstream gf(dir + "/golden_pose.bin", std::ios::binary);
         int32_t gcount = 0;
         gf.read(reinterpret_cast<char*>(&gcount), 4);
-        auto keep = yoloop::x86::nms_indices(dets, nth, topk);
+        auto keep = yoloop::cpu::nms_indices(dets, nth, topk);
         bool ok = shape_ok && (int32_t)keep.size() == gcount;
         double max_det_err = 0.0, max_kpt_err = 0.0;
         for (int32_t i = 0; i < gcount && ok; ++i) {
@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
         }
         ok = ok && max_det_err < 1e-3 && max_kpt_err < 1e-5;
         all_ok = all_ok && ok;
-        std::printf("[case8_v8_pose] decode+nms_indices %s | golden=%d x86=%zu | "
+        std::printf("[case8_v8_pose] decode+nms_indices %s | golden=%d cpu=%zu | "
                     "det_err=%.3g kpt_err=%.3g\n",
                     ok ? "PASS" : "FAIL", gcount, keep.size(), max_det_err, max_kpt_err);
     }
@@ -300,29 +300,29 @@ int main(int argc, char** argv) {
         }
 
         auto rdec = yoloop::ref::decode_af_raw(pred.data(), tab, nc, rm, conf);
-        auto xdec = yoloop::x86::decode_af_raw(pred.data(), tab, nc, rm, conf);
+        auto xdec = yoloop::cpu::decode_af_raw(pred.data(), tab, nc, rm, conf);
         auto m_ref = match_sets(rdec, gdec, 1e-2, 1e-3);
-        auto m_x86 = match_sets(xdec, gdec, 1e-2, 1e-3);
-        bool ok = m_ref.ok && m_x86.ok;
+        auto m_cpu = match_sets(xdec, gdec, 1e-2, 1e-3);
+        bool ok = m_ref.ok && m_cpu.ok;
         all_ok = all_ok && ok;
-        std::printf("[case9_afraw] decode %s | golden=%zu ref=%zu x86=%zu | "
-                    "ref_err coord=%.3g score=%.3g | x86_err coord=%.3g score=%.3g%s\n",
+        std::printf("[case9_afraw] decode %s | golden=%zu ref=%zu cpu=%zu | "
+                    "ref_err coord=%.3g score=%.3g | cpu_err coord=%.3g score=%.3g%s\n",
                     ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
-                    m_ref.max_coord_err, m_ref.max_score_err, m_x86.max_coord_err,
-                    m_x86.max_score_err, m_x86.unmatched ? " (unmatched!)" : "");
+                    m_ref.max_coord_err, m_ref.max_score_err, m_cpu.max_coord_err,
+                    m_cpu.max_score_err, m_cpu.unmatched ? " (unmatched!)" : "");
 
         auto rnms = yoloop::ref::nms(gdec, nth);
-        auto xnms = yoloop::x86::nms(gdec, nth, /*topk=*/0);
+        auto xnms = yoloop::cpu::nms(gdec, nth, /*topk=*/0);
         auto n_ref = match_sets(rnms, gnms, 1e-2, 1e-3);
-        auto n_x86 = match_sets(xnms, gnms, 1e-2, 1e-3);
-        bool nok = n_ref.ok && n_x86.ok;
+        auto n_cpu = match_sets(xnms, gnms, 1e-2, 1e-3);
+        bool nok = n_ref.ok && n_cpu.ok;
         all_ok = all_ok && nok;
-        std::printf("[case9_afraw] nms    %s | golden=%zu ref=%zu x86=%zu%s\n",
+        std::printf("[case9_afraw] nms    %s | golden=%zu ref=%zu cpu=%zu%s\n",
                     nok ? "PASS" : "FAIL", gnms.size(), rnms.size(), xnms.size(),
-                    n_x86.unmatched ? " (unmatched!)" : "");
+                    n_cpu.unmatched ? " (unmatched!)" : "");
 
         bench_afraw = bench_us([&] {
-            auto v = yoloop::x86::decode_af_raw(pred.data(), tab, nc, rm, conf);
+            auto v = yoloop::cpu::decode_af_raw(pred.data(), tab, nc, rm, conf);
             g_sink = v.size();
         }, 1000);
     }
@@ -342,15 +342,15 @@ int main(int argc, char** argv) {
             return 1;
         }
         auto rdec = yoloop::ref::decode_e2e(pred.data(), n, conf);
-        auto xdec = yoloop::x86::decode_e2e(pred.data(), n, conf);
+        auto xdec = yoloop::cpu::decode_e2e(pred.data(), n, conf);
         auto m_ref = match_sets(rdec, gdec, 1e-3, 1e-5);
-        auto m_x86 = match_sets(xdec, gdec, 1e-3, 1e-5);
-        bool ok = m_ref.ok && m_x86.ok;
+        auto m_cpu = match_sets(xdec, gdec, 1e-3, 1e-5);
+        bool ok = m_ref.ok && m_cpu.ok;
         all_ok = all_ok && ok;
-        std::printf("[case10_e2e] decode %s | golden=%zu ref=%zu x86=%zu | "
+        std::printf("[case10_e2e] decode %s | golden=%zu ref=%zu cpu=%zu | "
                     "err coord=%.3g score=%.3g\n",
                     ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
-                    m_x86.max_coord_err, m_x86.max_score_err);
+                    m_cpu.max_coord_err, m_cpu.max_score_err);
     }
 
     // ---- v8/v9/v11 第三切分（DFL 在图内）：[4+nc, N]，grid+dist2bbox 在 C++ ----
@@ -378,29 +378,29 @@ int main(int argc, char** argv) {
         }
 
         auto rdec = yoloop::ref::decode_af_dist(pred.data(), tab, nc, conf);
-        auto xdec = yoloop::x86::decode_af_dist(pred.data(), tab, nc, conf);
+        auto xdec = yoloop::cpu::decode_af_dist(pred.data(), tab, nc, conf);
         auto m_ref = match_sets(rdec, gdec, 1e-2, 1e-3);
-        auto m_x86 = match_sets(xdec, gdec, 1e-2, 1e-3);
-        bool ok = m_ref.ok && m_x86.ok;
+        auto m_cpu = match_sets(xdec, gdec, 1e-2, 1e-3);
+        bool ok = m_ref.ok && m_cpu.ok;
         all_ok = all_ok && ok;
-        std::printf("[case12_afdist] decode %s | golden=%zu ref=%zu x86=%zu | "
-                    "ref_err coord=%.3g score=%.3g | x86_err coord=%.3g score=%.3g%s\n",
+        std::printf("[case12_afdist] decode %s | golden=%zu ref=%zu cpu=%zu | "
+                    "ref_err coord=%.3g score=%.3g | cpu_err coord=%.3g score=%.3g%s\n",
                     ok ? "PASS" : "FAIL", gdec.size(), rdec.size(), xdec.size(),
-                    m_ref.max_coord_err, m_ref.max_score_err, m_x86.max_coord_err,
-                    m_x86.max_score_err, m_x86.unmatched ? " (unmatched!)" : "");
+                    m_ref.max_coord_err, m_ref.max_score_err, m_cpu.max_coord_err,
+                    m_cpu.max_score_err, m_cpu.unmatched ? " (unmatched!)" : "");
 
         auto rnms = yoloop::ref::nms(gdec, nth);
-        auto xnms = yoloop::x86::nms(gdec, nth, /*topk=*/0);
+        auto xnms = yoloop::cpu::nms(gdec, nth, /*topk=*/0);
         auto n_ref = match_sets(rnms, gnms, 1e-2, 1e-3);
-        auto n_x86 = match_sets(xnms, gnms, 1e-2, 1e-3);
-        bool nok = n_ref.ok && n_x86.ok;
+        auto n_cpu = match_sets(xnms, gnms, 1e-2, 1e-3);
+        bool nok = n_ref.ok && n_cpu.ok;
         all_ok = all_ok && nok;
-        std::printf("[case12_afdist] nms    %s | golden=%zu ref=%zu x86=%zu%s\n",
+        std::printf("[case12_afdist] nms    %s | golden=%zu ref=%zu cpu=%zu%s\n",
                     nok ? "PASS" : "FAIL", gnms.size(), rnms.size(), xnms.size(),
-                    n_x86.unmatched ? " (unmatched!)" : "");
+                    n_cpu.unmatched ? " (unmatched!)" : "");
 
         bench_afdist = bench_us([&] {
-            auto v = yoloop::x86::decode_af_dist(pred.data(), tab, nc, conf);
+            auto v = yoloop::cpu::decode_af_dist(pred.data(), tab, nc, conf);
             g_sink = v.size();
         }, 1000);
     }
